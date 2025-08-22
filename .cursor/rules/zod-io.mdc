@@ -1,0 +1,12 @@
+---
+description: Valider toutes les entrées/sorties avec Zod
+globs:
+  - "apps/web/src/**"
+  - "apps/functions/src/**"
+alwaysApply: true
+---
+
+Chaque endpoint et chaque requête client doit utiliser **Zod** :
+- `schema.safeParse()` à l’entrée (functions).
+- `zodResolver` dans les formulaires (web).
+- Ne consomme jamais une réponse non validée.

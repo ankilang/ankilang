@@ -1,0 +1,10 @@
+---
+description: Netlify Functions doivent retourner des erreurs RFC 7807
+globs:
+  - "apps/functions/src/**"
+alwaysApply: true
+---
+
+Retourne des erreurs JSON format **RFC 7807** : `{ type, title, detail, status, traceId }` avec `content-type: application/problem+json`.
+Expose un helper `problem(status, title, detail?)` et utilise-le partout.
+Ne loggue jamais de secrets. Ajoute `traceId` à chaque requête.

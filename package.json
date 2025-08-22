@@ -1,0 +1,31 @@
+{
+  "name": "ankilang",
+  "version": "0.1.0",
+  "description": "Webapp de création de flashcards (Basic & Cloze) pour l'apprentissage des langues, avec export Anki (.apkg)",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter=@ankilang/web dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r exec tsc --noEmit",
+    "lint": "echo 'Lint configuration à venir'",
+    "clean": "pnpm -r clean",
+    "install:all": "pnpm install"
+  },
+  "keywords": [
+    "flashcards",
+    "anki",
+    "language-learning",
+    "occitan",
+    "pwa",
+    "react",
+    "typescript"
+  ],
+  "author": "Ankilang Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

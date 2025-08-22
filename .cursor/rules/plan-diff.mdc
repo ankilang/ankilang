@@ -1,0 +1,13 @@
+---
+description: Exiger Plan → Diff avant toute modif multi-fichiers
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+Quand une tâche impacte plusieurs fichiers :
+1) Commence par un **Plan en ≤ 8 étapes** listant les **fichiers à créer/modifier** et les **risques**. **N’édite rien** tant que je n’ai pas validé.
+2) Implémente **l’étape 1 seulement**, puis **montre le diff complet** (fichier par fichier).
+3) Mets à jour **imports** et **tests**. Interdit : code partiel (`// TODO`, `// ...`).
+4) Exécute : `pnpm -w lint && pnpm -w typecheck && pnpm -w test` avant de conclure.
+5) **N’édite que** les fichiers listés dans l’étape en cours.
