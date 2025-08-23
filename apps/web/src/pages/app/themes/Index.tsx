@@ -44,7 +44,7 @@ export default function ThemesIndex() {
         <main className="container mx-auto px-4 py-8">
           {/* Filtres et recherche */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
                   Rechercher
@@ -98,7 +98,7 @@ export default function ThemesIndex() {
                       setSearchTerm('')
                       setSelectedLanguage('')
                     }}
-                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                    className="px-3 py-2 text-blue-600 hover:text-blue-800 transition-colors rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
                   >
                     Effacer les filtres
                   </button>
@@ -131,7 +131,7 @@ export default function ThemesIndex() {
               </Link>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredThemes.map((theme) => (
                 <ThemeCard key={theme.id} theme={theme} />
               ))}

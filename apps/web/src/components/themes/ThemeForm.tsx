@@ -48,7 +48,7 @@ export default function ThemeForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 sm:space-y-6">
       {error && (
         <div 
           className="p-4 bg-red-50 border border-red-200 rounded-lg"
@@ -66,7 +66,7 @@ export default function ThemeForm({
           id="name"
           type="text"
           {...register('name')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Ex: Vocabulaire de base"
           aria-describedby={errors.name ? 'name-error' : undefined}
         />
@@ -84,7 +84,7 @@ export default function ThemeForm({
         <select
           id="targetLang"
           {...register('targetLang')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           aria-describedby={errors.targetLang ? 'targetLang-error' : undefined}
         >
           <option value="">Sélectionnez une langue</option>
@@ -109,7 +109,7 @@ export default function ThemeForm({
           id="tags"
           type="text"
           {...register('tags')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Ex: vocabulaire, débutant, grammaire"
         />
         <p className="mt-1 text-sm text-gray-500">
@@ -124,7 +124,7 @@ export default function ThemeForm({
         <select
           id="shareStatus"
           {...register('shareStatus')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="private">Privé (seulement vous)</option>
           <option value="community">Communauté (partageable)</option>
@@ -134,7 +134,7 @@ export default function ThemeForm({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
       >
         {isLoading ? 'Création...' : 'Créer le thème'}
       </button>

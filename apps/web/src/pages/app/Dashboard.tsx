@@ -21,13 +21,13 @@ export default function Dashboard() {
         <header className="bg-white shadow-sm border-b">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <Link to="/" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link to="/" className="p-3 text-gray-600 hover:text-gray-900 transition-colors rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
                 <ArrowLeft size={20} />
               </Link>
               <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
               <Link 
                 to="/app/themes/new" 
-                className="btn-primary text-sm inline-flex items-center gap-2"
+                className="px-4 py-3 sm:py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
               >
                 <Plus size={16} />
                 Nouveau thème
@@ -38,7 +38,7 @@ export default function Dashboard() {
 
         <main className="container mx-auto px-4 py-8">
           {/* Statistiques */}
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-100 rounded-lg">
@@ -96,7 +96,7 @@ export default function Dashboard() {
               <h2 className="text-xl font-semibold text-gray-900">Mes thèmes</h2>
               <Link 
                 to="/app/themes" 
-                className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                className="px-3 py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
               >
                 Voir tous →
               </Link>

@@ -259,7 +259,7 @@ export default function NewCardModal({
             </p>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-4 sm:gap-6 pt-4">
             <button
               type="button"
               onClick={onClose}

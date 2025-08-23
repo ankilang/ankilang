@@ -9,11 +9,11 @@ interface ThemeCardProps {
 
 export default function ThemeCard({ theme }: ThemeCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
       <Link to={`/app/themes/${theme.id}`} className="block p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 min-w-0">
               {theme.name}
             </h3>
             <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -39,18 +39,18 @@ export default function ThemeCard({ theme }: ThemeCardProps) {
         </div>
 
         {theme.tags && theme.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-                            {theme.tags.slice(0, 3).map((tag: string, index: number) => (
-                  <span 
-                    key={index}
-                    className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700"
-                  >
-                    {tag}
-                  </span>
-                ))}
-            {theme.tags.length > 3 && (
+          <div className="flex flex-wrap gap-1 mb-4 min-w-0">
+            {theme.tags.slice(0, 2).map((tag: string, index: number) => (
+              <span 
+                key={index}
+                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700 truncate max-w-20"
+              >
+                {tag}
+              </span>
+            ))}
+            {theme.tags.length > 2 && (
               <span className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-50 text-gray-600">
-                +{theme.tags.length - 3}
+                +{theme.tags.length - 2}
               </span>
             )}
           </div>

@@ -9,11 +9,11 @@ interface LessonCardProps {
 
 export default function LessonCard({ lesson }: LessonCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-      <Link to={`/app/lessons/${lesson.id}`} className="block p-6"> aria-label={`Voir le détail de la leçon ${lesson.title}`}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
+      <Link to={`/app/lessons/${lesson.id}`} className="block p-6" aria-label={`Voir le détail de la leçon ${lesson.title}`}>
         <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 min-w-0">
               {lesson.title}
             </h3>
           </div>
@@ -50,18 +50,18 @@ export default function LessonCard({ lesson }: LessonCardProps) {
         </div>
 
         {lesson.tags && lesson.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {lesson.tags.slice(0, 3).map((tag, index) => (
+          <div className="flex flex-wrap gap-1 min-w-0">
+            {lesson.tags.slice(0, 2).map((tag, index) => (
               <span 
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-50 text-gray-600"
+                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-50 text-gray-600 truncate max-w-20"
               >
                 {tag}
               </span>
             ))}
-            {lesson.tags.length > 3 && (
+            {lesson.tags.length > 2 && (
               <span className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-50 text-gray-600">
-                +{lesson.tags.length - 3}
+                +{lesson.tags.length - 2}
               </span>
             )}
           </div>

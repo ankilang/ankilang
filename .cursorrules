@@ -1,0 +1,112 @@
+# Ankilang — Cursor Rules (v1.1)
+
+> But : guider l’IA pour **initialiser** puis **développer** Ankilang (monorepo pnpm).
+> S’applique à **toutes** les modifs (apps/web, apps/functions, services/exporter, packages/shared).
+
+## 0) Contexte & structure cible
+- Monorepo **pnpm** :
+
+ankilang/
+├─ apps/
+│  ├─ web/           (React + TS + Vite + Tailwind + shadcn/ui + PWA)
+│  └─ functions/     (Netlify Functions — TypeScript)           [plus tard]
+├─ services/
+│  └─ exporter/      (FastAPI + genanki)                        [plus tard]
+├─ packages/
+│  └─ shared/        (schemas Zod, types)                       [dès bootstrap]
+├─ docs/prd/         (PRD en Markdown)
+└─ infra/            (CI/CD, docker, workflows)                 [plus tard]
+
+## 1) Principes généraux (toujours)
+1. **Plan → Diff** pour toute tâche multi-fichiers. Afficher le **diff complet**.
+2. **Zéro code partiel** : pas de `// TODO`, `// ...`, pas de “stubs” vides.
+3. **TypeScript strict**, ESM, imports propres ; **Zod** aux frontières I/O.
+4. **Erreurs** d’API au format **RFC 7807** `{ type, title, detail, status, traceId }`.
+5. **Secrets** interdits dans le front : variables privées uniquement côté functions/services.
+6. **Tests** quand la logique est non triviale. Sinon, au minimum un smoke test.
+7. **Docs** : si l’API publique ou les schémas changent, mettre à jour `packages/shared` + README concernés.
+
+## 2) Bootstrap attendu (initialisation du repo)
+Créer **sans utiliser de générateurs externes** :
+- `pnpm-workspace.yaml`
+- Fichiers racine : `.gitignore`, `.editorconfig`, `.cursorignore`, `README.md`
+- **Ce fichier** `.cursorrules`
+- `docs/prd/ankilang-prd-v0.1.md` (stub si absent)
+- `packages/shared` (package.json minimal + `src/schemas/{theme.ts,card.ts}`)
+- `apps/web` (Vite minimal manuel + PWA + Tailwind)
+  - `index.html`, `vite.config.ts`, `tsconfig.json`
+  - `src/main.tsx`, `src/index.css`
+  - `src/pages/Landing.tsx`, `src/pages/app/Dashboard.tsx`
+  - Déps listées dans §3
+
+## 3) Front (apps/web) — conventions
+- Stack : **React + TS + Vite**, **Tailwind + shadcn/ui**, **@tanstack/react-query**, **axios** + intercepteurs, **react-router-dom**, **framer-motion**, **vite-plugin-pwa**.
+- Router : au moins `/` (Landing) et `/app` (Dashboard).
+- PWA : manifest simple, `registerType: 'autoUpdate'`.
+- Accessibilité : ARIA, focus visible ; `prefers-reduced-motion` respecté.
+
+### Règles de code côté web
+- **React Query** : un `QueryClient` partagé ; clés stables.
+- **Axios** : un client unique ; intercepteur `Authorization` (quand l’auth existera) et normalisation d’erreurs.
+- **Zod** : toute réponse venant d’un endpoint doit être validée avant usage.
+- **Animations** : micro-animations utiles (fade/slide 150–220ms), pas d’animations bloquantes.
+
+## 4) Fonctions Netlify (apps/functions) — à partir du sprint suivant
+- TS only. Valider **JWT Appwrite** sur routes protégées.
+- Réponses d’erreur **RFC 7807** ; helper `problem(status, title, detail?)`.
+- Endpoints cibles (plus tard) :
+
+POST /api/translate        # DeepL / Revirada
+GET  /api/pexels
+POST /api/tts              # Polly / Votz
+POST /api/export-apkg
+GET  /api/export-apkg/:jobId
+POST /api/billing/checkout-session  # Stripe (+ Stripe Tax)
+POST /api/billing/webhook
+
+## 5) Exporter (services/exporter) — plus tard
+- **FastAPI + genanki** ; `/health`, `/build-apkg`.
+- Cloze via `genanki.CLOZE_MODEL` (`Text`, `Extra`).
+- Médias : **basenames** uniquement (`<img src="name.ext">`, `[sound:name.mp3]`).
+- HTML-escape des champs texte ; noms de fichiers médias **uniques**.
+
+## 6) Sécurité & conformité
+- Pas de secrets en front. `.env.example` avec clés **factices** si besoin.
+- RGPD : minimisation, export/effacement (implémentation ultérieure).
+- Logs sans PII ; `traceId` dans les erreurs serveur.
+
+## 7) Tests & qualité
+- Web : **Vitest** + **React Testing Library** + **MSW** (quand endpoints présents).
+- Exporter : **pytest** (plus tard).
+- CI (plus tard) : lint → typecheck → tests.
+
+## 8) Perf & a11y
+- Core Web Vitals : viser LCP < 2.5s, INP < 200ms.
+- Images optimisées (WebP/AVIF) ; lazy-load si besoin.
+- A11y : contrastes >= 4.5:1 ; navigation clavier.
+
+## 9) Conventions
+- Nommage : `useXxx` pour hooks, PascalCase composants, camelCase fonctions/vars.
+- Imports absolus configurés plus tard si besoin (`@/*`).
+- Commits : Conventional Commits (`feat:`, `fix:`, `chore:`…).
+
+## 10) Workflow Cursor
+1. **Architect** : propose un plan en ≤ 8 étapes ; **n’édite rien** sans validation.
+2. **Implementor** : exécute **une étape à la fois** ; fournit le **diff complet** ; met à jour imports/tests ; exécute `pnpm -w typecheck` (et plus tard tests).
+3. **Inline Edit** : retouches ciblées.
+
+## 11) Prompts par défaut (raccourcis)
+- **Architect (plan multi-fichiers)**  
+  « Agis en Architect. Propose un plan en ≤ 8 étapes pour [tâche]. Liste fichiers à créer/modifier et risques. N’édite rien. »
+- **Implementor (étape unique)**  
+  « Implémente **l’étape 1 uniquement**. Affiche le **diff complet**. Mets à jour imports/tests. Exécute `pnpm -w typecheck`. »
+
+## 12) Dépendances — bootstrap web
+**Runtime** : `react` `react-dom` `react-router-dom` `@tanstack/react-query` `axios` `zod` `react-hook-form` `@hookform/resolvers` `framer-motion` `class-variance-authority` `tailwind-merge` `lucide-react`  
+**Dev** : `typescript` `vite` `@vitejs/plugin-react` `tailwindcss` `postcss` `autoprefixer` `vite-plugin-pwa`
+
+## 13) À ne jamais faire
+- Ne **jamais** commiter de secret (Stripe/Appwrite/AWS/DeepL…).
+- Ne pas renvoyer d’erreurs brutes ou de stacktraces côté API.
+- Ne pas créer d’API côté front (les clés resteraient exposées).
+

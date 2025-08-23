@@ -92,7 +92,11 @@ export default function LessonsIndex() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Leçons</h1>
 
       {isOffline && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <div 
+          className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6"
+          role="status"
+          aria-live="polite"
+        >
           <p className="text-yellow-800 text-sm">
             Mode hors-ligne activé. Certaines fonctionnalités peuvent être limitées.
           </p>
@@ -101,7 +105,7 @@ export default function LessonsIndex() {
 
       {/* Filtres */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Filtre langue */}
           <div>
             <label htmlFor="language-filter" className="block text-sm font-medium text-gray-700 mb-2">
@@ -173,7 +177,7 @@ export default function LessonsIndex() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredLessons.map(lesson => (
             <LessonCard key={lesson.id} lesson={lesson} />
           ))}

@@ -1,22 +1,95 @@
+/* Design System Ankilang */
+@import './styles/da.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Variables CSS pour les safe areas */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* PWA Standalone specific styles */
+body.pwa-standalone {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* TabBar content padding - maintenant géré conditionnellement dans AppLayout */
+/* body.pwa-standalone .app-content {
+  padding-bottom: calc(64px + var(--safe-bottom));
+} */
+
+/* Optimisations pour les devices haute densité */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .tab-button {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Optimisations pour les foldables */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tabbar-container {
+    max-width: 768px;
+    margin: 0 auto;
+  }
+}
+
+/* Optimisations pour les écrans très larges */
+@media (min-width: 1024px) {
+  .tabbar-container {
+    max-width: 1024px;
+    margin: 0 auto;
+  }
+}
+
+/* Optimisations pour le zoom 200% */
+@media (max-width: 320px) {
+  .tab-button {
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .fab-button {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Optimisations pour les devices tactiles */
+@media (hover: none) and (pointer: coarse) {
+  .tab-button {
+    touch-action: manipulation;
+  }
+  
+  .fab-button {
+    touch-action: manipulation;
+  }
+}
+
+/* Base styles */
 @layer base {
   * {
     box-sizing: border-box;
   }
 
   html {
-    font-family: system-ui, sans-serif;
-    background: #fff;
-    background-size: 224px;
+    scroll-behavior: smooth;
   }
 
   body {
     margin: 0;
-    padding: 0;
-    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
   }
 
   #root {
@@ -25,15 +98,233 @@
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  /* Design tokens pour la cohérence */
+  .da-card {
+    @apply rounded-2xl bg-white border border-gray-200 shadow-sm p-6 overflow-hidden;
   }
 
-  .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  .da-card--hover {
+    @apply hover:shadow-md transition-shadow duration-200;
   }
 
+  .da-card--accent {
+    @apply border-blue-200 bg-blue-50/50;
+  }
+
+  .da-hover-lift {
+    @apply hover:scale-105 transition-transform duration-200;
+  }
+
+  /* Animations respectueuses des préférences utilisateur */
+  @media (prefers-reduced-motion: reduce) {
+    .da-hover-lift {
+      @apply hover:scale-100 transition-none;
+    }
+    
+    .da-card--hover {
+      @apply transition-none;
+    }
+    
+    .tab-button {
+      transition: none !important;
+    }
+    
+    .fab-button {
+      transition: none !important;
+    }
+    
+    .offline-badge {
+      animation: none !important;
+    }
+  }
+
+  /* FAQ Accordion styles */
+  .faq-accordion {
+    @apply border-b border-gray-200 last:border-b-0;
+  }
+
+  .faq-trigger {
+    @apply w-full flex items-center justify-between py-4 px-0 text-left text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors;
+  }
+
+  .faq-content {
+    @apply pb-4 text-gray-600;
+  }
+
+  /* Loading fallback */
+  .loading-fallback {
+    @apply flex items-center justify-center min-h-[200px] text-gray-500;
+  }
+
+  /* Offline banner */
+  .offline-banner {
+    @apply bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4;
+  }
+
+  .offline-banner__content {
+    @apply flex items-start;
+  }
+
+  .offline-banner__icon {
+    @apply flex-shrink-0 w-5 h-5 text-yellow-400;
+  }
+
+  .offline-banner__text {
+    @apply ml-3 text-sm text-yellow-700;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply text-center py-12;
+  }
+
+  .empty-state__icon {
+    @apply mx-auto h-12 w-12 text-gray-400 mb-4;
+  }
+
+  .empty-state__title {
+    @apply text-lg font-medium text-gray-900 mb-2;
+  }
+
+  .empty-state__description {
+    @apply text-gray-600 max-w-md mx-auto;
+  }
+
+  /* Form styles */
+  .form-group {
+    @apply mb-6;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+
+  .form-error {
+    @apply mt-1 text-sm text-red-600;
+  }
+
+  .form-help {
+    @apply mt-1 text-sm text-gray-500;
+  }
+
+  /* Button styles */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
+  }
+
+  .btn--primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  }
+
+  .btn--secondary {
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500;
+  }
+
+  .btn--danger {
+    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+
+  .btn--sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn--lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge--success {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .badge--warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .badge--error {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .badge--info {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  /* Card styles */
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden;
+  }
+
+  .card__header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+
+  .card__title {
+    @apply text-lg font-medium text-gray-900;
+  }
+
+  .card__body {
+    @apply px-6 py-4;
+  }
+
+  .card__footer {
+    @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+  }
+
+  /* Navigation styles */
+  .nav-link {
+    @apply text-gray-600 hover:text-gray-900 transition-colors;
+  }
+
+  .nav-link--active {
+    @apply text-blue-600 font-medium;
+  }
+
+  /* Utility classes */
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  }
+
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  /* TabBar specific optimizations */
+  .tabbar-container {
+    contain: layout style paint;
+  }
+
+  .tab-button {
+    contain: layout style;
+  }
+
+  .fab-button {
+    contain: layout style;
+  }
+
+  /* Dark mode optimizations */
+  @media (prefers-color-scheme: dark) {
+    .tabbar-backdrop {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .tab-button {
+      border: 2px solid currentColor;
+    }
+    
+    .fab-button {
+      border: 2px solid currentColor;
+    }
   }
 }
