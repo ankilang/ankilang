@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { BentoTile } from './Bento'
 
 type FAQItem = {
   id: string
@@ -8,7 +9,7 @@ type FAQItem = {
 }
 
 type FAQAccordionProps = {
-  items: FAQItem[]
+  items?: FAQItem[]
   title?: string
 }
 
@@ -25,6 +26,52 @@ export default function FAQAccordion({ items, title }: FAQAccordionProps) {
     setOpenItems(newOpenItems)
   }
 
+  // FAQ longue par défaut si aucun items fourni
+  const defaultItems = [
+    {
+      id: 'gratuit',
+      question: 'Ankilang est-il vraiment gratuit ?',
+      answer: 'Oui ! L\'apprentissage en occitan est entièrement gratuit. D\'autres langues peuvent avoir des fonctionnalités premium pour des contenus avancés.'
+    },
+    {
+      id: 'algorithme',
+      question: 'Comment fonctionne l\'algorithme de révision ?',
+      answer: 'Notre algorithme s\'adapte à votre rythme d\'apprentissage et vous présente les cartes au moment optimal pour la mémorisation, basé sur la courbe de l\'oubli.'
+    },
+    {
+      id: 'partage',
+      question: 'Puis-je partager mes decks avec d\'autres ?',
+      answer: 'Absolument ! Vous pouvez partager vos decks avec la communauté et découvrir ceux créés par d\'autres utilisateurs. La collaboration enrichit l\'apprentissage.'
+    },
+    {
+      id: 'export',
+      question: 'Puis-je exporter mes cartes vers Anki ?',
+      answer: 'Oui, vous pouvez exporter vos decks au format .apkg compatible avec Anki. Vos progrès et statistiques sont préservés lors de l\'export.'
+    },
+    {
+      id: 'offline',
+      question: 'Puis-je utiliser Ankilang hors ligne ?',
+      answer: 'Ankilang fonctionne comme une PWA (Progressive Web App). Une fois installée, vous pouvez réviser vos cartes même sans connexion internet.'
+    },
+    {
+      id: 'langues',
+      question: 'Quelles langues sont supportées ?',
+      answer: 'Nous supportons de nombreuses langues : anglais, espagnol, allemand, italien, portugais, japonais, coréen, mandarin, suédois, et bien sûr l\'occitan gratuitement.'
+    },
+    {
+      id: 'confidentialite',
+      question: 'Mes données sont-elles protégées ?',
+      answer: 'Vos données personnelles sont protégées selon le RGPD. Nous ne partageons jamais vos informations personnelles et vous gardez le contrôle total de vos contenus.'
+    },
+    {
+      id: 'communaute',
+      question: 'Comment contribuer à la communauté ?',
+      answer: 'Vous pouvez créer et partager vos decks, proposer des améliorations, signaler des erreurs, ou simplement encourager d\'autres apprenants dans leur parcours.'
+    }
+  ]
+
+  const faqItems = items || defaultItems
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {title && (
@@ -34,11 +81,11 @@ export default function FAQAccordion({ items, title }: FAQAccordionProps) {
       )}
       
       <div className="space-y-2">
-        {items.map((item) => {
+        {faqItems.map((item) => {
           const isOpen = openItems.has(item.id)
           
           return (
-            <div key={item.id} className="da-card da-card--hover da-hover-lift p-4 sm:p-6">
+            <BentoTile key={item.id} className="p-4 sm:p-6">
               <button
                 className="w-full text-left py-3 sm:py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg flex items-center justify-between"
                 aria-expanded={isOpen}
@@ -68,7 +115,7 @@ export default function FAQAccordion({ items, title }: FAQAccordionProps) {
                   {item.answer}
                 </div>
               </div>
-            </div>
+            </BentoTile>
           )
         })}
       </div>

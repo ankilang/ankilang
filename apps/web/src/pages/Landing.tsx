@@ -1,508 +1,662 @@
-import { Link } from 'react-router-dom'
-import { BookOpen, Download, Languages, CheckCircle, ArrowRight } from 'lucide-react'
+import { useEffect } from 'react'
 import PageMeta from '../components/seo/PageMeta'
-import Blob from '../components/da/Blob'
-import MotionSafe from '../components/da/MotionSafe'
+import TextRotatorFade from '../components/typography/TextRotatorFade'
 import FAQAccordion from '../components/landing/FAQAccordion'
+import { BentoGrid, BentoTile, StatementTile, DataTile, FeatureTile } from '../components/landing/Bento'
+import OccitanCallout from '../components/landing/OccitanCallout'
+import CommunityOrbit from '../components/illustrations/CommunityOrbit'
 
-const faqItems = [
-  {
-    id: 'occitan-gratuit',
-    question: 'L\'occitan est-il vraiment gratuit ?',
-    answer: 'Oui ! Toutes les flashcards en occitan sont entièrement gratuites. Nous croyons à l\'importance de préserver les langues régionales et nous offrons un accès illimité à notre contenu occitan.'
-  },
-  {
-    id: 'export-anki',
-    question: 'Comment exporter vers Anki ?',
-    answer: 'Créez vos thèmes dans Ankilang, puis cliquez sur "Exporter" pour télécharger un fichier .apkg. Ouvrez Anki et importez ce fichier - vos cartes apparaîtront automatiquement !'
-  },
-  {
-    id: 'langues-supportees',
-    question: 'Quelles langues sont supportées ?',
-    answer: 'Nous supportons toutes les langues principales (anglais, espagnol, allemand, italien, etc.) ainsi que l\'occitan. De nouvelles langues sont ajoutées régulièrement.'
-  },
-  {
-    id: 'hors-ligne',
-    question: 'Puis-je utiliser Ankilang hors ligne ?',
-    answer: 'Oui ! Ankilang est une PWA (Progressive Web App) qui fonctionne hors ligne. Installez-la sur votre appareil pour un accès permanent à vos flashcards.'
-  },
-  {
-    id: 'cartes-types',
-    question: 'Quels types de cartes puis-je créer ?',
-    answer: 'Deux types : Basic (question/réponse classique) et Cloze (texte à trous). Parfait pour l\'apprentissage des langues avec traduction automatique.'
-  },
-  {
-    id: 'prix',
-    question: 'Quels sont les tarifs ?',
-    answer: 'L\'occitan est gratuit. Pour les autres langues, nous proposons un abonnement Pro avec fonctionnalités avancées. Consultez notre page tarifs pour plus de détails.'
-  }
-]
+
 
 export default function Landing() {
+  // Hook pour reveal au scroll - Version améliorée
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal-up, .reveal-fade, .reveal-scale');
+    
+    // Un seul observer partagé avec seuil 0.2
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-inview');
+          // Optionnel : arrêter d'observer une fois visible
+          // io.unobserve(entry.target);
+        }
+      });
+    }, { 
+      threshold: 0.2,
+      rootMargin: '0px 0px -50px 0px' // Déclenche un peu avant
+    });
+    
+    els.forEach(el => io.observe(el));
+    
+    return () => io.disconnect();
+  }, []);
+
   return (
     <>
-      <PageMeta 
-        title="Ankilang — Flashcards & export Anki (.apkg)" 
-        description="Crée des flashcards Basic & Cloze. Occitan illimité, PWA hors ligne, export direct Anki." 
+      <PageMeta
+        title="Ankilang — Maîtrisez les langues avec des flashcards intelligentes"
+        description="Transformez votre apprentissage des langues avec des flashcards personnalisées. Créez, partagez et maîtrisez les langues efficacement."
       />
-      
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
-        {/* décor d'arrière-plan */}
-        <MotionSafe>
-          <Blob className="w-[380px] h-[380px] left-[-80px] top-[-60px] animate-slowfloat" />
-          <Blob className="da-blob--blue w-[420px] h-[420px] right-[-120px] top-[80px] animate-slowspin" />
-        </MotionSafe>
 
-        <div className="container mx-auto px-4 py-16 relative z-10">
-          {/* Hero Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Contenu texte */}
-            <div className="text-center lg:text-left">
-              <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-                Crée tes flashcards<br />
-                <span className="text-blue-600">Exporte vers Anki</span>
+      {/* Schema.org FAQPage pour SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Comment fonctionne Ankilang ?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ankilang vous permet de créer des flashcards personnalisées pour apprendre les langues. Créez vos cartes, révisez régulièrement et maîtrisez progressivement la langue de votre choix."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Puis-je exporter mes flashcards vers Anki ?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Oui, Ankilang permet d'exporter vos flashcards au format .apkg compatible avec Anki, pour une utilisation hors ligne et une révision optimisée."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Les flashcards en occitan sont-elles gratuites ?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Oui, toutes les flashcards en occitan sont entièrement gratuites et illimitées, pour promouvoir l'apprentissage de cette langue régionale."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Quels types de flashcards puis-je créer ?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ankilang supporte les flashcards Basic (question-réponse) et Cloze (texte à trous), avec possibilité d'ajouter des images et de l'audio."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Puis-je partager mes decks avec la communauté ?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Oui, vous pouvez partager vos decks avec la communauté Ankilang et découvrir ceux créés par d'autres apprenants."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
+      {/* Wrapper principal - Background simple pour laisser place aux auroras */}
+      <main className="relative min-h-screen overflow-hidden bg-white dark:bg-slate-950 pwa-container">
+        
+        {/* Aurora global */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
+          <div className="aurora-layer aurora-slow" />
+        </div>
+        
+        {/* Container principal */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          
+          {/* HERO - 2 tuiles pleine largeur */}
+          <section className="relative py-12 sm:py-16">
+            {/* Aurora hero ciblée */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
+              <div className="aurora-hero" />
+            </div>
+            
+            <BentoGrid className="mb-16 gap-4 sm:gap-6 lg:gap-8 relative z-10">
+            {/* Tuile texte */}
+            <BentoTile colSpan={4} smColSpan={6} lgColSpan={6} className="flex flex-col justify-center reveal-up hero-container">
+              <h1 className="hero-title gradient-title max-w-[26ch] mb-6">
+                Maîtrisez les langues avec des flashcards intelligentes
               </h1>
               
-              <p className="text-lg sm:text-xl text-gray-600 mb-6 max-w-2xl lg:max-w-none">
-                Créez et étudiez des cartes en occitan sans frais, à votre rythme.
+              {/* Animation de langues conservée intégralement */}
+              <p className="hero-subtitle text-gray-700 mb-4">
+                <span>Créez vos flashcards pour apprendre&nbsp;</span>
+                <span className="language-rotator">
+                  <TextRotatorFade
+                    items={[
+                      <strong>l'anglais 🇬🇧</strong>,
+                      <strong>l'espagnol 🇪🇸</strong>,
+                      <strong>le portugais 🇵🇹</strong>,
+                      <strong>le suédois 🇸🇪</strong>,
+                      <strong>l'italien 🇮🇹</strong>,
+                      <strong>l'allemand 🇩🇪</strong>,
+                      <strong>le japonais 🇯🇵</strong>,
+                      <strong>le mandarin 🇨🇳</strong>,
+                      <strong>le coréen 🇰🇷</strong>
+                    ]}
+                    reserveLabel="le mandarin 🇨🇳"
+                    displayMs={3000}
+                    fadeMs={350}
+                    pauseOnHover={false}
+                  />
+                </span>
+                <span className="sr-only">Créez vos flashcards pour apprendre des langues.</span>
+                <span className="sr-only">Langues prises en charge : rotation visuelle</span>
               </p>
 
-              {/* Badge gratuit */}
-              <div className="mb-8">
-                <span
-                  className="inline-flex items-center rounded-full px-3 py-1 text-sm bg-green-100 text-green-800"
-                  aria-label="Les flashcards en occitan sont gratuites"
-                >
-                  Les flashcards en occitan sont gratuites.
+              {/* Badge occitan */}
+              <div className="mb-6">
+                <span className="chip" aria-label="Occitan gratuit">
+                  Les flashcards en occitan sont gratuites
+                  <img 
+                    src="/flags/oc.webp" 
+                    alt="Drapeau occitan" 
+                    className="ml-2 hero-image-sm" 
+                    width="20"
+                    height="16"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </span>
               </div>
 
-              {/* CTA */}
-              <a
-                href="/app/community?lang=oc"
-                data-analytics="lp_oc_free_cta_click"
-                onClick={() => console.log('[analytics] lp_oc_free_cta_click')}
-                className="inline-flex items-center justify-center min-h-[44px] px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              {/* CTAs avec badge animé sur le principal */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href="/app/community?lang=oc"
+                  className="btn-primary cta-shimmer cta-badge hero-cta min-h-[44px] inline-flex items-center justify-center"
+                >
+                  <span>Commencer gratuitement</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </a>
+                <a
+                  href="#how-it-works"
+                  className="btn-secondary hero-cta min-h-[44px] inline-flex items-center justify-center"
+                >
+                  <span>Voir comment ça marche</span>
+                  <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span className="sr-only">Ouvrir la page "Comment ça marche"</span>
+                </a>
+              </div>
+            </BentoTile>
+
+            {/* Tuile visuelle */}
+            <BentoTile colSpan={4} smColSpan={6} lgColSpan={6} className="flex items-center justify-center reveal-up hero-container">
+              <div className="tile-bento bento-accent w-full h-full flex items-center justify-center p-8">
+                <div className="text-center">
+                  <div className="hero-image rounded-2xl bg-gradient-to-br from-violet-500/20 via-fuchsia-500/20 to-blue-500/20 mb-4 flex items-center justify-center">
+                    <svg className="w-12 h-12 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <span className="chip">Illustration à venir</span>
+                </div>
+              </div>
+            </BentoTile>
+            </BentoGrid>
+          </section>
+
+          {/* Construisons Ankilang ensemble - Grille bento variée */}
+          <section className="py-12 sm:py-16">
+            <BentoGrid className="mb-16">
+              {/* Tuile statement - Créer vos decks */}
+              <StatementTile 
+                title="Créer vos decks"
+                subtitle="Concevez des cartes à votre image"
+                colSpan={4} smColSpan={6} lgColSpan={6}
+                className="reveal-up"
               >
-                Explorer l'occitan — Gratuit
-              </a>
-            </div>
+                <p className="mb-4">
+                  Personnalisez vos flashcards avec vos propres exemples, images et audio. 
+                  Structurez vos thèmes selon vos besoins d'apprentissage.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-violet-600 dark:text-violet-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Flashcards Basic et Cloze</span>
+                </div>
+              </StatementTile>
 
-            {/* Visuel hero */}
-            <div className="relative">
-              <img
-                src="/img/hero-ankilang.webp"
-                alt="Interface Ankilang avec flashcards"
-                width={800}
-                height={600}
-                loading="eager"
-                decoding="async"
-                className="w-full h-auto rounded-2xl da-card"
-                onError={(e) => {
-                  // Fallback si l'image manque
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  const fallback = target.nextElementSibling as HTMLElement
-                  if (fallback) fallback.style.display = 'block'
-                }}
-              />
-              {/* fallback si l'image manque */}
-              <div 
-                className="w-full aspect-[4/3] rounded-2xl da-card bg-gradient-to-tr from-indigo-400 to-violet-600 hidden"
-                style={{ display: 'none' }}
-              />
-            </div>
-          </div>
+              {/* Tuile visuelle - Créer vos decks (illustration SVG) */}
+              <BentoTile colSpan={4} smColSpan={6} lgColSpan={6} className="reveal-up reveal-up-delay-1">
+                <img
+                  src="/illustrations/illu-create-decks.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width={560}
+                  height={420}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
+                  draggable="false"
+                  className="w-full h-auto rounded-2xl shadow-soft-lg a11y-focus select-none"
+                />
+              </BentoTile>
 
-          {/* SECTION — Communauté naissante */}
-          <section aria-labelledby="lp-community-title" className="relative py-16 sm:py-20">
-            <div className="container mx-auto px-4">
-              <header className="mx-auto max-w-2xl text-center mb-10 sm:mb-12">
-                <h2 id="lp-community-title" className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-                  Construisons Ankilang ensemble
+              {/* Tuile data - Zéro pub */}
+              <DataTile 
+                metric="Zéro"
+                label="Publicité"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-2"
+                icon={
+                  <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                }
+              />
+
+              {/* Tuile data - Hors-ligne */}
+              <DataTile 
+                metric="100%"
+                label="Hors-ligne"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-3"
+                icon={
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                }
+              />
+
+              {/* Tuile statement - S'inspirer de la communauté */}
+              <StatementTile 
+                title="S'inspirer de la communauté"
+                subtitle="Explorez et adaptez"
+                colSpan={4} smColSpan={6} lgColSpan={6}
+                className="reveal-up reveal-up-delay-4"
+              >
+                <p className="mb-4">
+                  Découvrez les decks créés par d'autres apprenants. 
+                  Adaptez-les à vos besoins et partagez vos propres créations.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>Partage et collaboration</span>
+                </div>
+              </StatementTile>
+
+              {/* Tuile visuelle — Communauté orbitale (SVG animé, zéro CLS) */}
+              <BentoTile colSpan={4} smColSpan={6} lgColSpan={6} className="reveal-up reveal-up-delay-4">
+                <div className="rounded-2xl shadow-soft-lg overflow-hidden">
+                  <CommunityOrbit width={560} height={420} />
+                </div>
+              </BentoTile>
+
+              {/* Tuile data - Langues supportées */}
+              <DataTile 
+                metric="9+"
+                label="Langues"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-4"
+                icon={
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                  </svg>
+                }
+              />
+
+              {/* Tuile data - Occitan gratuit */}
+              <DataTile 
+                metric="100%"
+                label="Occitan gratuit"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-4"
+                icon={
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                }
+              />
+            </BentoGrid>
+          </section>
+
+          {/* Comment ça marche - Grille bento avec statement */}
+          <section className="py-12 sm:py-16">
+            <BentoGrid className="mb-16">
+              {/* Tuile statement - Méthode éprouvée */}
+              <StatementTile 
+                title="Méthode éprouvée"
+                subtitle="Basée sur la science cognitive"
+                colSpan={4} smColSpan={6} lgColSpan={6}
+                className="reveal-scale"
+              >
+                <p className="mb-4">
+                  Notre approche s'appuie sur l'algorithme de répétition espacée, 
+                  scientifiquement prouvé pour optimiser la rétention à long terme.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <span>Répétition espacée intelligente</span>
+                </div>
+              </StatementTile>
+
+              {/* FeatureTile - Étape 1 */}
+              <FeatureTile 
+                icon={
+                  <svg className="w-8 h-8 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                }
+                title="Créez vos cartes"
+                description="Concevez des flashcards personnalisées avec vos propres exemples."
+                colSpan={4} smColSpan={6} lgColSpan={3}
+                className="reveal-up reveal-up-delay-1"
+              />
+
+              {/* FeatureTile - Étape 2 */}
+              <FeatureTile 
+                icon={
+                  <svg className="w-8 h-8 text-fuchsia-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                }
+                title="Révisez régulièrement"
+                description="Révisez vos cartes selon un algorithme intelligent qui s'adapte à votre progression."
+                colSpan={4} smColSpan={6} lgColSpan={3}
+                className="reveal-up reveal-up-delay-2"
+              />
+
+              {/* Tuile visuelle - Étudiez régulièrement (illustration SVG) */}
+              <BentoTile colSpan={4} smColSpan={6} lgColSpan={3} className="reveal-up reveal-up-delay-2">
+                <img
+                  src="/illustrations/illu-study-rhythm.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width={560}
+                  height={420}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
+                  draggable="false"
+                  className="w-full h-auto rounded-2xl shadow-soft-lg a11y-focus select-none"
+                />
+              </BentoTile>
+
+              {/* FeatureTile - Étape 3 */}
+              <FeatureTile 
+                icon={
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+                title="Maîtrisez la langue"
+                description="Progressez de manière durable et atteignez un niveau de maîtrise solide."
+                colSpan={4} smColSpan={6} lgColSpan={3}
+                className="reveal-up reveal-up-delay-3"
+              />
+
+              {/* Tuile visuelle - Maîtrisez la langue (illustration SVG) */}
+              <BentoTile colSpan={4} smColSpan={6} lgColSpan={6} className="reveal-up reveal-up-delay-3">
+                <img
+                  src="/illustrations/illu-mastery-journey.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width={560}
+                  height={420}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
+                  draggable="false"
+                  className="w-full h-auto rounded-2xl shadow-soft-lg a11y-focus select-none"
+                />
+              </BentoTile>
+            </BentoGrid>
+          </section>
+
+          {/* Pourquoi utiliser Ankilang - Grille bento avec statement */}
+          <section className="py-12 sm:py-16">
+            <BentoGrid className="mb-16">
+              {/* Tuile statement - Avantages clés */}
+              <StatementTile 
+                title="Pourquoi choisir Ankilang ?"
+                subtitle="Une approche différente de l'apprentissage"
+                colSpan={4} smColSpan={6} lgColSpan={6}
+                className="reveal-fade"
+              >
+                <p className="mb-4">
+                  Nous combinons la simplicité d'utilisation avec des fonctionnalités avancées 
+                  pour vous offrir une expérience d'apprentissage optimale.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-violet-600 dark:text-violet-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Performance et simplicité</span>
+                </div>
+              </StatementTile>
+
+              {/* DataTile - Personnalisé */}
+              <DataTile 
+                metric="100%"
+                label="Personnalisé"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-1"
+                icon={
+                  <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                }
+              />
+
+              {/* DataTile - Efficace */}
+              <DataTile 
+                metric="×3"
+                label="Plus efficace"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-2"
+                icon={
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                }
+              />
+
+              {/* DataTile - Communautaire */}
+              <DataTile 
+                metric="∞"
+                label="Communautaire"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-3"
+                icon={
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                }
+              />
+
+              {/* DataTile - Fiable */}
+              <DataTile 
+                metric="100%"
+                label="Fiable"
+                colSpan={2} smColSpan={3} lgColSpan={3}
+                className="reveal-up reveal-up-delay-4"
+                icon={
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+              />
+            </BentoGrid>
+          </section>
+
+          {/* =========================================================
+              SECTION — Ankilang soutient l'apprentissage de l'occitan
+              - Tuiles éditoriales avec aurora violet/rose intensifiée
+              - CTA secondaire avec anneau focus visible
+            ========================================================= */}
+          <section
+            aria-labelledby="occitan-support-title"
+            className="relative py-12 sm:py-16"
+          >
+            {/* Aurora occitan intensifiée */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
+              <div className="aurora-occitan" />
+            </div>
+            
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <header className="mb-8 sm:mb-12 reveal-up">
+                <h2 id="occitan-support-title" className="hero-title gradient-title mb-4">
+                  Ankilang soutient l'apprentissage de l'occitan
                 </h2>
-                <p className="mt-3 text-gray-600">
-                  Une communauté d'apprenants qui explore, adapte et publie ses decks au fil du temps.
+                <p className="hero-subtitle text-gray-600 dark:text-gray-400 max-w-3xl">
+                  Préserver une langue, c'est préserver une culture. Nous facilitons l'accès à l'occitan
+                  pour encourager son apprentissage et sa transmission au quotidien.
                 </p>
               </header>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {/* Carte 1 — Créer */}
-                <article className="group relative rounded-2xl p-6 overflow-hidden hover:shadow-md transition-shadow border shadow-sm bg-white/60 supports-[backdrop-filter]:bg-white/40 backdrop-blur border-white/30 dark:bg-slate-900/40 dark:border-slate-700" aria-label="Créer ses decks">
-                  {/* Dégradé subtil en haut */}
-                  <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-400/40 to-fuchsia-400/40"></div>
-                  
-                  <div className="inline-flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 mb-4 group-hover:scale-105 transition-transform">
-                    {/* Icone stylo */}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                      <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-                    </svg>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                {/* Tuile éditoriale - Transmission */}
+                <article className="lg:col-span-2 tile-editorial p-6 sm:p-8 reveal-up">
+                  <div className="flex items-start gap-4 sm:gap-6">
+                    <img
+                      src="/flags/oc.webp"
+                      width="48"
+                      height="48"
+                      alt="Drapeau occitan"
+                      className="shrink-0 rounded-lg hero-image-sm"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                        Favoriser la transmission
+                      </h3>
+                      <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
+                        Nous mettons en avant des ressources et des decks pour faciliter la découverte
+                        et l'étude de l'occitan, afin que chacun puisse contribuer à sa vitalité.
+                        Notre plateforme offre un espace dédié pour partager et découvrir du contenu
+                        authentique en occitan.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <a
+                          href="/app/community?lang=oc"
+                          className="cta-secondary inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
+                          data-analytics="lp_occitan_support_cta"
+                          onClick={() => console.log('[analytics] lp_occitan_support_cta')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <span>Explorer les decks en occitan</span>
+                        </a>
+                        <a
+                          href="/app/themes/new?lang=oc"
+                          className="cta-secondary inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span>Créer un deck occitan</span>
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Créer ses decks</h3>
-                  <p className="mt-2 text-gray-600">
-                    Concevez des cartes à votre image et structurez vos thèmes.
-                  </p>
                 </article>
 
-                {/* Carte 2 — S'inspirer (sans interactions) */}
-                <article className="group relative rounded-2xl p-6 overflow-hidden hover:shadow-md transition-shadow border shadow-sm bg-white/60 supports-[backdrop-filter]:bg-white/40 backdrop-blur border-white/30 dark:bg-slate-900/40 dark:border-slate-700" aria-label="S'inspirer de la communauté">
-                  {/* Dégradé subtil en haut */}
-                  <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-400/40 to-fuchsia-400/40"></div>
-                  
-                  <div className="inline-flex size-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 mb-4 group-hover:scale-105 transition-transform">
-                    {/* Icone boussole */}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                      <circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-2 5-5 2 2-5 5-2z"/>
-                    </svg>
+                {/* Tuile illustration stylisée */}
+                <aside className="tile-editorial p-6 sm:p-8 reveal-up reveal-up-delay-1">
+                  <div className="text-center h-full flex flex-col justify-center">
+                    <div className="occitan-illustration mb-6">
+                      <svg className="w-16 h-16 text-violet-600 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                      Patrimoine culturel
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                      L'occitan est une langue romane parlée dans le sud de la France. 
+                      Nous contribuons à sa préservation en facilitant l'apprentissage.
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-sm text-violet-600 dark:text-violet-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      <span>100% gratuit</span>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">S'inspirer de la communauté</h3>
-                  <p className="mt-2 text-gray-600">
-                    Explorez les decks publiés par d'autres et adaptez-les à vos besoins.
-                  </p>
-                </article>
-
-                {/* Carte 3 — Grandir */}
-                <article className="group relative rounded-2xl p-6 overflow-hidden hover:shadow-md transition-shadow border shadow-sm bg-white/60 supports-[backdrop-filter]:bg-white/40 backdrop-blur border-white/30 dark:bg-slate-900/40 dark:border-slate-700" aria-label="Grandir pas à pas">
-                  {/* Dégradé subtil en haut */}
-                  <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-400/40 to-fuchsia-400/40"></div>
-                  
-                  <div className="inline-flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-4 group-hover:scale-105 transition-transform">
-                    {/* Icone feuille */}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                      <path d="M12 22s8-4 8-10a8 8 0 1 0-16 0c0 6 8 10 8 10z"/><path d="M12 12v10"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Grandir pas à pas</h3>
-                  <p className="mt-2 text-gray-600">
-                    Avancez à votre rythme avec une méthode simple et durable.
-                  </p>
-                </article>
+                </aside>
               </div>
             </div>
           </section>
 
-          {/* Product Tour Section avec illustration */}
-          <div className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                Fonctionnalités principales
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Tout ce dont vous avez besoin pour créer des flashcards efficaces
-              </p>
+          {/* Section Occitan - Tuile large */}
+          <section className="py-12 sm:py-16">
+            <BentoGrid className="mb-16">
+              <BentoTile colSpan={4} smColSpan={6} lgColSpan={12}>
+                <OccitanCallout />
+              </BentoTile>
+            </BentoGrid>
+          </section>
+
+          {/* FAQ longue */}
+          <section className="py-12 sm:py-16">
+            <BentoGrid className="mb-16">
+              <BentoTile colSpan={4} smColSpan={6} lgColSpan={12} className="reveal-up">
+                <div className="tile-bento bento-accent p-6">
+                  <FAQAccordion title="Questions fréquentes" />
+                </div>
+              </BentoTile>
+            </BentoGrid>
+          </section>
+
+          {/* CTA final */}
+          <section className="relative py-12 sm:py-16 safe-area-bottom">
+            {/* Aurora footer intensifiée */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
+              <div className="aurora-footer" />
             </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Illustration */}
-              <div className="order-2 lg:order-1">
-                <img
-                  src="/illustrations/features-overview.webp"
-                  alt="Vue d'ensemble des fonctionnalités Ankilang"
-                  width={800}
-                  height={600}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-auto rounded-2xl da-card"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    const fallback = target.nextElementSibling as HTMLElement
-                    if (fallback) fallback.style.display = 'block'
-                  }}
-                />
-                {/* fallback si l'image manque */}
-                <div 
-                  className="w-full aspect-[4/3] rounded-2xl da-card bg-gradient-to-tr from-blue-400 to-purple-600 hidden"
-                  style={{ display: 'none' }}
-                />
-              </div>
-              
-              {/* Features list */}
-              <div className="order-1 lg:order-2 space-y-6">
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <div className="flex items-start">
-                    <BookOpen className="w-8 h-8 text-blue-600 mr-4 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Flashcards intelligentes
-                      </h3>
-                      <p className="text-gray-600">
-                        Crée des cartes Basic et Cloze avec traduction automatique et prononciation.
-                      </p>
-                    </div>
+            <BentoGrid className="relative z-10">
+              <BentoTile colSpan={4} smColSpan={6} lgColSpan={12} className="reveal-up">
+                <div className="footer-cta p-8 sm:p-12 text-center perf-optimized">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    Prêt à commencer votre apprentissage ?
+                  </h2>
+                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+                    Rejoignez la communauté Ankilang et transformez votre façon d'apprendre les langues.
+                    Commencez gratuitement dès aujourd'hui.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a
+                      href="/app/community?lang=oc"
+                      className="btn-primary cta-shimmer cta-badge cta-final a11y-focus min-h-[48px] inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
+                    >
+                      <span>Commencer gratuitement</span>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </a>
+                    <a
+                      href="/app/themes/new"
+                      className="btn-secondary cta-final a11y-focus min-h-[48px] inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
+                    >
+                      <span>Créer mon premier deck</span>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </a>
+                  </div>
+                  <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Aucune carte de crédit requise</span>
                   </div>
                 </div>
-
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <div className="flex items-start">
-                    <Download className="w-8 h-8 text-green-600 mr-4 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Export Anki direct
-                      </h3>
-                      <p className="text-gray-600">
-                        Exporte tes thèmes en .apkg pour les importer directement dans Anki.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <div className="flex items-start">
-                    <Languages className="w-8 h-8 text-purple-600 mr-4 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Multi-langues
-                      </h3>
-                      <p className="text-gray-600">
-                        Support de nombreuses langues avec DeepL et Revirada pour la traduction.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* How It Works Section avec illustration */}
-          <div className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                Comment ça marche ?
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                En 3 étapes simples, créez vos flashcards et exportez-les vers Anki
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Étapes */}
-              <div className="space-y-6">
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <div className="flex items-start">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <span className="text-xl font-bold text-blue-600">1</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Créez votre thème
-                      </h3>
-                      <p className="text-gray-600">
-                        Choisissez une langue et créez un thème pour organiser vos cartes.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <div className="flex items-start">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <span className="text-xl font-bold text-green-600">2</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Ajoutez vos cartes
-                      </h3>
-                      <p className="text-gray-600">
-                        Créez des cartes Basic ou Cloze avec traduction automatique.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <div className="flex items-start">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <span className="text-xl font-bold text-purple-600">3</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Exportez vers Anki
-                      </h3>
-                      <p className="text-gray-600">
-                        Téléchargez le fichier .apkg et importez-le dans Anki.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Illustration */}
-              <div>
-                <img
-                  src="/illustrations/learning-path.webp"
-                  alt="Parcours d'apprentissage personnalisable"
-                  width={800}
-                  height={600}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-auto rounded-2xl da-card"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    const fallback = target.nextElementSibling as HTMLElement
-                    if (fallback) fallback.style.display = 'block'
-                  }}
-                />
-                {/* fallback si l'image manque */}
-                <div 
-                  className="w-full aspect-[4/3] rounded-2xl da-card bg-gradient-to-tr from-green-400 to-blue-600 hidden"
-                  style={{ display: 'none' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Use Cases Section avec illustration */}
-          <div className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                Pour qui est Ankilang ?
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Adapté à tous les types d'apprenants et de projets
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Illustration */}
-              <div className="order-2 lg:order-1">
-                <img
-                  src="/illustrations/user-personas.webp"
-                  alt="Différents types d'utilisateurs d'Ankilang"
-                  width={800}
-                  height={600}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-auto rounded-2xl da-card"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    const fallback = target.nextElementSibling as HTMLElement
-                    if (fallback) fallback.style.display = 'block'
-                  }}
-                />
-                {/* fallback si l'image manque */}
-                <div 
-                  className="w-full aspect-[4/3] rounded-2xl da-card bg-gradient-to-tr from-orange-400 to-red-600 hidden"
-                  style={{ display: 'none' }}
-                />
-              </div>
-              
-              {/* Personas */}
-              <div className="order-1 lg:order-2 space-y-6">
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    Étudiants en langues
-                  </h3>
-                  <ul className="space-y-2 text-gray-600">
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Vocabulaire et grammaire
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Préparation aux examens
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Révision quotidienne
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    Enseignants
-                  </h3>
-                  <ul className="space-y-2 text-gray-600">
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Création de supports
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Partage avec les élèves
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Suivi des progrès
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="da-card da-card--hover da-hover-lift p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    Passionnés de langues
-                  </h3>
-                  <ul className="space-y-2 text-gray-600">
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Langues régionales
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Apprentissage autonome
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      Communauté partage
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* FAQ Section */}
-          <div className="mt-24">
-            <FAQAccordion items={faqItems} title="Questions fréquentes" />
-          </div>
-
-          {/* CTA Final Section */}
-          <div className="mt-24 text-center">
-            <div className="da-card da-card--hover da-card--accent da-hover-lift p-8 sm:p-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                Prêt à commencer ?
-              </h2>
-              <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-                Rejoignez des milliers d'apprenants qui utilisent Ankilang pour maîtriser les langues
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
-                <a
-                  href="/app/community?lang=oc"
-                  data-analytics="lp_final_oc_cta_click"
-                  onClick={() => console.log('[analytics] lp_final_oc_cta_click')}
-                  className="inline-flex items-center justify-center min-h-[44px] px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                >
-                  Essayer l'occitan gratuit
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </a>
-                
-                <Link 
-                  to="/register"
-                  data-analytics="lp_final_register_cta_click"
-                  onClick={() => console.log('[analytics] lp_final_register_cta_click')}
-                  className="inline-flex items-center justify-center min-h-[44px] px-6 py-3 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                >
-                  Créer un compte
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-16 text-center">
-            <Link 
-              to="/abonnement" 
-              className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
-            >
-              Voir les tarifs →
-            </Link>
-          </div>
+              </BentoTile>
+            </BentoGrid>
+          </section>
         </div>
-      </div>
+      </main>
     </>
   )
 }

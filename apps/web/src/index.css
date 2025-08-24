@@ -1,6 +1,3 @@
-/* Design System Ankilang */
-@import './styles/da.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,6 +8,24 @@
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+  
+  /* Tokens doux pour les tuiles bento */
+  --tile-bg: rgba(255, 255, 255, 0.55);
+  --tile-bg-dark: rgba(15, 23, 42, 0.55);
+  --tile-ring: rgba(0, 0, 0, 0.06);
+  --tile-ring-dark: rgba(255, 255, 255, 0.06);
+  --tile-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  
+  /* Aurora tokens - Palette Radix Colors */
+  --aurora-1: 270deg 85% 62%;  /* Violet */
+  --aurora-2: 310deg 90% 60%;  /* Plum */
+  --aurora-3: 210deg 92% 60%;  /* Indigo */
+  --aurora-4: 142deg 76% 36%;  /* Lime */
+  --aurora-5: 180deg 100% 25%; /* Teal */
+  
+  /* Shadow tokens */
+  --shadow-soft: 0 8px 25px rgba(0, 0, 0, 0.08);
+  --shadow-aurora: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 /* PWA Standalone specific styles */
@@ -18,11 +33,6 @@ body.pwa-standalone {
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
 }
-
-/* TabBar content padding - maintenant géré conditionnellement dans AppLayout */
-/* body.pwa-standalone .app-content {
-  padding-bottom: calc(64px + var(--safe-bottom));
-} */
 
 /* Optimisations pour les devices haute densité */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
@@ -98,43 +108,811 @@ body.pwa-standalone {
 }
 
 @layer components {
-  /* Design tokens pour la cohérence */
-  .da-card {
-    @apply rounded-2xl bg-white border border-gray-200 shadow-sm p-6 overflow-hidden;
+  /* Boutons */
+  .btn-primary { @apply inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors; }
+  .btn-secondary { @apply inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium bg-white/80 text-gray-900 border border-gray-200 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 transition-colors; }
+
+  /* Surfaces / cartes */
+  .surface-glass { @apply rounded-2xl border bg-white/70 backdrop-blur-md border-white/20 shadow-lg shadow-black/5 dark:bg-slate-900/60 dark:border-slate-700/30; }
+  .card-accent { @apply surface-glass transition-transform duration-150 ease-out hover:-translate-y-[1px] hover:shadow-xl; }
+  
+  /* Bento Design - Surfaces discrètes (adoucies) */
+  .surface-quiet { 
+    @apply rounded-2xl backdrop-blur-md;
+    background: var(--tile-bg);
+    box-shadow: var(--tile-shadow);
+  }
+  .dark .surface-quiet {
+    background: var(--tile-bg-dark);
+  }
+  
+  .card-hairline { 
+    @apply rounded-2xl;
+    box-shadow: inset 0 0 0 1px var(--tile-ring), var(--tile-shadow);
+  }
+  .dark .card-hairline {
+    box-shadow: inset 0 0 0 1px var(--tile-ring-dark), var(--tile-shadow);
+  }
+  
+  .shadow-soft { 
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+  .shadow-soft-lg { 
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  }
+  
+  .accent-bar { 
+    @apply w-6 h-1 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full opacity-70 relative;
+  }
+  .accent-bar::before {
+    @apply absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full opacity-40;
+    content: '';
+  }
+  
+  .accent-bar:hover::before,
+  .accent-bar:focus::before {
+    opacity: 0.9;
   }
 
-  .da-card--hover {
-    @apply hover:shadow-md transition-shadow duration-200;
+  /* Titres & chips */
+  .gradient-title {
+    @apply font-semibold tracking-tight;
+    background: linear-gradient(90deg,#7c3aed 0%,#d946ef 40%,#06b6d4 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .chip { @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-900/20 dark:text-violet-200 dark:border-violet-900/40; }
+
+  /* Migration vers DA bento terminée - aliases supprimés */
+
+  /* =========================================================
+     AURORA BENTO - Utilitaires audacieux & premium
+     ========================================================= */
+  
+  /* Aurora layers - Dégradés radiaux multi-couches */
+  .aurora-layer {
+    position: absolute;
+    inset: -15%;
+    filter: blur(60px);
+    opacity: 0.6;
+    background: 
+      radial-gradient(circle at 20% 80%, hsl(var(--aurora-1)) 0%, transparent 60%),
+      radial-gradient(circle at 80% 20%, hsl(var(--aurora-2)) 0%, transparent 60%),
+      radial-gradient(circle at 40% 40%, hsl(var(--aurora-3)) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  
+  /* Aurora animé - Mouvement lent et fluide */
+  .aurora-slow {
+    animation: aurora-float 12s ease-in-out infinite;
+  }
+  
+  @keyframes aurora-float {
+    0%, 100% { 
+      transform: translate(0, 0) scale(1);
+    }
+    33% { 
+      transform: translate(-2%, -3%) scale(1.02);
+    }
+    66% { 
+      transform: translate(3%, -1%) scale(0.98);
+    }
   }
 
-  .da-card--accent {
-    @apply border-blue-200 bg-blue-50/50;
+  /* =========================================================
+     AURORA ZONES CIBLÉES - Nouveau système premium
+     ========================================================= */
+  
+  /* Aurora hero - Zone principale avec intensité modérée */
+  .aurora-hero {
+    position: absolute;
+    inset: -20%;
+    filter: blur(100px);
+    opacity: 0.12;
+    background: 
+      radial-gradient(circle at 25% 75%, hsl(var(--aurora-1)) 0%, transparent 70%),
+      radial-gradient(circle at 75% 25%, hsl(var(--aurora-2)) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* Aurora occitan - Violet/rose plus intense */
+  .aurora-occitan {
+    position: absolute;
+    inset: -20%;
+    filter: blur(140px);
+    opacity: 0.18;
+    background: 
+      radial-gradient(circle at 25% 75%, hsl(var(--aurora-1)) 0%, transparent 60%),
+      radial-gradient(circle at 75% 25%, hsl(var(--aurora-2)) 0%, transparent 60%),
+      radial-gradient(circle at 45% 55%, hsl(var(--aurora-3)) 0%, transparent 55%),
+      radial-gradient(circle at 60% 40%, hsl(var(--aurora-2)) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
   }
 
-  .da-hover-lift {
-    @apply hover:scale-105 transition-transform duration-200;
+  /* =========================================================
+     SECTION OCCITAN - Aurora intensifiée & tuiles éditoriales
+     ========================================================= */
+  
+  /* Aurora occitan intensifiée - Violet/rose dominant */
+  .aurora-occitan {
+    position: absolute;
+    inset: -20%;
+    filter: blur(140px);
+    opacity: 0.18;
+    background: 
+      radial-gradient(circle at 25% 75%, hsl(var(--aurora-1)) 0%, transparent 60%),
+      radial-gradient(circle at 75% 25%, hsl(var(--aurora-2)) 0%, transparent 60%),
+      radial-gradient(circle at 45% 55%, hsl(var(--aurora-3)) 0%, transparent 55%),
+      radial-gradient(circle at 60% 40%, hsl(var(--aurora-2)) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* Tuiles éditoriales - Style distinctif */
+  .tile-editorial {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(24px);
+    box-shadow: var(--shadow-soft);
+    border-radius: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dark .tile-editorial {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+  
+  .tile-editorial::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, 
+      hsl(var(--aurora-1)), 
+      hsl(var(--aurora-2)), 
+      hsl(var(--aurora-3))
+    );
+    opacity: 0.7;
+  }
+  
+  .tile-editorial:hover,
+  .tile-editorial:focus-within {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+  
+  /* CTA secondaire avec anneau focus visible */
+  .cta-secondary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, 
+      rgba(139, 92, 246, 0.1), 
+      rgba(217, 70, 239, 0.1)
+    );
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    color: rgb(139, 92, 246);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .cta-secondary:hover {
+    background: linear-gradient(135deg, 
+      rgba(139, 92, 246, 0.15), 
+      rgba(217, 70, 239, 0.15)
+    );
+    border-color: rgba(139, 92, 246, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  .cta-secondary:focus-visible {
+    outline: none;
+    ring: 2px;
+    ring-color: rgb(139, 92, 246);
+    ring-offset: 2px;
+    ring-offset-color: white;
+  }
+  
+  .dark .cta-secondary:focus-visible {
+    ring-offset-color: rgb(15, 23, 42);
+  }
+  
+  /* Illustration occitan stylisée */
+  .occitan-illustration {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, 
+      rgba(139, 92, 246, 0.1), 
+      rgba(217, 70, 239, 0.1), 
+      rgba(59, 130, 246, 0.1)
+    );
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .occitan-illustration::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, 
+      hsl(var(--aurora-1)), 
+      hsl(var(--aurora-2))
+    );
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.3;
+    animation: occitan-float 6s ease-in-out infinite;
+  }
+  
+  @keyframes occitan-float {
+    0%, 100% { 
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% { 
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+  }
+  
+  /* =========================================================
+     PWA SAFE-AREA & FOOTER CTA - Optimisations finales
+     ========================================================= */
+  
+  /* Aurora footer intensifiée - Clôture impactante */
+  .aurora-footer {
+    position: absolute;
+    inset: -25%;
+    filter: blur(120px);
+    opacity: 0.22;
+    background: 
+      radial-gradient(circle at 15% 85%, hsl(var(--aurora-2)) 0%, transparent 70%),
+      radial-gradient(circle at 85% 15%, hsl(var(--aurora-1)) 0%, transparent 70%),
+      radial-gradient(circle at 50% 50%, hsl(var(--aurora-3)) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* Safe areas PWA - Optimisations iOS */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  }
+  
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  
+  /* Container PWA avec safe areas */
+  .pwa-container {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  
+  /* Footer CTA optimisé */
+  .footer-cta {
+    position: relative;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .dark .footer-cta {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+  
+  .footer-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+  
+  /* CTA final avec badge */
+  .cta-final {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.75rem;
+    font-weight: 700;
+    border-radius: 1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .cta-final:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  .cta-final:active {
+    transform: translateY(0);
+  }
+  
+  /* Optimisations perf/a11y finales */
+  .perf-optimized {
+    will-change: transform;
+    contain: layout style paint;
+  }
+  
+  .a11y-focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  
+  .a11y-focus:focus-visible {
+    outline: 2px solid rgb(139, 92, 246);
+    outline-offset: 2px;
+  }
+  
+  /* Optimisations pour les devices haute densité */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .footer-cta {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  }
+  
+  /* Optimisations pour les écrans tactiles */
+  @media (hover: none) and (pointer: coarse) {
+    .footer-cta:hover {
+      transform: none;
+    }
+    
+    .cta-final:hover {
+      transform: none;
+    }
+  }
+  
+  /* Animation aurora zones - Mouvement plus subtil */
+  .aurora-hero,
+  .aurora-occitan,
+  .aurora-footer {
+    animation: aurora-zone-float 15s ease-in-out infinite;
+  }
+  
+  @keyframes aurora-zone-float {
+    0%, 100% { 
+      transform: translate(0, 0) scale(1);
+    }
+    25% { 
+      transform: translate(-1.5%, -2%) scale(1.01);
+    }
+    50% { 
+      transform: translate(2%, -1%) scale(0.99);
+    }
+    75% { 
+      transform: translate(-1%, 1.5%) scale(1.02);
+    }
   }
 
-  /* Animations respectueuses des préférences utilisateur */
+  /* =========================================================
+     SHIMMER CTA - Badge animé discret
+     ========================================================= */
+  
+  /* Shimmer sur CTA principal */
+  .cta-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .cta-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 100%
+    );
+    animation: shimmer-slow 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes shimmer-slow {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+  }
+
+  /* =========================================================
+     HERO ICONIQUE - Badge animé & optimisations
+     ========================================================= */
+  
+  /* Badge animé discret sur CTA */
+  .cta-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .cta-badge::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: linear-gradient(45deg, 
+      hsl(var(--aurora-1)), 
+      hsl(var(--aurora-2)), 
+      hsl(var(--aurora-3))
+    );
+    border-radius: 50%;
+    animation: badge-pulse 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes badge-pulse {
+    0%, 100% { 
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+  
+  /* Gradient shimmer sur badge */
+  .badge-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .badge-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 100%
+    );
+    animation: badge-shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes badge-shimmer {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+  }
+  
+  /* Optimisations hero - Tailles fixes pour éviter CLS */
+  .hero-container {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .hero-title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  .hero-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
+    line-height: 1.6;
+  }
+  
+  /* Rotateur de langues optimisé */
+  .language-rotator {
+    display: inline-block;
+    min-width: 120px;
+    text-align: left;
+  }
+  
+  /* CTA hero avec badge */
+  .hero-cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hero-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  .hero-cta:active {
+    transform: translateY(0);
+  }
+  
+  /* Optimisation images héro - Tailles explicites */
+  .hero-image {
+    width: 96px;
+    height: 96px;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+  
+  .hero-image-sm {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .hero-image-lg {
+    width: 120px;
+    height: 120px;
+  }
+  
+  /* Tuiles Bento audacieuses */
+  .tile-bento {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-soft);
+    border-radius: 20px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), var(--shadow-soft);
+  }
+  
+  .dark .tile-bento {
+    background: rgba(15, 23, 42, 0.7);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), var(--shadow-soft);
+  }
+  
+  .tile-bento:hover,
+  .tile-bento:focus-within {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-aurora);
+  }
+  
+  /* Accent prismatique */
+  .bento-accent {
+    position: relative;
+  }
+  
+  .bento-accent::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 6px;
+    height: 24px;
+    background: linear-gradient(180deg, 
+      hsl(var(--aurora-2)), 
+      hsl(var(--aurora-1)), 
+      hsl(var(--aurora-3))
+    );
+    border-radius: 3px;
+    opacity: 0.7;
+  }
+  
+  /* Reveal au scroll */
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+  }
+  
+  .reveal-up.is-inview {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* =========================================================
+     MOTION SOYEUSE - Micro-animations améliorées
+     ========================================================= */
+  
+  /* Reveal au scroll - Version améliorée */
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+  }
+  
+  .reveal-up.is-inview {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* Reveal avec délai - Pour les grilles */
+  .reveal-up-delay-1 {
+    transition-delay: 0.1s;
+  }
+  
+  .reveal-up-delay-2 {
+    transition-delay: 0.2s;
+  }
+  
+  .reveal-up-delay-3 {
+    transition-delay: 0.3s;
+  }
+  
+  .reveal-up-delay-4 {
+    transition-delay: 0.4s;
+  }
+  
+  /* Reveal avec fade - Alternative plus subtile */
+  .reveal-fade {
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+  }
+  
+  .reveal-fade.is-inview {
+    opacity: 1;
+  }
+  
+  /* Reveal avec scale - Pour les éléments importants */
+  .reveal-scale {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+  }
+  
+  .reveal-scale.is-inview {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  /* Hover micro-animations - Plus fluides */
+  .tile-bento {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .tile-bento:hover,
+  .tile-bento:focus-within {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-aurora);
+  }
+  
+  /* Boutons avec micro-animations */
+  .btn-primary,
+  .btn-secondary {
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+  }
+  
+  .btn-primary:active,
+  .btn-secondary:active {
+    transform: translateY(0);
+  }
+  
+  /* Marquee fluide (optionnel) */
+  .marquee {
+    display: flex;
+    gap: 1.5rem;
+    will-change: transform;
+    animation: marquee 28s linear infinite;
+  }
+  
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  
+  /* Safe areas pour PWA */
+  .safe-bottom {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+  
+  /* Reduced motion - Désactiver les animations décoratives */
   @media (prefers-reduced-motion: reduce) {
-    .da-hover-lift {
-      @apply hover:scale-100 transition-none;
+    .aurora-slow { 
+      animation: none !important; 
     }
-    
-    .da-card--hover {
-      @apply transition-none;
-    }
-    
-    .tab-button {
-      transition: none !important;
-    }
-    
-    .fab-button {
-      transition: none !important;
-    }
-    
-    .offline-badge {
+    .aurora-hero,
+    .aurora-occitan,
+    .aurora-footer {
       animation: none !important;
+    }
+    .cta-shimmer::before {
+      animation: none !important;
+    }
+    .cta-badge::after {
+      animation: none !important;
+    }
+    .badge-shimmer::before {
+      animation: none !important;
+    }
+    .occitan-illustration::before {
+      animation: none !important;
+    }
+    .marquee { 
+      animation: none !important; 
+    }
+    .reveal-up,
+    .reveal-fade,
+    .reveal-scale {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    .reveal-up-delay-1,
+    .reveal-up-delay-2,
+    .reveal-up-delay-3,
+    .reveal-up-delay-4 {
+      transition-delay: 0s !important;
+    }
+    .tile-bento {
+      transition: none !important;
+    }
+    .tile-bento:hover,
+    .tile-bento:focus-within {
+      transform: none !important;
+    }
+    .tile-editorial:hover,
+    .tile-editorial:focus-within {
+      transform: none !important;
+    }
+    .btn-primary,
+    .btn-secondary {
+      transition: none !important;
+    }
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-primary:active,
+    .btn-secondary:active {
+      transform: none !important;
+    }
+    .hero-cta:hover {
+      transform: none !important;
+    }
+    .cta-secondary:hover {
+      transform: none !important;
+    }
+    .footer-cta:hover {
+      transform: none !important;
+    }
+    .cta-final:hover {
+      transform: none !important;
     }
   }
 
@@ -216,13 +994,7 @@ body.pwa-standalone {
     @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
   }
 
-  .btn--primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
-  }
-
-  .btn--secondary {
-    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500;
-  }
+  /* Note: btn-primary and btn-secondary are now defined above */
 
   .btn--danger {
     @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
@@ -308,23 +1080,15 @@ body.pwa-standalone {
   .fab-button {
     contain: layout style;
   }
+}
 
-  /* Dark mode optimizations */
-  @media (prefers-color-scheme: dark) {
-    .tabbar-backdrop {
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-  }
-
-  /* High contrast mode support */
-  @media (prefers-contrast: high) {
-    .tab-button {
-      border: 2px solid currentColor;
-    }
-    
-    .fab-button {
-      border: 2px solid currentColor;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .animate-breathing, .animate-floatSlow, .animate-glow { animation: none !important; }
+  
+  /* Éléments décoratifs en reduced motion */
+  .accent-bar::before,
+  [aria-hidden="true"] {
+    opacity: 0.9 !important;
+    transition: none !important;
   }
 }
