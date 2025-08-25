@@ -835,27 +835,126 @@
   }
 }
 
-@media (max-width: 640px) {
-  .hero-checklist {
-    flex-direction: column;
-    gap: 2rem;
+/* Responsive Design - Mobile First */
+
+/* Tablette (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .pricing-container,
+  .features-container {
+    padding: 4rem 2rem;
   }
   
-  .hero-checklist-item {
-    font-size: 2.5rem;
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
   }
   
   .hero-title {
-    font-size: 3.5rem;
-    line-height: 1.1;
+    font-size: 5rem;
   }
   
-  .testimonials-minimal {
+  .hero-checklist-item {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Header mobile */
+  .sticky.top-0 {
+    padding: 0.5rem 0;
+  }
+  
+  /* Hero section mobile */
+  .hero-checklist {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .hero-checklist-item {
+    font-size: 2rem;
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+    line-height: 1.1;
+    padding: 0 1rem;
+  }
+  
+  /* Sections de contenu mobile */
+  .pricing-container,
+  .features-container {
+    padding: 3rem 1rem;
+  }
+  
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
+  
+  .feature-icon-enhanced {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1rem;
+  }
+  
+  /* FAQ mobile */
+  .faq-section {
+    padding: 3rem 1rem;
+  }
+  
+  /* Navigation mobile */
+  .mobile-menu {
+    padding: 1rem;
+  }
+  
+  /* Boutons mobile */
+  .cta-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Espacement général mobile */
+  .section-spacing {
     padding: 4rem 1rem;
   }
+}
+
+@media (max-width: 480px) {
+  /* Très petits écrans */
+  .hero-title {
+    font-size: 2.5rem;
+  }
   
-  .testimonial-card {
-    padding: 1.5rem;
+  .hero-checklist-item {
+    font-size: 1.75rem;
+  }
+  
+  .pricing-container,
+  .features-container {
+    padding: 2rem 0.75rem;
+  }
+  
+  .feature-card {
+    padding: 1rem;
+  }
+  
+  .cta-button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
   }
 }
 

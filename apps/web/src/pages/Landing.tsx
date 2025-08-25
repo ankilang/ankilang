@@ -87,7 +87,7 @@ export default function NewLanding() {
         {/* Section 0: Header */}
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50 dark:bg-slate-900/80 dark:border-slate-700/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+            <div className="flex items-center justify-between h-14 sm:h-16">
               
                             {/* Logo Ankilang avec Easter Egg */}
               <EasterEgg>
@@ -98,14 +98,14 @@ export default function NewLanding() {
                   transition={{ duration: 0.6 }}
                 >
                   <AnkilangLogo size="default" animated={true} />
-                  <span className="text-xl font-bold bg-gradient-to-r from-violet-600 to-violet-800 bg-clip-text text-transparent">
+                  <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-violet-600 to-violet-800 bg-clip-text text-transparent">
                     Ankilang
                   </span>
                 </motion.div>
               </EasterEgg>
 
               {/* Navigation Desktop */}
-              <nav className="hidden md:flex items-center gap-8 justify-center flex-1">
+              <nav className="hidden lg:flex items-center gap-6 xl:gap-8 justify-center flex-1">
                 {[
                   { name: 'Fonctionnalités', href: '#features', icon: '⚡' },
                   { name: 'Tarifs', href: '#pricing', icon: '💰' },
@@ -130,7 +130,7 @@ export default function NewLanding() {
               </nav>
 
               {/* Actions Desktop */}
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden lg:flex items-center gap-4">
                 <motion.a
                   href="/auth/login"
                   className="text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200"
@@ -151,8 +151,21 @@ export default function NewLanding() {
                 </motion.a>
               </div>
 
+              {/* Actions Tablette (visible sur md et lg) */}
+              <div className="hidden md:flex lg:hidden items-center gap-3">
+                <motion.a
+                  href="/auth/register"
+                  className="bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-700 hover:to-violet-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.6 }}
+                >
+                  S'inscrire
+                </motion.a>
+              </div>
+
               {/* Menu mobile */}
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400"
@@ -170,7 +183,7 @@ export default function NewLanding() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden border-t border-slate-200 dark:border-slate-700 py-4"
+                className="lg:hidden border-t border-slate-200 dark:border-slate-700 py-4"
               >
                 <div className="flex flex-col gap-4">
                   {[
@@ -214,7 +227,7 @@ export default function NewLanding() {
           {/* Aurora effect */}
           <div className="aurora-hero absolute inset-0 pointer-events-none"></div>
           
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col items-center text-center min-h-screen">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 flex flex-col items-center text-center min-h-screen">
             
             {/* Zone Centrale - Bloc de Texte Principal */}
             <motion.div 
@@ -225,7 +238,7 @@ export default function NewLanding() {
             >
               {/* Titre "Ankilang" avec animation lettre par lettre */}
               <motion.h1 
-                className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-display-bold text-dark-charcoal leading-relaxed mb-4 overflow-visible pb-2"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-display-bold text-dark-charcoal leading-relaxed mb-4 overflow-visible pb-2"
                 variants={{
                   hidden: { opacity: 0 },
                   visible: {
