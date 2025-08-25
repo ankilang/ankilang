@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, Link, NavLink } from 'react-router-dom'
-import { BookOpen, Settings, User, Menu, X } from 'lucide-react'
+import { Settings, User, Menu, X } from 'lucide-react'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import TabBar from '../navigation/TabBar'
@@ -30,10 +30,14 @@ export default function AppLayout() {
             <div className="flex items-center gap-4 sm:gap-6">
               {/* Logo */}
               <Link to="/app" className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-pastel-purple to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <BookOpen className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-gradient-to-br from-violet-600 via-violet-700 to-violet-800 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden">
+                  {/* Effet de brillance */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                  <span className="text-white font-bold text-lg relative z-10">A</span>
+                  {/* Petit point d'accent */}
+                  <div className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-yellow-400 rounded-full" />
                 </div>
-                <span className="font-playfair text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                <span className="font-playfair text-xl font-bold bg-gradient-to-r from-violet-600 to-violet-800 bg-clip-text text-transparent">
                   Ankilang
                 </span>
               </Link>
