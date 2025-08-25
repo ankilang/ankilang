@@ -18,6 +18,12 @@ export default defineConfig({
         background_color: '#ffffff',
         icons: [
           {
+            src: '/ankilang-logo.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          },
+          {
             src: '/icon-192.png',
             sizes: '192x192',
             type: 'image/png'

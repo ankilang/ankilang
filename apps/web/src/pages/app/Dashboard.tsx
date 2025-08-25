@@ -32,16 +32,16 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="font-playfair text-5xl md:text-6xl font-bold text-dark-charcoal mb-4">
+              <h1 className="font-playfair text-4xl sm:text-5xl md:text-6xl font-bold text-dark-charcoal mb-4">
                 Bonjour, <span className="bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">Marie</span> 👋
               </h1>
               
-              <p className="font-inter text-xl text-dark-charcoal/70 mb-12 max-w-3xl">
+              <p className="font-inter text-lg sm:text-xl text-dark-charcoal/70 mb-8 sm:mb-12 max-w-3xl">
                 Continuez votre progression sereinement. Voici un aperçu de votre activité.
               </p>
               
               {/* Statistiques - Plus grandes et mieux espacées */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl">
                 <StatCard number={totalThemes} label="Thèmes créés" color="purple" delay={0.2} />
                 <StatCard number={totalCards} label="Cartes totales" color="green" delay={0.4} />
                 <StatCard number={avgCards} label="Moyenne/thème" color="rose" delay={0.6} />
@@ -64,7 +64,7 @@ export default function Dashboard() {
               Actions rapides
             </motion.h2>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
               <ActionCard 
                 icon={Plus} 
                 title="Nouveau thème" 
