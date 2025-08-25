@@ -171,15 +171,13 @@ export default function AppLayout() {
       <main 
         className={`app-content ${isStandalone ? 'pt-0' : ''}`}
         style={{
-          // Padding bas conditionnel pour éviter que le contenu soit masqué par la TabBar
           paddingBottom: isTabBarVisible 
             ? 'calc(64px + var(--safe-bottom))' 
             : '0'
         }}
       >
-        <div className="container mx-auto px-4 py-6">
-          <Outlet />
-        </div>
+        {/* Supprimer le container mx-auto px-4 py-6 pour laisser les pages gérer leur propre layout */}
+        <Outlet />
       </main>
 
       {/* TabBar - affichée uniquement en PWA standalone et sur les routes appropriées */}
