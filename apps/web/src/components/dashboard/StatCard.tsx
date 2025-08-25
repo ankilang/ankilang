@@ -39,10 +39,11 @@ export default function StatCard({ number, label, color, delay = 0 }: StatCardPr
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay }}
-      className={`${colorClasses[color]} rounded-2xl p-6 border-2 shadow-lg`}
+      whileHover={{ y: -4, scale: 1.02 }}
+      className={`${colorClasses[color]} rounded-3xl p-8 border-2 shadow-xl hover:shadow-2xl transition-all duration-300`}
     >
       <motion.div 
-        className="font-inter text-3xl font-bold text-dark-charcoal mb-1"
+        className="font-inter text-5xl md:text-6xl font-bold text-dark-charcoal mb-2"
         key={count}
         initial={{ scale: 1.1 }}
         animate={{ scale: 1 }}
@@ -50,7 +51,7 @@ export default function StatCard({ number, label, color, delay = 0 }: StatCardPr
       >
         {count}
       </motion.div>
-      <div className="font-inter text-sm font-medium text-dark-charcoal/70">
+      <div className="font-inter text-lg font-medium text-dark-charcoal/70">
         {label}
       </div>
     </motion.div>
