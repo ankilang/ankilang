@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ankilang Design System - Variables CSS */
+:root {
+  --pastel-green: #D4E2D4;
+  --pastel-purple: #D2B4DE; 
+  --pastel-rose: #E6B0AA;
+  --dark-charcoal: #333333;
+  --soft-white: #FAFAFA;
+  --gradient-purple: linear-gradient(135deg, #D2B4DE 0%, #C8A2C8 100%);
+  --gradient-green: linear-gradient(135deg, #D4E2D4 0%, #C1D5C1 100%);
+  --gradient-rose: linear-gradient(135deg, #E6B0AA 0%, #D99B94 100%);
+}
+
 /* Configuration des polices par défaut */
 @layer base {
   html {
@@ -100,6 +112,33 @@
   
   .bg-dark-charcoal {
     background-color: #333333;
+  }
+  
+  /* Classes utilitaires pour la DA Ankilang */
+  .bg-pastel-green { background-color: var(--pastel-green); }
+  .bg-pastel-purple { background-color: var(--pastel-purple); }
+  .bg-pastel-rose { background-color: var(--pastel-rose); }
+  .text-dark-charcoal { color: var(--dark-charcoal); }
+  .border-pastel-green { border-color: var(--pastel-green); }
+  .border-pastel-purple { border-color: var(--pastel-purple); }
+  .border-pastel-rose { border-color: var(--pastel-rose); }
+
+  /* Typographie Ankilang */
+  .font-playfair { font-family: 'Playfair Display', serif; }
+  .font-inter { font-family: 'Inter', sans-serif; }
+
+  /* Animations signature */
+  .stat-counter {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .action-card {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .action-card:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(51, 51, 51, 0.15);
   }
 }
 
