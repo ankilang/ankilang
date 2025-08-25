@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet, Link, NavLink } from 'react-router-dom'
 import { Settings, User, Menu, X } from 'lucide-react'
+import AnkilangLogo from '../ui/AnkilangLogo'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import TabBar from '../navigation/TabBar'
@@ -30,13 +31,7 @@ export default function AppLayout() {
             <div className="flex items-center gap-4 sm:gap-6">
               {/* Logo */}
               <Link to="/app" className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-violet-600 via-violet-700 to-violet-800 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden">
-                  {/* Effet de brillance */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
-                  <span className="text-white font-bold text-lg relative z-10">A</span>
-                  {/* Petit point d'accent */}
-                  <div className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-yellow-400 rounded-full" />
-                </div>
+                <AnkilangLogo size="default" animated={true} />
                 <span className="font-playfair text-xl font-bold bg-gradient-to-r from-violet-600 to-violet-800 bg-clip-text text-transparent">
                   Ankilang
                 </span>
