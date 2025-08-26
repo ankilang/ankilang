@@ -12,7 +12,11 @@
     "lint": "echo 'Lint configuration à venir'",
     "qa:lh": "node scripts/run-lighthouse.mjs",
     "qa:shots": "node scripts/screenshots.mjs",
-    "qa:diff": "node scripts/diff.mjs"
+    "qa:diff": "node scripts/diff.mjs",
+    "test:pwa": "node scripts/test-pwa.mjs",
+    "validate:pwa": "node scripts/validate-pwa.mjs",
+    "checklist:pwa": "node scripts/pwa-checklist.mjs",
+    "deploy:pwa": "node scripts/deploy-pwa.mjs"
   },
   "dependencies": {
     "@ankilang/shared": "workspace:*",

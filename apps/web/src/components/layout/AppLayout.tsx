@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { Outlet, Link, NavLink } from 'react-router-dom'
 import { Settings, User, Menu, X } from 'lucide-react'
 import AnkilangLogo from '../ui/AnkilangLogo'
+import SafeArea from '../ui/SafeArea'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import TabBar from '../navigation/TabBar'
 
 export default function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { isStandalone } = usePWAContext()
+  const { isInstalled } = usePWAContext()
   const { isVisible: isTabBarVisible } = useTabBarVisibility()
 
   const toggleMobileMenu = () => {
@@ -20,12 +21,13 @@ export default function AppLayout() {
   }
 
   // Déterminer si le header doit être masqué/compacté
-  const shouldHideHeader = isStandalone && isTabBarVisible
+  const shouldHideHeader = isInstalled && isTabBarVisible
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header - masqué en PWA mobile standalone quand TabBar visible */}
-      <header className={`bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${shouldHideHeader ? 'hidden md:block' : ''}`}>
+      <SafeArea top={true}>
+        <header className={`bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${shouldHideHeader ? 'hidden md:block' : ''}`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 sm:gap-6">
@@ -160,11 +162,12 @@ export default function AppLayout() {
             </div>
           </div>
         )}
-      </header>
+        </header>
+      </SafeArea>
 
       {/* Contenu principal avec padding conditionnel pour TabBar */}
       <main 
-        className={`app-content ${isStandalone ? 'pt-0' : ''}`}
+        className={`app-content ${isInstalled ? 'pt-0' : ''}`}
         style={{
           paddingBottom: isTabBarVisible 
             ? 'calc(64px + var(--safe-bottom))' 
@@ -175,8 +178,8 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      {/* TabBar - affichée uniquement en PWA standalone et sur les routes appropriées */}
-      {isStandalone && <TabBar />}
+      {/* TabBar - affichée uniquement en PWA installée et sur les routes appropriées */}
+      {isInstalled && <TabBar />}
     </div>
   )
 }

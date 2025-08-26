@@ -5,6 +5,9 @@ import PublicLayout from './components/layout/PublicLayout'
 import AppLayout from './components/layout/AppLayout'
 import AuthLayout from './components/layout/AuthLayout'
 import LegalLayout from './components/layout/LegalLayout'
+import InstallPrompt from './components/ui/InstallPrompt'
+import UpdatePrompt from './components/ui/UpdatePrompt'
+import PWATestPanel from './components/ui/PWATestPanel'
 import Landing from './pages/Landing'
 import Dashboard from './pages/app/Dashboard'
 import Abonnement from './pages/Abonnement'
@@ -42,6 +45,12 @@ function App() {
   return (
     <PWAProvider>
       <Routes>
+        {/* Barre d'installation PWA */}
+        <InstallPrompt />
+        {/* Notification de mise à jour PWA */}
+        <UpdatePrompt />
+        {/* Panneau de test PWA (dev uniquement) */}
+        <PWATestPanel />
         {/* Routes publiques */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Landing />} />

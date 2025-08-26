@@ -1,143 +1,212 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react';
 
 interface PWAState {
-  isStandalone: boolean
-  isInstalled: boolean
+  isInstalled: boolean;
+  isOnline: boolean;
+  hasUpdate: boolean;
+  isInstalling: boolean;
+  swRegistration: ServiceWorkerRegistration | null;
 }
 
-export function usePWA(): PWAState {
-  const [pwaState, setPwaState] = useState<PWAState>({
-    isStandalone: false,
-    isInstalled: false
-  })
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
-  // Détection combinée PWA standalone
-  const detectStandalone = useCallback((): boolean => {
-    // 1. Détection principale : display-mode standalone
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      const standaloneQuery = window.matchMedia('(display-mode: standalone)')
-      if (standaloneQuery.matches) {
-        return true
-      }
-    }
+export function usePWA() {
+  const [state, setState] = useState<PWAState>({
+    isInstalled: false,
+    isOnline: navigator.onLine,
+    hasUpdate: false,
+    isInstalling: false,
+    swRegistration: null
+  });
 
-    // 2. Détection iOS : navigator.standalone
-    if (typeof navigator !== 'undefined' && 'standalone' in navigator) {
-      return navigator.standalone === true
-    }
+  const [beforeInstallPrompt, setBeforeInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
-    // 3. Fallback : User Agent iOS (dernier recours)
-    if (typeof navigator !== 'undefined' && navigator.userAgent) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      const isStandalone = navigator.userAgent.includes('standalone')
-      if (isIOS && isStandalone) {
-        return true
-      }
-    }
-
-    return false
-  }, [])
-
-  // Détection installation PWA
-  const detectInstalled = useCallback((): boolean => {
-    // Vérifier si l'app est installée via display-mode
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      const standaloneQuery = window.matchMedia('(display-mode: standalone)')
-      const fullscreenQuery = window.matchMedia('(display-mode: fullscreen)')
-      const minimalUIQuery = window.matchMedia('(display-mode: minimal-ui)')
-      
-      return standaloneQuery.matches || fullscreenQuery.matches || minimalUIQuery.matches
-    }
-
-    return false
-  }, [])
-
-  // Mise à jour de l'état PWA
-  const updatePWAState = useCallback(() => {
-    const isStandalone = detectStandalone()
-    const isInstalled = detectInstalled()
-    
-    setPwaState({ isStandalone, isInstalled })
-    
-    // Synchroniser la classe CSS sur <body>
-    if (typeof document !== 'undefined') {
-      const body = document.body
-      if (isStandalone) {
-        body.classList.add('pwa-standalone')
-      } else {
-        body.classList.remove('pwa-standalone')
-      }
-    }
-  }, [detectStandalone, detectInstalled])
-
+  // Vérifier si l'app est installée
   useEffect(() => {
-    // État initial
-    updatePWAState()
-
-    // Écouteurs d'événements pour les changements
-    const handleAppInstalled = () => {
-      console.log('[PWA] App installed')
-      updatePWAState()
-    }
-
-    const handleDisplayModeChange = (event: MediaQueryListEvent) => {
-      console.log('[PWA] Display mode changed:', event.media, event.matches)
-      updatePWAState()
-    }
-
-    const handleOrientationChange = () => {
-      // Corriger les glitchs Android post-rotation
-      setTimeout(updatePWAState, 100)
-    }
-
-    const handleVisualViewportResize = () => {
-      // Corriger les glitchs Android post-rotation
-      setTimeout(updatePWAState, 100)
-    }
-
-    // Ajouter les écouteurs
-    if (typeof window !== 'undefined') {
-      // Installation PWA
-      window.addEventListener('appinstalled', handleAppInstalled)
+    const checkInstallation = () => {
+      const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                         (window.navigator as any).standalone === true;
       
-      // Changement de mode d'affichage
-      const standaloneQuery = window.matchMedia('(display-mode: standalone)')
-      const fullscreenQuery = window.matchMedia('(display-mode: fullscreen)')
-      const minimalUIQuery = window.matchMedia('(display-mode: minimal-ui)')
-      
-      standaloneQuery.addEventListener('change', handleDisplayModeChange)
-      fullscreenQuery.addEventListener('change', handleDisplayModeChange)
-      minimalUIQuery.addEventListener('change', handleDisplayModeChange)
-      
-      // Correction des glitchs Android
-      window.addEventListener('orientationchange', handleOrientationChange)
-      
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', handleVisualViewportResize)
-      }
-    }
+      setState(prev => ({ ...prev, isInstalled }));
+    };
 
-    // Cleanup
+    checkInstallation();
+    window.addEventListener('appinstalled', checkInstallation);
+    
     return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('appinstalled', handleAppInstalled)
-        
-        const standaloneQuery = window.matchMedia('(display-mode: standalone)')
-        const fullscreenQuery = window.matchMedia('(display-mode: fullscreen)')
-        const minimalUIQuery = window.matchMedia('(display-mode: minimal-ui)')
-        
-        standaloneQuery.removeEventListener('change', handleDisplayModeChange)
-        fullscreenQuery.removeEventListener('change', handleDisplayModeChange)
-        minimalUIQuery.removeEventListener('change', handleDisplayModeChange)
-        
-        window.removeEventListener('orientationchange', handleOrientationChange)
-        
-        if (window.visualViewport) {
-          window.visualViewport.removeEventListener('resize', handleVisualViewportResize)
-        }
+      window.removeEventListener('appinstalled', checkInstallation);
+    };
+  }, []);
+
+  // Gérer l'état en ligne/hors ligne
+  useEffect(() => {
+    const handleOnline = () => setState(prev => ({ ...prev, isOnline: true }));
+    const handleOffline = () => setState(prev => ({ ...prev, isOnline: false }));
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Capturer l'événement beforeinstallprompt
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setBeforeInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  // Gérer les mises à jour du service worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        setState(prev => ({ ...prev, swRegistration: registration }));
+
+        // Écouter les mises à jour
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setState(prev => ({ ...prev, hasUpdate: true }));
+              }
+            });
+          }
+        });
+
+        // Écouter les messages du service worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          const { type } = event.data;
+          
+          switch (type) {
+            case 'UPDATE_AVAILABLE':
+              setState(prev => ({ ...prev, hasUpdate: true }));
+              break;
+            case 'UPDATE_READY':
+              setState(prev => ({ ...prev, hasUpdate: true }));
+              break;
+          }
+        });
+      });
+    }
+  }, []);
+
+  // Fonction pour installer l'app
+  const installApp = useCallback(async () => {
+    if (!beforeInstallPrompt) {
+      console.log('beforeInstallPrompt non disponible');
+      return false;
+    }
+
+    setState(prev => ({ ...prev, isInstalling: true }));
+
+    try {
+      await beforeInstallPrompt.prompt();
+      const { outcome } = await beforeInstallPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('Utilisateur a accepté l\'installation');
+        setBeforeInstallPrompt(null);
+        setState(prev => ({ ...prev, isInstalling: false, isInstalled: true }));
+        return true;
+      } else {
+        console.log('Utilisateur a refusé l\'installation');
+        setState(prev => ({ ...prev, isInstalling: false }));
+        return false;
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'installation:', error);
+      setState(prev => ({ ...prev, isInstalling: false }));
+      return false;
+    }
+  }, [beforeInstallPrompt]);
+
+  // Fonction pour mettre à jour le service worker
+  const updateSW = useCallback(async () => {
+    if (state.swRegistration) {
+      try {
+        await state.swRegistration.update();
+        setState(prev => ({ ...prev, hasUpdate: false }));
+        return true;
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour:', error);
+        return false;
       }
     }
-  }, [updatePWAState])
+    return false;
+  }, [state.swRegistration]);
 
-  return pwaState
+  // Fonction pour forcer la mise à jour
+  const forceUpdate = useCallback(async () => {
+    if (state.swRegistration && state.swRegistration.waiting) {
+      state.swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      
+      // Recharger la page après la mise à jour
+      window.location.reload();
+      return true;
+    }
+    return false;
+  }, [state.swRegistration]);
+
+  // Fonction pour effacer le cache
+  const clearCache = useCallback(async () => {
+    if (state.swRegistration) {
+      try {
+        await state.swRegistration.active?.postMessage({ type: 'CLEAR_CACHE' });
+        return true;
+      } catch (error) {
+        console.error('Erreur lors de l\'effacement du cache:', error);
+        return false;
+      }
+    }
+    return false;
+  }, [state.swRegistration]);
+
+  // Fonction pour obtenir la version du service worker
+  const getSWVersion = useCallback(async () => {
+    if (state.swRegistration) {
+      try {
+        const channel = new MessageChannel();
+        const versionPromise = new Promise<string>((resolve) => {
+          channel.port1.onmessage = (event) => {
+            resolve(event.data.version);
+          };
+        });
+
+        state.swRegistration.active?.postMessage(
+          { type: 'GET_VERSION' },
+          [channel.port2]
+        );
+
+        return await versionPromise;
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la version:', error);
+        return null;
+      }
+    }
+    return null;
+  }, [state.swRegistration]);
+
+  return {
+    ...state,
+    beforeInstallPrompt: !!beforeInstallPrompt,
+    installApp,
+    updateSW,
+    forceUpdate,
+    clearCache,
+    getSWVersion
+  };
 }

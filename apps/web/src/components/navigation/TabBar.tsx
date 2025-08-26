@@ -122,14 +122,14 @@ const TabButton = memo(({ item, isActive, onClick, isCompact }: {
 TabButton.displayName = 'TabButton'
 
 function TabBar() {
-  const { isStandalone } = usePWAContext()
+  const { isInstalled } = usePWAContext()
   const { isTabActive, navigateToTab } = useTabNavigation()
   const isOnline = useOnlineStatus()
   const { isVisible, isCompact, isKeyboardOpen } = useTabBarVisibility()
   const navRef = useRef<HTMLElement>(null)
 
-  // Ne pas afficher la TabBar si pas en mode PWA standalone
-  if (!isStandalone) {
+  // Ne pas afficher la TabBar si pas en mode PWA installée
+  if (!isInstalled) {
     return null
   }
 

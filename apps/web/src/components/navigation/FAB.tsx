@@ -36,14 +36,14 @@ interface FABProps {
 }
 
 const FAB = memo(({ className = '' }: FABProps) => {
-  const { isStandalone } = usePWAContext()
+  const { isInstalled } = usePWAContext()
   const location = useLocation()
   const navigate = useNavigate()
   const isOnline = useOnlineStatus()
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  // Ne pas afficher le FAB si pas en mode PWA standalone
-  if (!isStandalone) {
+  // Ne pas afficher le FAB si pas en mode PWA installée
+  if (!isInstalled) {
     return null
   }
 
