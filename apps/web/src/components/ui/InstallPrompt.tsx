@@ -19,11 +19,18 @@ export default function InstallPrompt({ className = '' }: InstallPromptProps) {
   const [isAndroid, setIsAndroid] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Détection de la plateforme
+  // Détection de la plateforme et du mobile
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
     const isAndroidDevice = /android/.test(userAgent);
+    const isMobile = /mobile|android|iphone|ipad|ipod|blackberry|windows phone/.test(userAgent);
+    
+    // Ne s'afficher que sur mobile
+    if (!isMobile) {
+      setIsVisible(false);
+      return;
+    }
     
     setIsIOS(isIOSDevice);
     setIsAndroid(isAndroidDevice);
