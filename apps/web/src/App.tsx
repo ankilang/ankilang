@@ -44,13 +44,13 @@ const LoadingFallback = () => (
 function App() {
   return (
     <PWAProvider>
+      {/* Barre d'installation PWA */}
+      <InstallPrompt />
+      {/* Notification de mise à jour PWA */}
+      <UpdatePrompt />
+      {/* Panneau de test PWA (dev uniquement) */}
+      <PWATestPanel />
       <Routes>
-        {/* Barre d'installation PWA */}
-        <InstallPrompt />
-        {/* Notification de mise à jour PWA */}
-        <UpdatePrompt />
-        {/* Panneau de test PWA (dev uniquement) */}
-        <PWATestPanel />
         {/* Routes publiques */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Landing />} />
