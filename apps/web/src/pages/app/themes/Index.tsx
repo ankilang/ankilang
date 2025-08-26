@@ -33,22 +33,24 @@ export default function ThemesIndex() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="bg-gradient-to-br from-pastel-green via-pastel-purple/30 to-pastel-rose/20 relative overflow-hidden"
+          style={{ paddingTop: 'var(--safe-top, 0px)' }}
         >
           {/* Éléments décoratifs */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-pastel-purple/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-pastel-rose/20 rounded-full blur-2xl" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-pastel-purple/20 rounded-full blur-3xl sm:w-64 sm:h-64" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-pastel-rose/20 rounded-full blur-2xl sm:w-48 sm:h-48" />
           
-          <div className="relative container mx-auto px-6 py-12">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="relative container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6">
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
+                className="flex-1"
               >
-                <h1 className="font-display text-4xl lg:text-5xl font-bold text-dark-charcoal mb-3">
+                <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-dark-charcoal mb-2 sm:mb-3">
                   Ma Bibliothèque
                 </h1>
-                <p className="font-sans text-lg text-dark-charcoal/70 max-w-2xl">
+                <p className="font-sans text-base sm:text-lg text-dark-charcoal/70 max-w-2xl">
                   Organisez vos flashcards par thèmes et langues. Créez, partagez et apprenez efficacement.
                 </p>
               </motion.div>
@@ -57,16 +59,16 @@ export default function ThemesIndex() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="flex flex-col sm:flex-row items-center gap-4"
+                className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto"
               >
                 {/* Statistiques rapides */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <div className="text-center">
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ duration: 0.6, delay: 0.6 }}
-                      className="text-2xl font-bold text-dark-charcoal font-display"
+                      className="text-xl sm:text-2xl font-bold text-dark-charcoal font-display"
                     >
                       {mockThemes.length}
                     </motion.div>
@@ -77,7 +79,7 @@ export default function ThemesIndex() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ duration: 0.6, delay: 0.7 }}
-                      className="text-2xl font-bold text-dark-charcoal font-display"
+                      className="text-xl sm:text-2xl font-bold text-dark-charcoal font-display"
                     >
                       {mockThemes.reduce((sum, theme) => sum + theme.cardCount, 0)}
                     </motion.div>
@@ -88,12 +90,13 @@ export default function ThemesIndex() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto"
                 >
                   <Link 
                     to="/app/themes/new" 
-                    className="btn-primary inline-flex items-center gap-2 shadow-xl"
+                    className="btn-primary inline-flex items-center gap-2 shadow-xl w-full sm:w-auto justify-center text-sm sm:text-base px-4 sm:px-6 py-3 sm:py-4"
                   >
-                    <Plus size={18} />
+                    <Plus size={16} className="sm:w-5 sm:h-5" />
                     Nouveau thème
                   </Link>
                 </motion.div>
@@ -107,17 +110,17 @@ export default function ThemesIndex() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="container mx-auto px-6 -mt-6 relative z-10"
+          className="container mx-auto px-4 sm:px-6 -mt-6 relative z-10"
         >
-          <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-end">
               {/* Recherche */}
               <div className="lg:col-span-2">
-                <label htmlFor="search" className="label-field">
+                <label htmlFor="search" className="label-field text-sm sm:text-base">
                   Rechercher dans vos thèmes
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-charcoal/40 w-5 h-5" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-dark-charcoal/40 w-4 h-4 sm:w-5 sm:h-5" />
                   <motion.input
                     whileFocus={{ scale: 1.02 }}
                     id="search"
@@ -125,24 +128,24 @@ export default function ThemesIndex() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Rechercher par nom ou tags..."
-                    className="input-field pl-12 text-lg"
+                    className="input-field pl-10 sm:pl-12 text-base sm:text-lg"
                   />
                 </div>
               </div>
 
               {/* Filtre langue */}
               <div>
-                <label htmlFor="language" className="label-field">
+                <label htmlFor="language" className="label-field text-sm sm:text-base">
                   Langue cible
                 </label>
                 <div className="relative">
-                  <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-charcoal/40 w-5 h-5" />
+                  <Filter className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-dark-charcoal/40 w-4 h-4 sm:w-5 sm:h-5" />
                   <motion.select
                     whileFocus={{ scale: 1.02 }}
                     id="language"
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="input-field pl-12"
+                    className="input-field pl-10 sm:pl-12 text-base sm:text-lg"
                   >
                     <option value="">Toutes les langues</option>
                     {LANGUAGES.map((language) => (
@@ -155,21 +158,21 @@ export default function ThemesIndex() {
               </div>
             </div>
 
-            {/* Barre de résultats */}
+                        {/* Barre de résultats */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="mt-6 pt-6 border-t border-gray-100"
+              className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="font-sans text-dark-charcoal font-medium">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <span className="font-sans text-dark-charcoal font-medium text-sm sm:text-base">
                     {filteredThemes.length} thème{filteredThemes.length > 1 ? 's' : ''} 
                     {selectedLanguage && ` en ${getLanguageLabel(selectedLanguage)}`}
                   </span>
                   {filteredThemes.length > 0 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                       {[...new Set(filteredThemes.map(t => t.targetLang))].map(lang => (
                         <span key={lang} className="px-2 py-1 bg-pastel-purple/20 text-purple-700 rounded-full text-xs font-medium">
                           {getLanguageLabel(lang)}
@@ -187,10 +190,10 @@ export default function ThemesIndex() {
                       setSearchTerm('')
                       setSelectedLanguage('')
                     }}
-                    className="px-4 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 transition-colors rounded-xl font-medium font-sans"
+                    className="px-3 sm:px-4 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 transition-colors rounded-xl font-medium font-sans text-sm sm:text-base self-start sm:self-auto"
                   >
                     Effacer les filtres
-                                      </motion.button>
+                  </motion.button>
                 )}
               </div>
             </motion.div>
@@ -198,21 +201,21 @@ export default function ThemesIndex() {
         </motion.section>
 
         {/* Grid de Thèmes en Mosaïque */}
-        <main className="container mx-auto px-6 py-12">
+        <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
           {filteredThemes.length === 0 ? (
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6 }}
-              className="text-center py-20"
+              className="text-center py-12 sm:py-20"
             >
-              <div className="w-24 h-24 bg-gradient-to-br from-pastel-purple to-purple-300 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <Search className="w-12 h-12 text-white" />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-pastel-purple to-purple-300 rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
+                <Search className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
               </div>
-              <h3 className="font-display text-2xl font-bold text-dark-charcoal mb-3">
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-dark-charcoal mb-2 sm:mb-3">
                 {searchTerm || selectedLanguage ? 'Aucun thème trouvé' : 'Votre bibliothèque vous attend'}
               </h3>
-              <p className="font-sans text-dark-charcoal/70 mb-8 max-w-md mx-auto">
+              <p className="font-sans text-dark-charcoal/70 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base px-4 sm:px-0">
                 {searchTerm || selectedLanguage 
                   ? 'Essayez de modifier vos critères de recherche ou explorez d\'autres langues.'
                   : 'Commencez votre aventure d\'apprentissage en créant votre premier thème de flashcards.'
@@ -224,9 +227,9 @@ export default function ThemesIndex() {
               >
                 <Link 
                   to="/app/themes/new" 
-                  className="btn-primary inline-flex items-center gap-3 text-lg px-8 py-4 shadow-xl"
+                  className="btn-primary inline-flex items-center gap-2 sm:gap-3 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-xl"
                 >
-                  <Plus size={20} />
+                  <Plus size={18} className="sm:w-5 sm:h-5" />
                   Créer mon premier thème
                 </Link>
               </motion.div>
@@ -236,7 +239,7 @@ export default function ThemesIndex() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
             >
               {filteredThemes.map((theme, index) => (
                 <ThemeCard key={theme.id} theme={theme} index={index} />
