@@ -30,7 +30,6 @@ export default function ThemeForm({
   initialData 
 }: ThemeFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
-  const [selectedLang, setSelectedLang] = useState('')
   
   const {
     register,
@@ -43,7 +42,7 @@ export default function ThemeForm({
   })
 
   const watchedValues = watch()
-  const selectedLanguage = getLanguageByCode(selectedLang || watchedValues.targetLang)
+  const selectedLanguage = getLanguageByCode(watchedValues.targetLang)
 
   const handleFormSubmit = (data: ThemeFormData) => {
     const tags = data.tags 
@@ -186,7 +185,7 @@ export default function ThemeForm({
                   value={language.code}
                   {...register('targetLang')}
                   onFocus={() => setCurrentStep(2)}
-                  onChange={(e) => setSelectedLang(e.target.value)}
+
                   className="sr-only"
                 />
                 <div className="text-center">
@@ -230,24 +229,24 @@ export default function ThemeForm({
           )}
           
           {/* Message de confirmation de sélection */}
-          {watchedValues.targetLang && selectedLanguage && (
+          {watchedValues.targetLang && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center justify-center gap-3 py-3 px-4 bg-green-50 border border-green-200 rounded-xl mt-4"
             >
               <div className="text-xl">
-                {selectedLanguage.code === 'oc' ? (
+                {selectedLanguage?.code === 'oc' ? (
                   <span className="font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
                     ÒC
                   </span>
                 ) : (
-                  selectedLanguage.flag
+                  selectedLanguage?.flag
                 )}
               </div>
               <span className="font-sans text-sm text-green-800">
-                <strong>{selectedLanguage.label}</strong> sélectionné
-                {selectedLanguage.code === 'oc' && (
+                <strong>{selectedLanguage?.label}</strong> sélectionné
+                {selectedLanguage?.code === 'oc' && (
                   <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">
                     GRATUIT & ILLIMITÉ
                   </span>
