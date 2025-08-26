@@ -100,17 +100,28 @@ export default function NewTheme() {
           </div>
         </motion.header>
 
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-8">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+        <main className="container mx-auto px-6 py-12 -mt-6 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="mb-8"
+              >
+                <h2 className="font-display text-2xl font-bold text-dark-charcoal mb-3">
                   Créer un nouveau thème
                 </h2>
-                <p className="text-gray-600">
-                  Organisez vos flashcards par thème et langue cible. Vous pourrez ensuite ajouter des cartes Basic et Cloze.
+                <p className="font-sans text-dark-charcoal/70 leading-relaxed">
+                  Un thème vous permet d'organiser vos flashcards par sujet ou langue. 
+                  Vous pourrez ensuite y ajouter des cartes Basic et Cloze pour un apprentissage structuré.
                 </p>
-              </div>
+              </motion.div>
 
               <ThemeForm
                 onSubmit={handleSubmit}
@@ -118,7 +129,7 @@ export default function NewTheme() {
                 error={error}
               />
             </div>
-          </div>
+          </motion.div>
         </main>
       </div>
     </>
