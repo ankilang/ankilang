@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Sparkles, Globe } from 'lucide-react'
+import { LANGUAGES } from '../../../constants/languages'
 import ThemeForm from '../../../components/themes/ThemeForm'
 import { addMockTheme } from '../../../data/mockData'
 import { CreateThemeSchema } from '@ankilang/shared'
@@ -42,21 +45,60 @@ export default function NewTheme() {
       />
       
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => navigate('/app/themes')}
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <h1 className="text-2xl font-bold text-gray-900">Nouveau thème</h1>
-              </div>
+        {/* Header Immersif */}
+        <motion.header 
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="bg-gradient-to-br from-pastel-purple via-pastel-green/50 to-pastel-rose/30 relative overflow-hidden"
+        >
+          {/* Éléments décoratifs */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-pastel-rose/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-pastel-purple/30 rounded-full blur-2xl" />
+          
+          <div className="relative container mx-auto px-6 py-12">
+            <div className="flex items-center gap-6 mb-6">
+              <motion.button
+                onClick={() => navigate('/app/themes')}
+                whileHover={{ scale: 1.1, x: -2 }}
+                whileTap={{ scale: 0.9 }}
+                className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
+              >
+                <ArrowLeft size={20} />
+              </motion.button>
+              
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                <h1 className="font-display text-4xl lg:text-5xl font-bold text-dark-charcoal mb-2">
+                  Studio de Création
+                </h1>
+                <p className="font-sans text-lg text-dark-charcoal/70 max-w-2xl">
+                  Donnez vie à vos idées d'apprentissage. Créez un thème personnalisé pour organiser vos flashcards.
+                </p>
+              </motion.div>
             </div>
+            
+            {/* Statistiques inspirantes */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="flex items-center gap-6 text-sm"
+            >
+              <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span className="font-sans text-dark-charcoal">Création illimitée</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm">
+                <Globe className="w-4 h-4 text-green-600" />
+                <span className="font-sans text-dark-charcoal">{LANGUAGES.length} langues disponibles</span>
+              </div>
+            </motion.div>
           </div>
-        </header>
+        </motion.header>
 
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
