@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Sparkles, Tag, Globe, Lock, Users, Wand2 } from 'lucide-react'
-import { LANGUAGES, getLanguageByCode } from '../../constants/languages'
+import { LANGUAGES } from '../../constants/languages'
 import { CreateThemeSchema } from '@ankilang/shared'
 
 const themeFormSchema = z.object({
@@ -30,7 +30,6 @@ export default function ThemeForm({
   initialData 
 }: ThemeFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
-  const [selectedLang, setSelectedLang] = useState('')
   
   const {
     register,
@@ -43,7 +42,6 @@ export default function ThemeForm({
   })
 
   const watchedValues = watch()
-  const selectedLanguage = getLanguageByCode(selectedLang || watchedValues.targetLang)
 
   const handleFormSubmit = (data: ThemeFormData) => {
     const tags = data.tags 
@@ -63,7 +61,7 @@ export default function ThemeForm({
     { id: 3, title: 'Personnalisation', icon: Sparkles }
   ]
 
-  return (
+    return (
     <div className="space-y-8">
       {/* Indicateur d'étapes */}
       <div className="flex items-center justify-center space-x-4">
@@ -91,96 +89,25 @@ export default function ThemeForm({
         ))}
       </div>
 
-      {/* Prévisualisation en temps réel */}
+      {/* Introduction directe */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-pastel-green to-pastel-purple/30 rounded-3xl p-6 border border-white/20 relative overflow-hidden"
+        className="text-center py-6"
       >
-        {/* Effet de particules subtiles */}
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-purple-300/30 rounded-full"
-              animate={{
-                x: [0, 100, 0],
-                y: [0, -50, 0],
-                opacity: [0, 1, 0]
-              }}
-              transition={{
-                duration: 4,
-                delay: i * 1.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              style={{
-                left: `${20 + i * 30}%`,
-                top: `${30 + i * 20}%`
-              }}
-            />
-          ))}
-        </div>
-        
-        <h3 className="font-display text-lg font-semibold text-dark-charcoal mb-4 flex items-center gap-2 relative z-10">
-          <Sparkles className="w-5 h-5 text-purple-600" />
-          Aperçu de votre thème
-        </h3>
-        
-        <motion.div 
-          className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/40 relative z-10"
-          animate={watchedValues.name ? { scale: [1, 1.02, 1] } : {}}
-          transition={{ duration: 0.5 }}
+        <motion.div
+          animate={{ rotate: [0, 10, -10, 0] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          className="text-4xl mb-4"
         >
-          <div className="flex items-center gap-3 mb-3">
-            {selectedLanguage && (
-              <motion.span 
-                className="text-2xl"
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              >
-                {selectedLanguage.flag || (selectedLanguage.code === 'oc' ? '🏴󠁧󠁢󠁳󠁣󠁴󠁿' : '🌍')}
-              </motion.span>
-            )}
-            <div>
-              <motion.h4 
-                className="font-display font-bold text-dark-charcoal"
-                animate={watchedValues.name ? { color: ['#333333', '#7C3AED', '#333333'] } : {}}
-                transition={{ duration: 1 }}
-              >
-                {watchedValues.name || 'Nom de votre thème'}
-              </motion.h4>
-              <p className="text-sm text-dark-charcoal/70">
-                {selectedLanguage ? selectedLanguage.label : 'Langue cible'}
-                {selectedLanguage?.code === 'oc' && (
-                  <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
-                    GRATUIT
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-          {watchedValues.tags && (
-            <motion.div 
-              className="flex flex-wrap gap-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              {watchedValues.tags.split(',').slice(0, 3).map((tag, index) => (
-                                 <motion.span 
-                   key={index} 
-                   className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
-                   initial={{ scale: 0 }}
-                   animate={{ scale: 1 }}
-                   transition={{ delay: 0.1 * index }}
-                 >
-                   {tag.trim()}
-                 </motion.span>
-              ))}
-            </motion.div>
-          )}
+          ✨
         </motion.div>
+        <h3 className="font-display text-xl font-semibold text-dark-charcoal mb-2">
+          Créons votre thème ensemble
+        </h3>
+        <p className="font-sans text-dark-charcoal/70 max-w-md mx-auto">
+          Quelques informations suffisent pour organiser parfaitement vos flashcards
+        </p>
       </motion.div>
 
       {/* Formulaire */}
@@ -253,7 +180,6 @@ export default function ThemeForm({
                     value={language.code}
                     {...register('targetLang')}
                     onFocus={() => setCurrentStep(2)}
-                    onChange={(e) => setSelectedLang(e.target.value)}
                     className="sr-only"
                   />
                   <div className="text-center">
@@ -286,7 +212,6 @@ export default function ThemeForm({
                     value={language.code}
                     {...register('targetLang')}
                     onFocus={() => setCurrentStep(2)}
-                    onChange={(e) => setSelectedLang(e.target.value)}
                     className="sr-only"
                   />
                   <div className="text-center">
@@ -304,7 +229,6 @@ export default function ThemeForm({
           <select
             {...register('targetLang')}
             onFocus={() => setCurrentStep(2)}
-            onChange={(e) => setSelectedLang(e.target.value)}
             className="input-field"
             aria-describedby={errors.targetLang ? 'targetLang-error' : undefined}
           >
