@@ -61,62 +61,41 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
       
       <Link to={`/app/themes/${theme.id}`} className="block">
         <div className={`${pastel?.bg || 'bg-gray-100'} ${pastel?.border || 'border-gray-300'} border-2 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden`}>
-          {/* Bouton Options (modifier/supprimer) */}
-          <div className="absolute top-3 right-3 z-20">
-            <div className="relative">
+          {/* Menu flottant accessible - repositionné */}
+          {isMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              className="absolute top-16 right-6 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-30"
+              role="menu"
+            >
               <button
-                aria-label={`Options pour ${theme.name}`}
-                className="p-2 rounded-xl bg-white/80 backdrop-blur border border-white/60 hover:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                role="menuitem"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                onClick={(e) => { 
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onEdit?.(theme)
+                  setIsMenuOpen(false)
+                }}
+              >
+                <Pencil className="w-4 h-4" /> Modifier
+              </button>
+              <button
+                role="menuitem"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 transition-colors"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  setIsMenuOpen(!isMenuOpen)
-                }}
-                onBlur={() => {
-                  // Fermer le menu après un délai pour permettre la navigation
-                  setTimeout(() => setIsMenuOpen(false), 150)
+                  onDelete?.(theme)
+                  setIsMenuOpen(false)
                 }}
               >
-                <MoreVertical className="w-4 h-4 text-dark-charcoal" />
+                <Trash2 className="w-4 h-4" /> Supprimer
               </button>
-
-              {/* Menu flottant accessible */}
-              {isMenuOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-30"
-                  role="menu"
-                >
-                  <button
-                    role="menuitem"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                    onClick={(e) => { 
-                      e.preventDefault()
-                      e.stopPropagation()
-                      onEdit?.(theme)
-                      setIsMenuOpen(false)
-                    }}
-                  >
-                    <Pencil className="w-4 h-4" /> Modifier
-                  </button>
-                  <button
-                    role="menuitem"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 transition-colors"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      onDelete?.(theme)
-                      setIsMenuOpen(false)
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" /> Supprimer
-                  </button>
-                </motion.div>
-              )}
-            </div>
-          </div>
+            </motion.div>
+          )}
 
           {/* Effet de brillance */}
           <motion.div
@@ -125,7 +104,7 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
             transition={{ duration: 0.8 }}
           />
           
-          {/* Header avec drapeau et statut */}
+          {/* Header avec drapeau, statut et bouton menu */}
           <div className="flex items-start justify-between mb-4 relative z-10">
             <div className="flex items-center gap-3">
               {/* Drapeau de la langue */}
@@ -155,8 +134,9 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
               </div>
             </div>
             
-            {/* Badge de partage */}
-            <div className="flex items-center gap-1">
+            {/* Zone droite : Badge de partage + Bouton menu */}
+            <div className="flex items-center gap-2">
+              {/* Badge de partage */}
               {theme.shareStatus === 'private' ? (
                 <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-lg">
                   <Lock className="w-3 h-3 text-gray-600" />
@@ -168,6 +148,22 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
                   <span className="text-xs font-medium text-green-600">Partagé</span>
                 </div>
               )}
+              
+              {/* Bouton menu intégré dans le header */}
+              <button
+                aria-label={`Options pour ${theme.name}`}
+                className="p-2 rounded-xl bg-white/80 backdrop-blur border border-white/60 hover:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsMenuOpen(!isMenuOpen)
+                }}
+                onBlur={() => {
+                  setTimeout(() => setIsMenuOpen(false), 150)
+                }}
+              >
+                <MoreVertical className="w-4 h-4 text-dark-charcoal" />
+              </button>
             </div>
           </div>
 
