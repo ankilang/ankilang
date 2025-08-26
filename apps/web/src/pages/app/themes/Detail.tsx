@@ -1,27 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Download, Settings, Lock, Users, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
 import CardList from '../../../components/cards/CardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
-import { getThemeById, getCardsByThemeId, addMockCard } from '../../../data/mockData'
+import EditCardModal from '../../../components/cards/EditCardModal'
+import { getThemeById, getCardsByThemeId, addMockCard, updateMockCard, deleteMockCard } from '../../../data/mockData'
 import { LANGUAGES } from '../../../constants/languages'
 import { getLanguageColor } from '../../../utils/languageColors'
 import { CreateCardSchema } from '@ankilang/shared'
 import type { z } from 'zod'
+import type { Card } from '@ankilang/shared'
 import PageMeta from '../../../components/seo/PageMeta'
 
 export default function ThemeDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingCard, setEditingCard] = useState<Card | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
+  const [cards, setCards] = useState<Card[]>([])
 
   const theme = getThemeById(id!)
-  const cards = getCardsByThemeId(id!)
   const language = LANGUAGES.find(lang => lang.code === theme?.targetLang)
   const colors = getLanguageColor(theme?.targetLang || 'default')
+
+  // Charger les cartes au montage et quand l'ID change
+  useEffect(() => {
+    if (id) {
+      setCards(getCardsByThemeId(id))
+    }
+  }, [id])
 
   if (!theme) {
     return (
@@ -53,6 +64,16 @@ export default function ThemeDetail() {
     setIsModalOpen(true)
   }
 
+  const handleEditCard = (card: Card) => {
+    setEditingCard(card)
+    setIsEditModalOpen(true)
+  }
+
+  const handleDeleteCard = (card: Card) => {
+    deleteMockCard(card.id)
+    setCards(getCardsByThemeId(id!))
+  }
+
   const handleCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
     setIsLoading(true)
     setError(undefined)
@@ -61,9 +82,30 @@ export default function ThemeDetail() {
       await new Promise(resolve => setTimeout(resolve, 1000))
       console.log('Creating card:', data)
       addMockCard(data)
+      setCards(getCardsByThemeId(id!))
       setIsModalOpen(false)
     } catch (err) {
       setError('Erreur lors de la création de la carte. Veuillez réessayer.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleEditCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
+    if (!editingCard) return
+    
+    setIsLoading(true)
+    setError(undefined)
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Updating card:', data)
+      updateMockCard(editingCard.id, data)
+      setCards(getCardsByThemeId(id!))
+      setIsEditModalOpen(false)
+      setEditingCard(null)
+    } catch (err) {
+      setError('Erreur lors de la modification de la carte. Veuillez réessayer.')
     } finally {
       setIsLoading(false)
     }
@@ -219,6 +261,8 @@ export default function ThemeDetail() {
             <CardList
               cards={cards}
               onAddCard={handleAddCard}
+              onEditCard={handleEditCard}
+              onDeleteCard={handleDeleteCard}
               themeName={theme.name}
               themeColors={colors}
             />
@@ -235,6 +279,22 @@ export default function ThemeDetail() {
           themeId={theme.id}
           themeColors={colors}
         />
+
+        {/* Modale d'édition de carte */}
+        {editingCard && (
+          <EditCardModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false)
+              setEditingCard(null)
+            }}
+            onSubmit={handleEditCardSubmit}
+            isLoading={isLoading}
+            error={error}
+            card={editingCard}
+            themeColors={colors}
+          />
+        )}
       </div>
     </>
   )

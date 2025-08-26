@@ -203,3 +203,52 @@ export const addMockCard = (card: Omit<Card, 'id' | 'userId' | 'createdAt' | 'up
   
   return newCard
 }
+
+// Helpers CRUD pour les cartes (mock)
+export const updateMockCard = (id: string, patch: Partial<Card>) => {
+  // Chercher la carte dans tous les thèmes
+  for (const themeId in mockCards) {
+    const cardIndex = mockCards[themeId]!.findIndex(c => c.id === id)
+    if (cardIndex !== -1) {
+      mockCards[themeId]![cardIndex] = { 
+        ...mockCards[themeId]![cardIndex], 
+        ...patch, 
+        updatedAt: new Date().toISOString() 
+      } as Card
+      
+      // Mettre à jour le nombre de cartes du thème
+      const theme = mockThemes.find(t => t.id === themeId)
+      if (theme) {
+        theme.updatedAt = new Date().toISOString()
+      }
+      return
+    }
+  }
+}
+
+export const deleteMockCard = (id: string) => {
+  // Chercher et supprimer la carte dans tous les thèmes
+  for (const themeId in mockCards) {
+    const cardIndex = mockCards[themeId]!.findIndex(c => c.id === id)
+    if (cardIndex !== -1) {
+      mockCards[themeId]!.splice(cardIndex, 1)
+      
+      // Mettre à jour le nombre de cartes du thème
+      const theme = mockThemes.find(t => t.id === themeId)
+      if (theme) {
+        theme.cardCount = mockCards[themeId]!.length
+        theme.updatedAt = new Date().toISOString()
+      }
+      return
+    }
+  }
+}
+
+export const getCardById = (id: string): Card | undefined => {
+  // Chercher la carte dans tous les thèmes
+  for (const themeId in mockCards) {
+    const card = mockCards[themeId]!.find(c => c.id === id)
+    if (card) return card
+  }
+  return undefined
+}

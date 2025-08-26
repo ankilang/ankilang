@@ -1,10 +1,13 @@
 import { Plus, FileText, Tag, Sparkles, Brain, Type } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Card } from '@ankilang/shared'
+import CardActions from './CardActions'
 
 interface CardListProps {
   cards: Card[]
   onAddCard: () => void
+  onEditCard: (card: Card) => void
+  onDeleteCard: (card: Card) => void
   themeName: string
   themeColors: {
     primary: string
@@ -14,7 +17,7 @@ interface CardListProps {
   }
 }
 
-export default function CardList({ cards, onAddCard, themeName, themeColors }: CardListProps) {
+export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, themeName, themeColors }: CardListProps) {
   if (cards.length === 0) {
     return (
       <motion.div 
@@ -176,8 +179,16 @@ export default function CardList({ cards, onAddCard, themeName, themeColors }: C
                   </div>
                 </div>
                 
-                <div className="text-xs text-dark-charcoal/50 font-sans">
-                  #{index + 1}
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-dark-charcoal/50 font-sans">
+                    #{index + 1}
+                  </div>
+                  <CardActions
+                    card={card}
+                    onEdit={onEditCard}
+                    onDelete={onDeleteCard}
+                    themeColors={themeColors}
+                  />
                 </div>
               </div>
 
