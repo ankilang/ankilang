@@ -218,6 +218,7 @@ export default function ThemeForm({
           <select
             {...register('targetLang')}
             onFocus={() => setCurrentStep(2)}
+            onChange={(e) => setSelectedLang(e.target.value)}
             className="input-field"
             aria-describedby={errors.targetLang ? 'targetLang-error' : undefined}
           >
