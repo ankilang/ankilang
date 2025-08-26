@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Download, Settings } from 'lucide-react'
+import { ArrowLeft, Download, Settings, Lock, Users, FileText } from 'lucide-react'
+import { motion } from 'framer-motion'
 import CardList from '../../../components/cards/CardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
 import { getThemeById, getCardsByThemeId, addMockCard } from '../../../data/mockData'
-import { getLanguageLabel } from '../../../constants/languages'
+import { LANGUAGES } from '../../../constants/languages'
+import { getLanguageColor } from '../../../utils/languageColors'
 import { CreateCardSchema } from '@ankilang/shared'
 import type { z } from 'zod'
 import PageMeta from '../../../components/seo/PageMeta'
@@ -18,17 +20,31 @@ export default function ThemeDetail() {
 
   const theme = getThemeById(id!)
   const cards = getCardsByThemeId(id!)
+  const language = LANGUAGES.find(lang => lang.code === theme?.targetLang)
+  const colors = getLanguageColor(theme?.targetLang || 'default')
 
   if (!theme) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Thème introuvable</h1>
-          <p className="text-gray-600 mb-6">Le thème que vous recherchez n'existe pas.</p>
-          <Link to="/app/themes" className="btn-primary">
+      <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/20"
+        >
+          <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-rose rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">Thème introuvable</h1>
+          <p className="font-sans text-dark-charcoal/70 mb-6">Le thème que vous recherchez n'existe pas.</p>
+          <motion.button
+            onClick={() => navigate('/app/themes')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="btn-primary"
+          >
             Retour aux thèmes
-          </Link>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     )
   }
@@ -42,15 +58,9 @@ export default function ThemeDetail() {
     setError(undefined)
     
     try {
-      // Mock: simuler un délai de création
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
       console.log('Creating card:', data)
-      
-      // Créer la carte mock
       addMockCard(data)
-      
-      // Fermer la modale
       setIsModalOpen(false)
     } catch (err) {
       setError('Erreur lors de la création de la carte. Veuillez réessayer.')
@@ -63,78 +73,156 @@ export default function ThemeDetail() {
     <>
       <PageMeta 
         title={`${theme.name} — Ankilang`}
-        description={`Thème de flashcards en ${getLanguageLabel(theme.targetLang)} avec ${theme.cardCount} cartes.`}
+        description={`Thème de flashcards en ${language?.label} avec ${theme.cardCount} cartes.`}
       />
       
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
+      <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20">
+        {/* Header immersif avec couleurs thématiques */}
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${colors.secondary} 0%, ${colors.secondary}80 50%, white 100%)`
+          }}
+        >
+          {/* Éléments décoratifs */}
+          <div 
+            className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20"
+            style={{ backgroundColor: colors.primary }}
+          />
+          <div 
+            className="absolute bottom-0 left-0 w-80 h-80 rounded-full blur-2xl opacity-30"
+            style={{ backgroundColor: colors.accent }}
+          />
+          
+          <div className="relative container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <motion.button
                   onClick={() => navigate('/app/themes')}
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  whileHover={{ scale: 1.1, x: -2 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
                 >
-                  <ArrowLeft size={20} />
-                </button>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{theme.name}</h1>
-                  <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                    <span>{getLanguageLabel(theme.targetLang)}</span>
-                    <span>•</span>
-                    <span>{theme.cardCount} cartes</span>
-                    <span>•</span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      theme.shareStatus === 'community' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {theme.shareStatus === 'community' ? 'Partagé' : 'Privé'}
-                    </span>
+                  <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
+                </motion.button>
+                
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  {/* Drapeau de la langue */}
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md border border-white/40">
+                    {language?.code === 'oc' ? (
+                      <span className="text-lg sm:text-2xl font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
+                        ÒC
+                      </span>
+                    ) : (
+                      <span className="text-2xl sm:text-3xl">{language?.flag || '🌍'}</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-charcoal mb-1 sm:mb-2 line-clamp-2">
+                      {theme.name}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-dark-charcoal/70">
+                      <div className="flex items-center gap-2">
+                        <span className="font-sans font-medium">{language?.label}</span>
+                        {theme.targetLang === 'oc' && (
+                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">
+                            GRATUIT
+                          </span>
+                        )}
+                      </div>
+                      <span className="hidden sm:inline">•</span>
+                      <div className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" style={{ color: colors.accent }} />
+                        <span className="font-sans">{theme.cardCount} cartes</span>
+                      </div>
+                      <span className="hidden sm:inline">•</span>
+                      <div className="flex items-center gap-1">
+                        {theme.shareStatus === 'community' ? (
+                          <>
+                            <Users className="w-4 h-4 text-green-600" />
+                            <span className="font-sans text-green-700">Partagé</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-4 h-4 text-gray-600" />
+                            <span className="font-sans text-gray-700">Privé</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  to={`/app/themes/${theme.id}/export`}
-                  className="btn-secondary inline-flex items-center gap-2"
+              
+              {/* Actions */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    to={`/app/themes/${theme.id}/export`}
+                    className="btn-secondary inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3"
+                  >
+                    <Download size={16} />
+                    <span className="hidden sm:inline">Exporter</span>
+                  </Link>
+                </motion.div>
+                <motion.button 
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
                 >
-                  <Download size={16} />
-                  Exporter
-                </Link>
-                <button className="p-2 text-gray-600 hover:text-gray-900 transition-colors">
-                  <Settings size={20} />
-                </button>
+                  <Settings size={18} className="sm:w-5 sm:h-5" />
+                </motion.button>
               </div>
             </div>
           </div>
-        </header>
+        </motion.header>
 
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* Tags du thème */}
           {theme.tags && theme.tags.length > 0 && (
-            <div className="mb-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mb-6 sm:mb-8"
+            >
               <div className="flex flex-wrap gap-2">
                 {theme.tags.map((tag: string, index: number) => (
-                  <span 
+                  <motion.span 
                     key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-50 text-blue-700"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="inline-flex items-center px-3 py-2 rounded-xl text-sm font-medium"
+                    style={{ 
+                      backgroundColor: colors.secondary,
+                      color: colors.accent 
+                    }}
                   >
                     {tag}
-                  </span>
+                  </motion.span>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* Liste des cartes */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {/* Container principal des cartes */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 p-6 sm:p-8"
+          >
             <CardList
               cards={cards}
               onAddCard={handleAddCard}
               themeName={theme.name}
+              themeColors={colors}
             />
-          </div>
+          </motion.div>
         </main>
 
         {/* Modale d'ajout de carte */}
@@ -145,6 +233,7 @@ export default function ThemeDetail() {
           isLoading={isLoading}
           error={error}
           themeId={theme.id}
+          themeColors={colors}
         />
       </div>
     </>

@@ -5,9 +5,15 @@ interface CardListProps {
   cards: Card[]
   onAddCard: () => void
   themeName: string
+  themeColors?: {
+    primary: string
+    secondary: string
+    accent: string
+    gradient: string
+  }
 }
 
-export default function CardList({ cards, onAddCard, themeName }: CardListProps) {
+export default function CardList({ cards, onAddCard, themeName, themeColors }: CardListProps) {
   if (cards.length === 0) {
     return (
       <div className="text-center py-12">
@@ -20,7 +26,11 @@ export default function CardList({ cards, onAddCard, themeName }: CardListProps)
         </p>
         <button
           onClick={onAddCard}
-          className="btn-primary inline-flex items-center gap-2"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:scale-105"
+          style={{
+            backgroundColor: themeColors?.primary || '#3B82F6',
+            color: 'white'
+          }}
         >
           <Plus className="w-4 h-4" />
           Ajouter une carte
@@ -37,7 +47,11 @@ export default function CardList({ cards, onAddCard, themeName }: CardListProps)
         </h2>
         <button
           onClick={onAddCard}
-          className="btn-primary inline-flex items-center gap-2"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:scale-105"
+          style={{
+            backgroundColor: themeColors?.primary || '#3B82F6',
+            color: 'white'
+          }}
         >
           <Plus className="w-4 h-4" />
           Ajouter une carte
@@ -52,11 +66,13 @@ export default function CardList({ cards, onAddCard, themeName }: CardListProps)
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  card.type === 'basic' 
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-purple-100 text-purple-800'
-                }`}>
+                <span 
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: themeColors?.secondary || '#DBEAFE',
+                    color: themeColors?.accent || '#1E40AF'
+                  }}
+                >
                   <Type className="w-3 h-3 mr-1" />
                   {card.type === 'basic' ? 'Basic' : 'Cloze'}
                 </span>
@@ -95,7 +111,11 @@ export default function CardList({ cards, onAddCard, themeName }: CardListProps)
                   {card.tags.map((tag: string, tagIndex: number) => (
                     <span 
                       key={tagIndex}
-                      className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-50 text-gray-600"
+                      className="inline-flex items-center px-2 py-1 rounded-md text-xs"
+                      style={{
+                        backgroundColor: `${themeColors?.accent || '#1E40AF'}20`,
+                        color: themeColors?.accent || '#1E40AF'
+                      }}
                     >
                       {tag}
                     </span>
