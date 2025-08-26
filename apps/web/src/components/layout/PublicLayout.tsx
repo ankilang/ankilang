@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { BookOpen } from 'lucide-react'
+import AnkilangLogo from '../ui/AnkilangLogo'
 
 export default function PublicLayout() {
   const location = useLocation()
@@ -14,10 +14,12 @@ export default function PublicLayout() {
             <div className="flex items-center justify-between">
               <Link 
                 to="/" 
-                className="flex items-center gap-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
+                className="flex items-center gap-3 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
               >
-                <BookOpen className="w-6 h-6" />
-                Ankilang
+                <AnkilangLogo size="default" animated={true} />
+                <span className="font-display bg-gradient-to-r from-violet-600 to-violet-800 bg-clip-text text-transparent">
+                  Ankilang
+                </span>
               </Link>
               <nav className="flex items-center gap-4">
                 <Link 

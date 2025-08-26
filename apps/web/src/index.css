@@ -98,23 +98,71 @@
     color: #333333;
   }
   
-  .bg-pastel-green {
-    background-color: #D4E2D4;
-  }
-  
-  .bg-pastel-purple {
-    background-color: #D2B4DE;
-  }
-  
-  .bg-pastel-rose {
-    background-color: #E6B0AA;
-  }
-  
-  .bg-dark-charcoal {
-    background-color: #333333;
-  }
-  
   /* Classes utilitaires pour la DA Ankilang */
+  .bg-pastel-green { background-color: var(--pastel-green); }
+  .bg-pastel-purple { background-color: var(--pastel-purple); }
+  .bg-pastel-rose { background-color: var(--pastel-rose); }
+  .border-pastel-green { border-color: var(--pastel-green); }
+  .border-pastel-purple { border-color: var(--pastel-purple); }
+  .border-pastel-rose { border-color: var(--pastel-rose); }
+}
+
+/* Composants d'authentification */
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-white border-2 border-pastel-purple text-purple-700 font-semibold py-3 px-6 rounded-xl transition-all duration-200;
+  }
+  
+  .btn-secondary:hover {
+    background-color: rgba(210, 180, 222, 0.1);
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-0 focus:border-pastel-purple transition-colors duration-200 font-sans;
+  }
+  
+  .input-field:focus {
+    @apply border-purple-400;
+    background-color: rgba(250, 245, 255, 0.3);
+  }
+  
+  .label-field {
+    @apply block text-sm font-medium text-dark-charcoal mb-2 font-sans;
+  }
+  
+  .error-message {
+    @apply mt-2 text-sm text-red-600 font-sans;
+  }
+  
+  .auth-link {
+    @apply text-purple-600 hover:text-purple-800 transition-colors font-medium;
+  }
+}
+
+/* Animations pour l'authentification */
+@layer utilities {
+  .auth-card-enter {
+    animation: slideInUp 0.6s ease-out;
+  }
+  
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Classes utilitaires pour la DA Ankilang */
+@layer utilities {
   .bg-pastel-green { background-color: var(--pastel-green); }
   .bg-pastel-purple { background-color: var(--pastel-purple); }
   .bg-pastel-rose { background-color: var(--pastel-rose); }

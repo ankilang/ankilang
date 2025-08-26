@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import AuthForm from '../../components/auth/AuthForm'
 import PageMeta from '../../components/seo/PageMeta'
 
@@ -14,8 +15,8 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 export default function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string>()
+  const [success, setSuccess] = useState(false)
 
   const {
     register,
@@ -30,13 +31,9 @@ export default function ForgotPassword() {
     setError(undefined)
     
     try {
-      // Mock: simuler un délai d'envoi
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
       console.log('Forgot password data:', data)
-      
-      // Mock: afficher le message de confirmation
-      setIsSubmitted(true)
+      setSuccess(true)
     } catch (err) {
       setError('Erreur lors de l\'envoi. Veuillez réessayer.')
     } finally {
@@ -44,40 +41,53 @@ export default function ForgotPassword() {
     }
   }
 
-  if (isSubmitted) {
+  if (success) {
     return (
       <>
         <PageMeta 
-          title="Mot de passe oublié — Ankilang" 
-          description="Réinitialisez votre mot de passe." 
+          title="Email envoyé — Ankilang" 
+          description="Un email de réinitialisation a été envoyé à votre adresse." 
         />
         
-        <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12">
-          <div className="w-full max-w-md mx-auto px-4">
-            <div className="bg-white rounded-lg shadow-xl p-8 text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                E-mail envoyé
-              </h1>
-              
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-green-800">
-                  Si un compte existe avec cette adresse e-mail, un message de réinitialisation a été envoyé.
-                </p>
-              </div>
-              
-              <p className="text-gray-600 mb-6">
-                Vérifiez votre boîte de réception et suivez les instructions pour réinitialiser votre mot de passe.
-              </p>
-              
-              <Link 
-                to="/auth/login" 
-                className="btn-primary w-full"
-              >
-                Retour à la connexion
-              </Link>
+        <AuthForm
+          title="Email envoyé"
+          submitLabel="Envoyer le lien"
+          onSubmit={() => {}}
+          isLoading={false}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center space-y-4"
+          >
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-          </div>
-        </section>
+            <p className="text-dark-charcoal font-sans">
+              Un email de réinitialisation a été envoyé à votre adresse email.
+            </p>
+            <p className="text-sm text-dark-charcoal/70 font-sans">
+              Vérifiez votre boîte de réception et suivez les instructions pour réinitialiser votre mot de passe.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-center pt-4 border-t border-gray-100"
+          >
+            <Link 
+              to="/auth/login" 
+              className="auth-link"
+            >
+              Retour à la connexion
+            </Link>
+          </motion.div>
+        </AuthForm>
       </>
     )
   }
@@ -86,45 +96,52 @@ export default function ForgotPassword() {
     <>
       <PageMeta 
         title="Mot de passe oublié — Ankilang" 
-        description="Réinitialisez votre mot de passe." 
+        description="Réinitialisez votre mot de passe Ankilang." 
       />
       
       <AuthForm
         title="Mot de passe oublié"
-        submitLabel="Envoyer le lien de réinitialisation"
+        submitLabel="Envoyer le lien"
         onSubmit={handleSubmit(onSubmit)}
         isLoading={isLoading}
         error={error}
       >
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <label htmlFor="email" className="label-field">
             Adresse e-mail
           </label>
           <input
             id="email"
             type="email"
             {...register('email')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             placeholder="votre@email.com"
             aria-describedby={errors.email ? 'email-error' : undefined}
           />
           {errors.email && (
-            <p id="email-error" className="mt-1 text-sm text-red-600">
+            <p id="email-error" className="error-message">
               {errors.email.message}
             </p>
           )}
-        </div>
+        </motion.div>
 
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            <Link 
-              to="/auth/login" 
-              className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
-            >
-              ← Retour à la connexion
-            </Link>
-          </p>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+          className="text-center pt-4 border-t border-gray-100"
+        >
+          <Link 
+            to="/auth/login" 
+            className="auth-link"
+          >
+            Retour à la connexion
+          </Link>
+        </motion.div>
       </AuthForm>
     </>
   )

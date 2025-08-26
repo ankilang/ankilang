@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { motion } from 'framer-motion'
 
 interface AuthFormProps {
   title: string
@@ -18,40 +19,64 @@ export default function AuthForm({
   error 
 }: AuthFormProps) {
   return (
-    <section 
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12"
-      aria-labelledby="auth-title"
-    >
-      <div className="w-full max-w-md mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <h1 
-            id="auth-title" 
-            className="text-2xl font-bold text-gray-900 text-center mb-6"
+    <section className="min-h-screen bg-pastel-green relative overflow-hidden flex items-center justify-center py-12">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-pastel-purple/30 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-pastel-rose/30 rounded-full blur-2xl" />
+      
+      <div className="relative w-full max-w-md mx-auto px-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-white/20"
+        >
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="font-display text-3xl font-bold text-dark-charcoal text-center mb-8"
           >
             {title}
-          </h1>
+          </motion.h1>
 
           {error && (
-            <div 
-              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl"
               aria-live="polite"
             >
-              <p className="text-red-800 text-sm">{error}</p>
-            </div>
+              <p className="text-red-800 text-sm font-sans">{error}</p>
+            </motion.div>
           )}
 
-          <form onSubmit={onSubmit} className="space-y-6">
+          <motion.form 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            onSubmit={onSubmit} 
+            className="space-y-6"
+          >
             {children}
             
-            <button
+            <motion.button
               type="submit"
               disabled={isLoading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isLoading ? 'Chargement...' : submitLabel}
-            </button>
-          </form>
-        </div>
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Chargement...
+                </span>
+              ) : (
+                submitLabel
+              )}
+            </motion.button>
+          </motion.form>
+        </motion.div>
       </div>
     </section>
   )

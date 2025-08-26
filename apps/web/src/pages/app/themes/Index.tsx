@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Search, Filter } from 'lucide-react'
+import { motion } from 'framer-motion'
 import ThemeCard from '../../../components/themes/ThemeCard'
 import { mockThemes } from '../../../data/mockData'
 import { LANGUAGES, getLanguageLabel } from '../../../constants/languages'
@@ -26,53 +27,122 @@ export default function ThemesIndex() {
       />
       
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">Mes thèmes</h1>
-              <Link 
-                to="/app/themes/new" 
-                className="btn-primary inline-flex items-center gap-2"
+        {/* Header Immersif */}
+        <motion.header 
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="bg-gradient-to-br from-pastel-green via-pastel-purple/30 to-pastel-rose/20 relative overflow-hidden"
+        >
+          {/* Éléments décoratifs */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-pastel-purple/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-pastel-rose/20 rounded-full blur-2xl" />
+          
+          <div className="relative container mx-auto px-6 py-12">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
               >
-                <Plus size={16} />
-                Nouveau thème
-              </Link>
+                <h1 className="font-display text-4xl lg:text-5xl font-bold text-dark-charcoal mb-3">
+                  Ma Bibliothèque
+                </h1>
+                <p className="font-sans text-lg text-dark-charcoal/70 max-w-2xl">
+                  Organisez vos flashcards par thèmes et langues. Créez, partagez et apprenez efficacement.
+                </p>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="flex flex-col sm:flex-row items-center gap-4"
+              >
+                {/* Statistiques rapides */}
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.6, delay: 0.6 }}
+                      className="text-2xl font-bold text-dark-charcoal font-display"
+                    >
+                      {mockThemes.length}
+                    </motion.div>
+                    <div className="text-xs text-dark-charcoal/70 font-sans">Thèmes</div>
+                  </div>
+                  <div className="text-center">
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.6, delay: 0.7 }}
+                      className="text-2xl font-bold text-dark-charcoal font-display"
+                    >
+                      {mockThemes.reduce((sum, theme) => sum + theme.cardCount, 0)}
+                    </motion.div>
+                    <div className="text-xs text-dark-charcoal/70 font-sans">Cartes</div>
+                  </div>
+                </div>
+                
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link 
+                    to="/app/themes/new" 
+                    className="btn-primary inline-flex items-center gap-2 shadow-xl"
+                  >
+                    <Plus size={18} />
+                    Nouveau thème
+                  </Link>
+                </motion.div>
+              </motion.div>
             </div>
           </div>
-        </header>
+        </motion.header>
 
-        <main className="container mx-auto px-4 py-8">
-          {/* Filtres et recherche */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                  Rechercher
+        {/* Filtres Redesignés */}
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="container mx-auto px-6 -mt-6 relative z-10"
+        >
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
+              {/* Recherche */}
+              <div className="lg:col-span-2">
+                <label htmlFor="search" className="label-field">
+                  Rechercher dans vos thèmes
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-charcoal/40 w-5 h-5" />
+                  <motion.input
+                    whileFocus={{ scale: 1.02 }}
                     id="search"
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Rechercher par nom ou tags..."
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field pl-12 text-lg"
                   />
                 </div>
               </div>
 
+              {/* Filtre langue */}
               <div>
-                <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-2">
-                  Filtrer par langue
+                <label htmlFor="language" className="label-field">
+                  Langue cible
                 </label>
                 <div className="relative">
-                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <select
+                  <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-charcoal/40 w-5 h-5" />
+                  <motion.select
+                    whileFocus={{ scale: 1.02 }}
                     id="language"
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field pl-12"
                   >
                     <option value="">Toutes les langues</option>
                     {LANGUAGES.map((language) => (
@@ -80,62 +150,98 @@ export default function ThemesIndex() {
                         {language.label}
                       </option>
                     ))}
-                  </select>
+                  </motion.select>
                 </div>
               </div>
             </div>
 
-            {/* Statistiques des filtres */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>
-                  {filteredThemes.length} thème{filteredThemes.length > 1 ? 's' : ''} trouvé{filteredThemes.length > 1 ? 's' : ''}
-                  {selectedLanguage && ` en ${getLanguageLabel(selectedLanguage)}`}
-                </span>
+            {/* Barre de résultats */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="mt-6 pt-6 border-t border-gray-100"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="font-sans text-dark-charcoal font-medium">
+                    {filteredThemes.length} thème{filteredThemes.length > 1 ? 's' : ''} 
+                    {selectedLanguage && ` en ${getLanguageLabel(selectedLanguage)}`}
+                  </span>
+                  {filteredThemes.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      {[...new Set(filteredThemes.map(t => t.targetLang))].map(lang => (
+                        <span key={lang} className="px-2 py-1 bg-pastel-purple/20 text-purple-700 rounded-full text-xs font-medium">
+                          {getLanguageLabel(lang)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
                 {(searchTerm || selectedLanguage) && (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       setSearchTerm('')
                       setSelectedLanguage('')
                     }}
-                    className="px-3 py-2 text-blue-600 hover:text-blue-800 transition-colors rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+                    className="px-4 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 transition-colors rounded-xl font-medium font-sans"
                   >
                     Effacer les filtres
-                  </button>
+                                      </motion.button>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
+        </motion.section>
 
-          {/* Liste des thèmes */}
+        {/* Grid de Thèmes en Mosaïque */}
+        <main className="container mx-auto px-6 py-12">
           {filteredThemes.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-gray-400" />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="text-center py-20"
+            >
+              <div className="w-24 h-24 bg-gradient-to-br from-pastel-purple to-purple-300 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Search className="w-12 h-12 text-white" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm || selectedLanguage ? 'Aucun thème trouvé' : 'Aucun thème créé'}
+              <h3 className="font-display text-2xl font-bold text-dark-charcoal mb-3">
+                {searchTerm || selectedLanguage ? 'Aucun thème trouvé' : 'Votre bibliothèque vous attend'}
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="font-sans text-dark-charcoal/70 mb-8 max-w-md mx-auto">
                 {searchTerm || selectedLanguage 
-                  ? 'Essayez de modifier vos critères de recherche.'
-                  : 'Commencez par créer votre premier thème pour organiser vos flashcards.'
+                  ? 'Essayez de modifier vos critères de recherche ou explorez d\'autres langues.'
+                  : 'Commencez votre aventure d\'apprentissage en créant votre premier thème de flashcards.'
                 }
               </p>
-              <Link 
-                to="/app/themes/new" 
-                className="btn-primary inline-flex items-center gap-2"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Plus size={16} />
-                Créer un thème
-              </Link>
-            </div>
+                <Link 
+                  to="/app/themes/new" 
+                  className="btn-primary inline-flex items-center gap-3 text-lg px-8 py-4 shadow-xl"
+                >
+                  <Plus size={20} />
+                  Créer mon premier thème
+                </Link>
+              </motion.div>
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredThemes.map((theme) => (
-                <ThemeCard key={theme.id} theme={theme} />
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
+            >
+              {filteredThemes.map((theme, index) => (
+                <ThemeCard key={theme.id} theme={theme} index={index} />
               ))}
-            </div>
+            </motion.div>
           )}
         </main>
       </div>

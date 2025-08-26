@@ -1,89 +1,97 @@
 import { Link } from 'react-router-dom'
-import { Mail, ExternalLink } from 'lucide-react'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import AuthForm from '../../components/auth/AuthForm'
 import PageMeta from '../../components/seo/PageMeta'
 
 export default function VerifyEmail() {
-  const openEmailClient = () => {
-    // Ouvrir le client mail par défaut ou rediriger vers un webmail
-    window.open('mailto:', '_blank')
-  }
+  const [isResending, setIsResending] = useState(false)
 
-  const openGmail = () => {
-    window.open('https://mail.google.com', '_blank')
-  }
-
-  const openOutlook = () => {
-    window.open('https://outlook.live.com', '_blank')
+  const handleResendEmail = async () => {
+    setIsResending(true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Resending verification email...')
+    } catch (err) {
+      console.error('Error resending email:', err)
+    } finally {
+      setIsResending(false)
+    }
   }
 
   return (
     <>
       <PageMeta 
-        title="Vérifiez votre e-mail — Ankilang" 
-        description="Confirmez votre adresse pour activer votre compte." 
+        title="Vérifiez votre email — Ankilang" 
+        description="Vérifiez votre adresse email pour activer votre compte Ankilang." 
       />
       
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12">
-        <div className="w-full max-w-md mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-xl p-8 text-center">
-            <div className="mb-6">
-              <Mail className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                Vérifiez votre e-mail
-              </h1>
-            </div>
-            
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800">
-                Nous avons envoyé un lien de confirmation à votre adresse e-mail.
-              </p>
-            </div>
-            
-            <p className="text-gray-600 mb-6">
-              Cliquez sur le lien dans l'e-mail pour activer votre compte Ankilang.
-            </p>
-
-            <div className="space-y-3 mb-6">
-              <button
-                onClick={openEmailClient}
-                className="w-full btn-primary flex items-center justify-center gap-2"
-              >
-                <Mail className="w-5 h-5" />
-                Ouvrir la boîte mail
-              </button>
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={openGmail}
-                  className="flex-1 btn-secondary text-sm flex items-center justify-center gap-1"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Gmail
-                </button>
-                <button
-                  onClick={openOutlook}
-                  className="flex-1 btn-secondary text-sm flex items-center justify-center gap-1"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Outlook
-                </button>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">
-                Vous n'avez pas reçu l'e-mail ?
-              </p>
-              <Link 
-                to="/auth/login" 
-                className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
-              >
-                Retour à la connexion
-              </Link>
-            </div>
+      <AuthForm
+        title="Vérifiez votre email"
+        submitLabel="Renvoyer l'email"
+        onSubmit={handleResendEmail}
+        isLoading={isResending}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="text-center space-y-4"
+        >
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
           </div>
-        </div>
-      </section>
+          
+          <p className="text-dark-charcoal font-sans">
+            Nous avons envoyé un email de vérification à votre adresse.
+          </p>
+          
+          <p className="text-sm text-dark-charcoal/70 font-sans">
+            Cliquez sur le lien dans l'email pour activer votre compte et commencer à créer vos flashcards.
+          </p>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+          className="text-center pt-4 border-t border-gray-100"
+        >
+          <p className="text-sm text-dark-charcoal/70 font-sans mb-4">
+            Vous n'avez pas reçu l'email ?
+          </p>
+          <button
+            onClick={handleResendEmail}
+            disabled={isResending}
+            className="btn-secondary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isResending ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-purple-600/30 border-t-purple-600 rounded-full animate-spin" />
+                Envoi en cours...
+              </span>
+            ) : (
+              'Renvoyer l\'email'
+            )}
+          </button>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="text-center pt-4 border-t border-gray-100"
+        >
+          <Link 
+            to="/auth/login" 
+            className="auth-link"
+          >
+            Retour à la connexion
+          </Link>
+        </motion.div>
+      </AuthForm>
     </>
   )
 }

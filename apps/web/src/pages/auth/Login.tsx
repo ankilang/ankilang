@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import AuthForm from '../../components/auth/AuthForm'
 import PageMeta from '../../components/seo/PageMeta'
 
@@ -31,12 +32,8 @@ export default function Login() {
     setError(undefined)
     
     try {
-      // Mock: simuler un délai d'authentification
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
       console.log('Login data:', data)
-      
-      // Mock: redirection vers le dashboard
       navigate('/app')
     } catch (err) {
       setError('Erreur de connexion. Veuillez réessayer.')
@@ -49,7 +46,7 @@ export default function Login() {
     <>
       <PageMeta 
         title="Connexion — Ankilang" 
-        description="Connectez-vous à votre espace." 
+        description="Connectez-vous à votre espace Ankilang pour créer et gérer vos flashcards." 
       />
       
       <AuthForm
@@ -59,64 +56,82 @@ export default function Login() {
         isLoading={isLoading}
         error={error}
       >
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <label htmlFor="email" className="label-field">
             Adresse e-mail
           </label>
           <input
             id="email"
             type="email"
             {...register('email')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             placeholder="votre@email.com"
             aria-describedby={errors.email ? 'email-error' : undefined}
           />
           {errors.email && (
-            <p id="email-error" className="mt-1 text-sm text-red-600">
+            <p id="email-error" className="error-message">
               {errors.email.message}
             </p>
           )}
-        </div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+        >
+          <label htmlFor="password" className="label-field">
             Mot de passe
           </label>
           <input
             id="password"
             type="password"
             {...register('password')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             placeholder="Votre mot de passe"
             aria-describedby={errors.password ? 'password-error' : undefined}
           />
           {errors.password && (
-            <p id="password-error" className="mt-1 text-sm text-red-600">
+            <p id="password-error" className="error-message">
               {errors.password.message}
             </p>
           )}
-        </div>
+        </motion.div>
 
-        <div className="flex items-center justify-between">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="flex items-center justify-between"
+        >
           <Link 
             to="/auth/forgot-password" 
-            className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            className="text-sm auth-link"
           >
             Mot de passe oublié ?
           </Link>
-        </div>
+        </motion.div>
 
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.9 }}
+          className="text-center pt-4 border-t border-gray-100"
+        >
+          <p className="text-sm text-dark-charcoal/70 font-sans">
             Pas encore de compte ?{' '}
             <Link 
               to="/auth/register" 
-              className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
+              className="auth-link"
             >
-              S'inscrire
+              S'inscrire gratuitement
             </Link>
           </p>
-        </div>
+        </motion.div>
       </AuthForm>
     </>
   )
