@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, Calendar, Tag, Sparkles } from 'lucide-react'
+import { Calendar, FileText, Lock, Users } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { getLanguageLabel } from '../../constants/languages'
+import { LANGUAGES } from '../../constants/languages'
 import type { Theme } from '@ankilang/shared'
 
 interface ThemeCardProps {
@@ -13,13 +13,15 @@ interface ThemeCardProps {
 export default function ThemeCard({ theme, index }: ThemeCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   
+  const language = LANGUAGES.find(lang => lang.code === theme.targetLang)
+  
   // Couleurs dynamiques par langue
   const languageColors = {
-    'en': { bg: 'bg-pastel-purple', border: 'border-purple-300', accent: 'text-purple-700' },
-    'es': { bg: 'bg-pastel-rose', border: 'border-rose-300', accent: 'text-rose-700' },
-    'oc': { bg: 'bg-gradient-to-br from-yellow-200 to-red-200', border: 'border-yellow-300', accent: 'text-yellow-800' },
-    'de': { bg: 'bg-pastel-green', border: 'border-green-300', accent: 'text-green-700' },
-    'default': { bg: 'bg-pastel-green', border: 'border-green-300', accent: 'text-green-700' }
+    'en': { bg: 'bg-pastel-purple', border: 'border-purple-300', accent: '#7c3aed', secondary: '#f3e8ff' },
+    'es': { bg: 'bg-pastel-rose', border: 'border-rose-300', accent: '#e11d48', secondary: '#ffe4e6' },
+    'oc': { bg: 'bg-gradient-to-br from-yellow-200 to-red-200', border: 'border-yellow-300', accent: '#ca8a04', secondary: '#fef3c7' },
+    'de': { bg: 'bg-pastel-green', border: 'border-green-300', accent: '#16a34a', secondary: '#dcfce7' },
+    'default': { bg: 'bg-pastel-green', border: 'border-green-300', accent: '#16a34a', secondary: '#dcfce7' }
   }
   
   const colors = languageColors[theme.targetLang as keyof typeof languageColors] || languageColors.default
@@ -71,102 +73,99 @@ export default function ThemeCard({ theme, index }: ThemeCardProps) {
             transition={{ duration: 0.8 }}
           />
           
-          {/* Header avec icône et statut */}
+          {/* Header avec drapeau et statut */}
           <div className="flex items-start justify-between mb-4 relative z-10">
             <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 ${colors.bg} rounded-2xl flex items-center justify-center shadow-md border ${colors.border}`}>
-                <BookOpen className={`w-6 h-6 ${colors.accent}`} />
+              {/* Drapeau de la langue */}
+              <div className="w-12 h-12 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md border border-white/40">
+                {language?.code === 'oc' ? (
+                  <span className="text-lg font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
+                    ÒC
+                  </span>
+                ) : (
+                  <span className="text-2xl">{language?.flag || '🌍'}</span>
+                )}
               </div>
-              <div>
-                <h3 className="font-display text-xl font-bold text-dark-charcoal mb-1 line-clamp-2">
+              
+              {/* Informations de base */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-display text-lg font-bold text-dark-charcoal mb-1 line-clamp-1">
                   {theme.name}
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-dark-charcoal/70">
-                  <span className="font-sans font-medium">{getLanguageLabel(theme.targetLang)}</span>
+                <p className="font-sans text-sm text-dark-charcoal/70">
+                  {language?.label || 'Langue inconnue'}
                   {theme.targetLang === 'oc' && (
-                    <Sparkles className="w-4 h-4 text-yellow-600" />
+                    <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">
+                      GRATUIT
+                    </span>
                   )}
-                </div>
+                </p>
               </div>
             </div>
             
-            <motion.span 
-              whileHover={{ scale: 1.1 }}
-              className={`px-3 py-1 rounded-full text-xs font-bold ${
-                theme.shareStatus === 'community' 
-                  ? 'bg-green-100 text-green-800 border border-green-200' 
-                  : 'bg-gray-100 text-gray-700 border border-gray-200'
-              }`}
-            >
-              {theme.shareStatus === 'community' ? '🌍 Partagé' : '🔒 Privé'}
-            </motion.span>
-          </div>
-
-          {/* Statistiques avec animation */}
-          <div className="mb-4 relative z-10">
-            <div className="flex items-center gap-4 text-sm">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-1 bg-white/50 px-3 py-2 rounded-xl"
-              >
-                <BookOpen className="w-4 h-4 text-dark-charcoal/70" />
-                <span className="font-sans font-bold text-dark-charcoal">{theme.cardCount}</span>
-                <span className="font-sans text-dark-charcoal/70">cartes</span>
-              </motion.div>
-              
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-1 bg-white/50 px-3 py-2 rounded-xl"
-              >
-                <Calendar className="w-4 h-4 text-dark-charcoal/70" />
-                <span className="font-sans text-dark-charcoal/70">
-                  {theme.updatedAt 
-                    ? new Date(theme.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                    : 'Récent'
-                  }
-                </span>
-              </motion.div>
+            {/* Badge de partage */}
+            <div className="flex items-center gap-1">
+              {theme.shareStatus === 'private' ? (
+                <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-lg">
+                  <Lock className="w-3 h-3 text-gray-600" />
+                  <span className="text-xs font-medium text-gray-600">Privé</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-lg">
+                  <Users className="w-3 h-3 text-green-600" />
+                  <span className="text-xs font-medium text-green-600">Partagé</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Tags avec animation */}
+          {/* Statistiques */}
+          <div className="flex items-center gap-4 mb-4 relative z-10">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" style={{ color: colors.accent }} />
+              <span className="font-sans text-sm font-medium text-dark-charcoal">
+                {theme.cardCount || 0} cartes
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" style={{ color: colors.accent }} />
+              <span className="font-sans text-sm text-dark-charcoal/70">
+                {theme.updatedAt ? new Date(theme.updatedAt).toLocaleDateString('fr-FR', { 
+                  day: 'numeric', 
+                  month: 'short' 
+                }) : 'Nouveau'}
+              </span>
+            </div>
+          </div>
+
+          {/* Tags */}
           {theme.tags && theme.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4 relative z-10">
-              {theme.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
-                <motion.span 
-                  key={tagIndex}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 + tagIndex * 0.1 }}
-                  whileHover={{ scale: 1.1 }}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/70 text-dark-charcoal border border-white/50 backdrop-blur-sm"
+              {theme.tags.slice(0, 3).map((tag, index) => (
+                <span 
+                  key={index}
+                  className="px-2 py-1 rounded-lg text-xs font-medium"
+                  style={{ 
+                    backgroundColor: colors.secondary,
+                    color: colors.accent 
+                  }}
                 >
-                  <Tag className="w-3 h-3 mr-1" />
                   {tag}
-                </motion.span>
+                </span>
               ))}
               {theme.tags.length > 3 && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/70 text-dark-charcoal/70">
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
                   +{theme.tags.length - 3}
                 </span>
               )}
             </div>
           )}
           
-          {/* Barre de progression créative */}
-          <div className="relative z-10">
-            <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min((theme.cardCount / 50) * 100, 100)}%` }}
-                transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
-                className={`h-full bg-gradient-to-r ${colors.accent === 'text-purple-700' ? 'from-purple-400 to-purple-600' : colors.accent === 'text-rose-700' ? 'from-rose-400 to-rose-600' : 'from-green-400 to-green-600'} rounded-full`}
-              />
-            </div>
-            <p className="text-xs text-dark-charcoal/70 mt-1 font-sans">
-              {theme.cardCount < 10 ? 'Débutant' : theme.cardCount < 30 ? 'En cours' : 'Avancé'}
-            </p>
-          </div>
+          {/* Indicateur de couleur en bas */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-1 rounded-b-3xl"
+            style={{ backgroundColor: colors.accent }}
+          />
         </div>
       </Link>
     </motion.div>
