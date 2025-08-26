@@ -1,7 +1,10 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LANGUAGES } from '../../constants/languages'
+import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { Sparkles, Tag, Globe, Lock, Users, Wand2 } from 'lucide-react'
+import { LANGUAGES, getLanguageByCode } from '../../constants/languages'
 import { CreateThemeSchema } from '@ankilang/shared'
 
 const themeFormSchema = z.object({
@@ -26,14 +29,21 @@ export default function ThemeForm({
   error,
   initialData 
 }: ThemeFormProps) {
+  const [currentStep, setCurrentStep] = useState(1)
+  const [selectedLang, setSelectedLang] = useState('')
+  
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm<ThemeFormData>({
     resolver: zodResolver(themeFormSchema),
     defaultValues: initialData
   })
+
+  const watchedValues = watch()
+  const selectedLanguage = getLanguageByCode(selectedLang || watchedValues.targetLang)
 
   const handleFormSubmit = (data: ThemeFormData) => {
     const tags = data.tags 
@@ -47,97 +57,286 @@ export default function ThemeForm({
     } as z.infer<typeof CreateThemeSchema>)
   }
 
+  const steps = [
+    { id: 1, title: 'Nom du thème', icon: Wand2 },
+    { id: 2, title: 'Langue cible', icon: Globe },
+    { id: 3, title: 'Personnalisation', icon: Sparkles }
+  ]
+
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 sm:space-y-6">
-      {error && (
-        <div 
-          className="p-4 bg-red-50 border border-red-200 rounded-lg"
-          aria-live="polite"
-        >
-          <p className="text-red-800 text-sm">{error}</p>
-        </div>
-      )}
-
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-          Nom du thème *
-        </label>
-        <input
-          id="name"
-          type="text"
-          {...register('name')}
-          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Ex: Vocabulaire de base"
-          aria-describedby={errors.name ? 'name-error' : undefined}
-        />
-        {errors.name && (
-          <p id="name-error" className="mt-1 text-sm text-red-600">
-            {errors.name.message}
-          </p>
-        )}
+    <div className="space-y-8">
+      {/* Indicateur d'étapes */}
+      <div className="flex items-center justify-center space-x-4">
+        {steps.map((step, index) => (
+          <motion.div
+            key={step.id}
+            className="flex items-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <div className={`flex items-center justify-center w-12 h-12 rounded-2xl border-2 transition-all duration-300 ${
+              currentStep >= step.id 
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-500 text-white shadow-lg' 
+                : 'bg-white border-gray-200 text-gray-400'
+            }`}>
+              <step.icon className="w-5 h-5" />
+            </div>
+            {index < steps.length - 1 && (
+              <div className={`w-16 h-0.5 mx-2 transition-colors duration-300 ${
+                currentStep > step.id ? 'bg-purple-500' : 'bg-gray-200'
+              }`} />
+            )}
+          </motion.div>
+        ))}
       </div>
 
-      <div>
-        <label htmlFor="targetLang" className="block text-sm font-medium text-gray-700 mb-2">
-          Langue cible *
-        </label>
-        <select
-          id="targetLang"
-          {...register('targetLang')}
-          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          aria-describedby={errors.targetLang ? 'targetLang-error' : undefined}
-        >
-          <option value="">Sélectionnez une langue</option>
-          {LANGUAGES.map((language) => (
-            <option key={language.code} value={language.code}>
-              {language.label} {language.nativeName && `(${language.nativeName})`}
-            </option>
-          ))}
-        </select>
-        {errors.targetLang && (
-          <p id="targetLang-error" className="mt-1 text-sm text-red-600">
-            {errors.targetLang.message}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-          Tags (optionnel)
-        </label>
-        <input
-          id="tags"
-          type="text"
-          {...register('tags')}
-          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Ex: vocabulaire, débutant, grammaire"
-        />
-        <p className="mt-1 text-sm text-gray-500">
-          Séparez les tags par des virgules
-        </p>
-      </div>
-
-      <div>
-        <label htmlFor="shareStatus" className="block text-sm font-medium text-gray-700 mb-2">
-          Statut de partage
-        </label>
-        <select
-          id="shareStatus"
-          {...register('shareStatus')}
-          className="w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="private">Privé (seulement vous)</option>
-          <option value="community">Communauté (partageable)</option>
-        </select>
-      </div>
-
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+      {/* Prévisualisation en temps réel */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-pastel-green to-pastel-purple/30 rounded-3xl p-6 border border-white/20"
       >
-        {isLoading ? 'Création...' : 'Créer le thème'}
-      </button>
-    </form>
+        <h3 className="font-display text-lg font-semibold text-dark-charcoal mb-4 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-purple-600" />
+          Aperçu de votre thème
+        </h3>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/40">
+          <div className="flex items-center gap-3 mb-3">
+            {selectedLanguage && (
+              <span className="text-2xl">{selectedLanguage.flag}</span>
+            )}
+            <div>
+              <h4 className="font-display font-bold text-dark-charcoal">
+                {watchedValues.name || 'Nom de votre thème'}
+              </h4>
+              <p className="text-sm text-dark-charcoal/70">
+                {selectedLanguage ? selectedLanguage.label : 'Langue cible'}
+              </p>
+            </div>
+          </div>
+          {watchedValues.tags && (
+            <div className="flex flex-wrap gap-1">
+              {watchedValues.tags.split(',').slice(0, 3).map((tag, index) => (
+                <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                  {tag.trim()}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Formulaire */}
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-4 bg-red-50 border-2 border-red-200 rounded-xl"
+            aria-live="polite"
+          >
+            <p className="text-red-800 text-sm font-sans">{error}</p>
+          </motion.div>
+        )}
+
+        {/* Étape 1: Nom du thème */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <label htmlFor="name" className="label-field flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-purple-600" />
+            Donnez un nom à votre thème *
+          </label>
+          <motion.input
+            whileFocus={{ scale: 1.02 }}
+            id="name"
+            type="text"
+            {...register('name')}
+            onFocus={() => setCurrentStep(1)}
+            className="input-field text-lg"
+            placeholder="Ex: Vocabulaire de base, Expressions courantes..."
+            aria-describedby={errors.name ? 'name-error' : undefined}
+          />
+          {errors.name && (
+            <p id="name-error" className="error-message">
+              {errors.name.message}
+            </p>
+          )}
+        </motion.div>
+
+        {/* Étape 2: Langue cible */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <label htmlFor="targetLang" className="label-field flex items-center gap-2">
+            <Globe className="w-4 h-4 text-purple-600" />
+            Choisissez votre langue cible *
+          </label>
+          
+          {/* Sélecteur de langues avec drapeaux */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+            {LANGUAGES.slice(0, 8).map((language) => (
+              <motion.label
+                key={language.code}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
+                  watchedValues.targetLang === language.code
+                    ? 'border-purple-500 bg-purple-50 shadow-lg'
+                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  value={language.code}
+                  {...register('targetLang')}
+                  onFocus={() => setCurrentStep(2)}
+                  onChange={(e) => setSelectedLang(e.target.value)}
+                  className="sr-only"
+                />
+                <div className="text-center">
+                  <div className="text-2xl mb-2">{language.flag}</div>
+                  <div className="font-sans font-medium text-sm text-dark-charcoal">
+                    {language.label}
+                  </div>
+                  {language.code === 'oc' && (
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+              </motion.label>
+            ))}
+          </div>
+          
+          {/* Select classique pour toutes les langues */}
+          <select
+            {...register('targetLang')}
+            onFocus={() => setCurrentStep(2)}
+            className="input-field"
+            aria-describedby={errors.targetLang ? 'targetLang-error' : undefined}
+          >
+            <option value="">Ou sélectionnez dans la liste complète</option>
+            {LANGUAGES.map((language) => (
+              <option key={language.code} value={language.code}>
+                {language.flag} {language.label} {language.nativeName && `(${language.nativeName})`}
+              </option>
+            ))}
+          </select>
+          {errors.targetLang && (
+            <p id="targetLang-error" className="error-message">
+              {errors.targetLang.message}
+            </p>
+          )}
+        </motion.div>
+
+        {/* Étape 3: Personnalisation */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-6"
+        >
+          <div>
+            <label htmlFor="tags" className="label-field flex items-center gap-2">
+              <Tag className="w-4 h-4 text-purple-600" />
+              Tags pour organiser (optionnel)
+            </label>
+            <motion.input
+              whileFocus={{ scale: 1.02 }}
+              id="tags"
+              type="text"
+              {...register('tags')}
+              onFocus={() => setCurrentStep(3)}
+              className="input-field"
+              placeholder="Ex: vocabulaire, débutant, grammaire, voyage..."
+            />
+            <p className="mt-2 text-sm text-dark-charcoal/70 font-sans">
+              Séparez les tags par des virgules pour mieux organiser vos thèmes
+            </p>
+          </div>
+
+          <div>
+            <label className="label-field flex items-center gap-2 mb-4">
+              <Users className="w-4 h-4 text-purple-600" />
+              Partage et visibilité
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <motion.label
+                whileHover={{ scale: 1.02 }}
+                className={`cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
+                  watchedValues.shareStatus === 'private'
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-200 bg-white hover:border-purple-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  value="private"
+                  {...register('shareStatus')}
+                  className="sr-only"
+                />
+                <div className="flex items-center gap-3">
+                  <Lock className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <div className="font-sans font-semibold text-dark-charcoal">Privé</div>
+                    <div className="text-sm text-dark-charcoal/70">Visible par vous uniquement</div>
+                  </div>
+                </div>
+              </motion.label>
+              
+              <motion.label
+                whileHover={{ scale: 1.02 }}
+                className={`cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
+                  watchedValues.shareStatus === 'community'
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-200 bg-white hover:border-purple-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  value="community"
+                  {...register('shareStatus')}
+                  className="sr-only"
+                />
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-green-600" />
+                  <div>
+                    <div className="font-sans font-semibold text-dark-charcoal">Communauté</div>
+                    <div className="text-sm text-dark-charcoal/70">Partageable avec d'autres</div>
+                  </div>
+                </div>
+              </motion.label>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Bouton de soumission */}
+        <motion.button
+          type="submit"
+          disabled={isLoading}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-3">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Création de votre thème...
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-3">
+              <Sparkles className="w-5 h-5" />
+              Créer mon thème
+            </span>
+          )}
+        </motion.button>
+      </form>
+    </div>
   )
 }
