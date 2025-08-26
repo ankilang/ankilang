@@ -139,7 +139,7 @@ export default function ThemeForm({
             type="text"
             {...register('name')}
             onFocus={() => setCurrentStep(1)}
-            className="input-field text-lg"
+            className="input-field text-lg sm:text-base md:text-lg"
             placeholder="Ex: Vocabulaire de base, Expressions courantes..."
             aria-describedby={errors.name ? 'name-error' : undefined}
           />
@@ -333,7 +333,7 @@ export default function ThemeForm({
           disabled={isLoading}
           whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(124, 58, 237, 0.3)" }}
           whileTap={{ scale: 0.98 }}
-          className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-white text-lg py-4 rounded-2xl font-semibold shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden"
+          className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-white text-lg py-4 sm:text-base sm:py-3 rounded-2xl font-semibold shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden"
         >
           {/* Effet de brillance au survol */}
           <motion.div

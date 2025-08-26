@@ -72,10 +72,10 @@ export default function NewTheme() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                <h1 className="font-display text-4xl lg:text-5xl font-bold text-dark-charcoal mb-2">
+                <h1 className="font-display text-4xl lg:text-5xl font-bold text-dark-charcoal mb-2 sm:text-3xl lg:text-4xl">
                   Studio de Création
                 </h1>
-                <p className="font-sans text-lg text-dark-charcoal/70 max-w-2xl">
+                <p className="font-sans text-lg text-dark-charcoal/70 max-w-2xl sm:text-base">
                   Donnez vie à vos idées d'apprentissage. Créez un thème personnalisé pour organiser vos flashcards.
                 </p>
               </motion.div>
@@ -86,7 +86,7 @@ export default function NewTheme() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex items-center gap-6 text-sm"
+              className="flex items-center gap-6 text-sm sm:flex-col sm:items-start sm:gap-2"
             >
               <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm">
                 <Sparkles className="w-4 h-4 text-purple-600" />
@@ -100,14 +100,14 @@ export default function NewTheme() {
           </div>
         </motion.header>
 
-        <main className="container mx-auto px-6 py-12 -mt-6 relative z-10">
+        <main className="container mx-auto px-6 py-12 -mt-6 relative z-10 sm:px-4 sm:py-8">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="max-w-4xl mx-auto"
+            className="max-w-4xl mx-auto sm:px-0"
           >
-            <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12">
+            <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12 sm:p-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

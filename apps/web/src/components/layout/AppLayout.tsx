@@ -171,7 +171,8 @@ export default function AppLayout() {
         style={{
           paddingBottom: isTabBarVisible 
             ? 'calc(64px + var(--safe-bottom))' 
-            : '0'
+            : '0',
+          paddingTop: isInstalled ? 'var(--safe-top)' : '0' // Ajout pour la safe area du haut
         }}
       >
         {/* Supprimer le container mx-auto px-4 py-6 pour laisser les pages gérer leur propre layout */}
