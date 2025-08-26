@@ -95,36 +95,92 @@ export default function ThemeForm({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-pastel-green to-pastel-purple/30 rounded-3xl p-6 border border-white/20"
+        className="bg-gradient-to-br from-pastel-green to-pastel-purple/30 rounded-3xl p-6 border border-white/20 relative overflow-hidden"
       >
-        <h3 className="font-display text-lg font-semibold text-dark-charcoal mb-4 flex items-center gap-2">
+        {/* Effet de particules subtiles */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-purple-300/30 rounded-full"
+              animate={{
+                x: [0, 100, 0],
+                y: [0, -50, 0],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: 4,
+                delay: i * 1.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{
+                left: `${20 + i * 30}%`,
+                top: `${30 + i * 20}%`
+              }}
+            />
+          ))}
+        </div>
+        
+        <h3 className="font-display text-lg font-semibold text-dark-charcoal mb-4 flex items-center gap-2 relative z-10">
           <Sparkles className="w-5 h-5 text-purple-600" />
           Aperçu de votre thème
         </h3>
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/40">
+        
+        <motion.div 
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/40 relative z-10"
+          animate={watchedValues.name ? { scale: [1, 1.02, 1] } : {}}
+          transition={{ duration: 0.5 }}
+        >
           <div className="flex items-center gap-3 mb-3">
             {selectedLanguage && (
-              <span className="text-2xl">{selectedLanguage.flag}</span>
+              <motion.span 
+                className="text-2xl"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              >
+                {selectedLanguage.flag || (selectedLanguage.code === 'oc' ? '🏴󠁧󠁢󠁳󠁣󠁴󠁿' : '🌍')}
+              </motion.span>
             )}
             <div>
-              <h4 className="font-display font-bold text-dark-charcoal">
+              <motion.h4 
+                className="font-display font-bold text-dark-charcoal"
+                animate={watchedValues.name ? { color: ['#333333', '#7C3AED', '#333333'] } : {}}
+                transition={{ duration: 1 }}
+              >
                 {watchedValues.name || 'Nom de votre thème'}
-              </h4>
+              </motion.h4>
               <p className="text-sm text-dark-charcoal/70">
                 {selectedLanguage ? selectedLanguage.label : 'Langue cible'}
+                {selectedLanguage?.code === 'oc' && (
+                  <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
+                    GRATUIT
+                  </span>
+                )}
               </p>
             </div>
           </div>
           {watchedValues.tags && (
-            <div className="flex flex-wrap gap-1">
+            <motion.div 
+              className="flex flex-wrap gap-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               {watchedValues.tags.split(',').slice(0, 3).map((tag, index) => (
-                <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                  {tag.trim()}
-                </span>
+                                 <motion.span 
+                   key={index} 
+                   className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
+                   initial={{ scale: 0 }}
+                   animate={{ scale: 1 }}
+                   transition={{ delay: 0.1 * index }}
+                 >
+                   {tag.trim()}
+                 </motion.span>
               ))}
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Formulaire */}
