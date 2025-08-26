@@ -181,36 +181,66 @@ export default function ThemeForm({
           {/* Sélecteur de langues avec drapeaux */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
             {LANGUAGES.slice(0, 8).map((language) => (
-              <motion.label
-                key={language.code}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
-                  watchedValues.targetLang === language.code
-                    ? 'border-purple-500 bg-purple-50 shadow-lg'
-                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  value={language.code}
-                  {...register('targetLang')}
-                  onFocus={() => setCurrentStep(2)}
-                  onChange={(e) => setSelectedLang(e.target.value)}
-                  className="sr-only"
-                />
-                <div className="text-center">
-                  <div className="text-2xl mb-2">{language.flag}</div>
-                  <div className="font-sans font-medium text-sm text-dark-charcoal">
-                    {language.label}
-                  </div>
-                  {language.code === 'oc' && (
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full flex items-center justify-center">
-                      <Sparkles className="w-3 h-3 text-white" />
+              language.code === 'oc' ? (
+                <motion.label
+                  key={language.code}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
+                    watchedValues.targetLang === language.code
+                      ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-red-50 shadow-lg'
+                      : 'border-yellow-300 bg-gradient-to-br from-yellow-100 to-red-100 hover:border-yellow-400'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={language.code}
+                    {...register('targetLang')}
+                    onFocus={() => setCurrentStep(2)}
+                    onChange={(e) => setSelectedLang(e.target.value)}
+                    className="sr-only"
+                  />
+                  <div className="text-center">
+                    {/* Symbole spécial pour l'occitan au lieu du drapeau */}
+                    <div className="text-2xl mb-2 font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
+                      ÒC
                     </div>
-                  )}
-                </div>
-              </motion.label>
+                    <div className="font-sans font-medium text-sm text-dark-charcoal">
+                      {language.label}
+                    </div>
+                    {/* Badge "Gratuit" */}
+                    <div className="absolute -top-1 -right-1 px-2 py-1 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full text-xs text-white font-bold shadow-lg">
+                      GRATUIT
+                    </div>
+                  </div>
+                </motion.label>
+              ) : (
+                <motion.label
+                  key={language.code}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
+                    watchedValues.targetLang === language.code
+                      ? 'border-purple-500 bg-purple-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={language.code}
+                    {...register('targetLang')}
+                    onFocus={() => setCurrentStep(2)}
+                    onChange={(e) => setSelectedLang(e.target.value)}
+                    className="sr-only"
+                  />
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">{language.flag}</div>
+                    <div className="font-sans font-medium text-sm text-dark-charcoal">
+                      {language.label}
+                    </div>
+                  </div>
+                </motion.label>
+              )
             ))}
           </div>
           
