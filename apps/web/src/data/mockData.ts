@@ -47,6 +47,23 @@ export const mockThemes: Theme[] = [
   }
 ]
 
+// Helpers CRUD pour les thèmes (mock)
+export const updateMockTheme = (id: string, patch: Partial<Theme>) => {
+  const i = mockThemes.findIndex(t => t.id === id)
+  if (i === -1) return
+  mockThemes[i] = { 
+    ...mockThemes[i], 
+    ...patch, 
+    updatedAt: new Date().toISOString() 
+  } as Theme
+}
+
+export const deleteMockTheme = (id: string) => {
+  const i = mockThemes.findIndex(t => t.id === id)
+  if (i !== -1) mockThemes.splice(i, 1)
+  if (mockCards[id]) delete mockCards[id]
+}
+
 export const mockCards: Record<string, Card[]> = {
   '1': [
     {

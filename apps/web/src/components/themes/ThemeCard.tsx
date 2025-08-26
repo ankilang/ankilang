@@ -1,30 +1,25 @@
 import { Link } from 'react-router-dom'
-import { Calendar, FileText, Lock, Users } from 'lucide-react'
+import { Calendar, FileText, Lock, Users, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { LANGUAGES } from '../../constants/languages'
+import { getPastelForTheme } from '../../constants/themes'
 import type { Theme } from '@ankilang/shared'
 
 interface ThemeCardProps {
   theme: Theme
   index: number
+  onEdit?: (theme: Theme) => void
+  onDelete?: (theme: Theme) => void
 }
 
-export default function ThemeCard({ theme, index }: ThemeCardProps) {
+export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   
   const language = LANGUAGES.find(lang => lang.code === theme.targetLang)
-  
-  // Couleurs dynamiques par langue
-  const languageColors = {
-    'en': { bg: 'bg-pastel-purple', border: 'border-purple-300', accent: '#7c3aed', secondary: '#f3e8ff' },
-    'es': { bg: 'bg-pastel-rose', border: 'border-rose-300', accent: '#e11d48', secondary: '#ffe4e6' },
-    'oc': { bg: 'bg-gradient-to-br from-yellow-200 to-red-200', border: 'border-yellow-300', accent: '#ca8a04', secondary: '#fef3c7' },
-    'de': { bg: 'bg-pastel-green', border: 'border-green-300', accent: '#16a34a', secondary: '#dcfce7' },
-    'default': { bg: 'bg-pastel-green', border: 'border-green-300', accent: '#16a34a', secondary: '#dcfce7' }
-  }
-  
-  const colors = languageColors[theme.targetLang as keyof typeof languageColors] || languageColors.default
+  const pastel = getPastelForTheme(theme.id || theme.name) // mapping stable
+  const accent = pastel?.accent || '#6b7280' // fallback si pastel undefined
   
   return (
     <motion.div
@@ -65,7 +60,64 @@ export default function ThemeCard({ theme, index }: ThemeCardProps) {
       )}
       
       <Link to={`/app/themes/${theme.id}`} className="block">
-        <div className={`${colors.bg} ${colors.border} border-2 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden`}>
+        <div className={`${pastel?.bg || 'bg-gray-100'} ${pastel?.border || 'border-gray-300'} border-2 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden`}>
+          {/* Bouton Options (modifier/supprimer) */}
+          <div className="absolute top-3 right-3 z-20">
+            <div className="relative">
+              <button
+                aria-label={`Options pour ${theme.name}`}
+                className="p-2 rounded-xl bg-white/80 backdrop-blur border border-white/60 hover:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsMenuOpen(!isMenuOpen)
+                }}
+                onBlur={() => {
+                  // Fermer le menu après un délai pour permettre la navigation
+                  setTimeout(() => setIsMenuOpen(false), 150)
+                }}
+              >
+                <MoreVertical className="w-4 h-4 text-dark-charcoal" />
+              </button>
+
+              {/* Menu flottant accessible */}
+              {isMenuOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-30"
+                  role="menu"
+                >
+                  <button
+                    role="menuitem"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                    onClick={(e) => { 
+                      e.preventDefault()
+                      e.stopPropagation()
+                      onEdit?.(theme)
+                      setIsMenuOpen(false)
+                    }}
+                  >
+                    <Pencil className="w-4 h-4" /> Modifier
+                  </button>
+                  <button
+                    role="menuitem"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      onDelete?.(theme)
+                      setIsMenuOpen(false)
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" /> Supprimer
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          </div>
+
           {/* Effet de brillance */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent"
@@ -119,53 +171,53 @@ export default function ThemeCard({ theme, index }: ThemeCardProps) {
             </div>
           </div>
 
-          {/* Statistiques */}
-          <div className="flex items-center gap-4 mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4" style={{ color: colors.accent }} />
-              <span className="font-sans text-sm font-medium text-dark-charcoal">
-                {theme.cardCount || 0} cartes
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" style={{ color: colors.accent }} />
-              <span className="font-sans text-sm text-dark-charcoal/70">
-                {theme.updatedAt ? new Date(theme.updatedAt).toLocaleDateString('fr-FR', { 
-                  day: 'numeric', 
-                  month: 'short' 
-                }) : 'Nouveau'}
-              </span>
-            </div>
-          </div>
+                           {/* Statistiques */}
+                 <div className="flex items-center gap-4 mb-4 relative z-10">
+                   <div className="flex items-center gap-2">
+                     <FileText className="w-4 h-4" style={{ color: accent }} />
+                     <span className="font-sans text-sm font-medium text-dark-charcoal">
+                       {theme.cardCount || 0} cartes
+                     </span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <Calendar className="w-4 h-4" style={{ color: accent }} />
+                     <span className="font-sans text-sm text-dark-charcoal/70">
+                       {theme.updatedAt ? new Date(theme.updatedAt).toLocaleDateString('fr-FR', { 
+                         day: 'numeric', 
+                         month: 'short' 
+                       }) : 'Nouveau'}
+                     </span>
+                   </div>
+                 </div>
 
-          {/* Tags */}
-          {theme.tags && theme.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4 relative z-10">
-              {theme.tags.slice(0, 3).map((tag, index) => (
-                <span 
-                  key={index}
-                  className="px-2 py-1 rounded-lg text-xs font-medium"
-                  style={{ 
-                    backgroundColor: colors.secondary,
-                    color: colors.accent 
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
-              {theme.tags.length > 3 && (
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
-                  +{theme.tags.length - 3}
-                </span>
-              )}
-            </div>
-          )}
-          
-          {/* Indicateur de couleur en bas */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 h-1 rounded-b-3xl"
-            style={{ backgroundColor: colors.accent }}
-          />
+                           {/* Tags */}
+                 {theme.tags && theme.tags.length > 0 && (
+                   <div className="flex flex-wrap gap-2 mb-4 relative z-10">
+                     {theme.tags.slice(0, 3).map((tag, index) => (
+                       <span 
+                         key={index}
+                         className="px-2 py-1 rounded-lg text-xs font-medium"
+                         style={{ 
+                           backgroundColor: `${accent}20`,
+                           color: accent 
+                         }}
+                       >
+                         {tag}
+                       </span>
+                     ))}
+                     {theme.tags.length > 3 && (
+                       <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
+                         +{theme.tags.length - 3}
+                       </span>
+                     )}
+                   </div>
+                 )}
+
+                 {/* Indicateur de couleur en bas */}
+                 <div 
+                   className="absolute bottom-0 left-0 right-0 h-1 rounded-b-3xl"
+                   style={{ backgroundColor: accent }}
+                 />
         </div>
       </Link>
     </motion.div>

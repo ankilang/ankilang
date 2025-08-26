@@ -1,23 +1,37 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Filter } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ThemeCard from '../../../components/themes/ThemeCard'
-import { mockThemes } from '../../../data/mockData'
+import { mockThemes, deleteMockTheme } from '../../../data/mockData'
 import { LANGUAGES, getLanguageLabel } from '../../../constants/languages'
 import PageMeta from '../../../components/seo/PageMeta'
+import type { Theme } from '@ankilang/shared'
 
 export default function ThemesIndex() {
+  const navigate = useNavigate()
+  const [themes, setThemes] = useState<Theme[]>([...mockThemes])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('')
 
   // Filtrer les thèmes
-  const filteredThemes = mockThemes.filter(theme => {
+  const filteredThemes = themes.filter(theme => {
     const matchesSearch = theme.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          theme.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesLanguage = !selectedLanguage || theme.targetLang === selectedLanguage
     return matchesSearch && matchesLanguage
   })
+
+  const handleEdit = (theme: Theme) => {
+    navigate(`/app/themes/${theme.id}?edit=1`)
+  }
+
+  const handleDelete = (theme: Theme) => {
+    if (confirm(`Supprimer le thème « ${theme.name} » ? Cette action est définitive.`)) {
+      deleteMockTheme(theme.id)
+      setThemes(prev => prev.filter(t => t.id !== theme.id))
+    }
+  }
 
   return (
     <>
@@ -70,7 +84,7 @@ export default function ThemesIndex() {
                       transition={{ duration: 0.6, delay: 0.6 }}
                       className="text-lg sm:text-xl lg:text-2xl font-bold text-dark-charcoal font-display"
                     >
-                      {mockThemes.length}
+                      {themes.length}
                     </motion.div>
                     <div className="text-xs text-dark-charcoal/70 font-sans">Thèmes</div>
                   </div>
@@ -81,7 +95,7 @@ export default function ThemesIndex() {
                       transition={{ duration: 0.6, delay: 0.7 }}
                       className="text-lg sm:text-xl lg:text-2xl font-bold text-dark-charcoal font-display"
                     >
-                      {mockThemes.reduce((sum, theme) => sum + theme.cardCount, 0)}
+                      {themes.reduce((sum, theme) => sum + theme.cardCount, 0)}
                     </motion.div>
                     <div className="text-xs text-dark-charcoal/70 font-sans">Cartes</div>
                   </div>
@@ -242,7 +256,13 @@ export default function ThemesIndex() {
               className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 xl:gap-8"
             >
               {filteredThemes.map((theme, index) => (
-                <ThemeCard key={theme.id} theme={theme} index={index} />
+                <ThemeCard 
+                  key={theme.id} 
+                  theme={theme} 
+                  index={index}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               ))}
             </motion.div>
           )}
