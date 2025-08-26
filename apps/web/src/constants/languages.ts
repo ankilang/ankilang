@@ -7,7 +7,7 @@ export interface Language {
 }
 
 export const LANGUAGES: Language[] = [
-  { code: 'oc', label: 'Occitan', nativeName: 'Occitan', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', color: 'from-yellow-400 to-red-500' }, // Pas de drapeau standard, utilise l'Écosse
+  { code: 'oc', label: 'Occitan', nativeName: 'Occitan', flag: '', color: 'from-yellow-400 to-red-500' }, // Pas de drapeau officiel
   { code: 'en', label: 'Anglais', nativeName: 'English', flag: '🇬🇧', color: 'from-blue-500 to-red-500' },
   { code: 'es', label: 'Espagnol', nativeName: 'Español', flag: '🇪🇸', color: 'from-red-500 to-yellow-500' },
   { code: 'fr', label: 'Français', nativeName: 'Français', flag: '🇫🇷', color: 'from-blue-500 to-red-500' },
@@ -40,7 +40,8 @@ export const getLanguageLabel = (code: string): string => {
 
 export const getLanguageFlag = (code: string): string => {
   const language = getLanguageByCode(code)
-  return language ? language.flag : '🌍'
+  if (!language) return '🌍'
+  return language.flag || '🌍'
 }
 
 export const getLanguageColor = (code: string): string => {
