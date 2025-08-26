@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Sparkles, Globe } from 'lucide-react'
-import { LANGUAGES } from '../../../constants/languages'
 import ThemeForm from '../../../components/themes/ThemeForm'
 import { addMockTheme } from '../../../data/mockData'
 import { CreateThemeSchema } from '@ankilang/shared'
@@ -45,58 +43,43 @@ export default function NewTheme() {
       />
       
       <div className="min-h-screen bg-gray-50">
-        {/* Header Immersif */}
+        {/* Header Simplifié - SANS statistiques */}
         <motion.header 
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="bg-gradient-to-br from-pastel-purple via-pastel-green/50 to-pastel-rose/30 relative overflow-hidden"
+          style={{ paddingTop: 'var(--safe-top, 0px)' }}
         >
           {/* Éléments décoratifs */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-pastel-rose/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-pastel-purple/30 rounded-full blur-2xl" />
+          <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-pastel-rose/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-40 sm:w-80 h-40 sm:h-80 bg-pastel-purple/30 rounded-full blur-2xl" />
           
-          <div className="relative container mx-auto px-6 py-12">
-            <div className="flex items-center gap-6 mb-6">
+          <div className="relative container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
               <motion.button
                 onClick={() => navigate('/app/themes')}
                 whileHover={{ scale: 1.1, x: -2 }}
                 whileTap={{ scale: 0.9 }}
-                className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
               >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
               </motion.button>
               
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
+                className="flex-1"
               >
-                <h1 className="font-display text-4xl lg:text-5xl font-bold text-dark-charcoal mb-2 sm:text-3xl lg:text-4xl">
+                <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold text-dark-charcoal mb-1 sm:mb-2">
                   Studio de Création
                 </h1>
-                <p className="font-sans text-lg text-dark-charcoal/70 max-w-2xl sm:text-base">
+                <p className="font-sans text-sm sm:text-lg text-dark-charcoal/70 max-w-2xl">
                   Donnez vie à vos idées d'apprentissage. Créez un thème personnalisé pour organiser vos flashcards.
                 </p>
               </motion.div>
             </div>
-            
-            {/* Statistiques inspirantes */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex items-center gap-6 text-sm sm:flex-col sm:items-start sm:gap-2"
-            >
-              <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm">
-                <Sparkles className="w-4 h-4 text-purple-600" />
-                <span className="font-sans text-dark-charcoal">Création illimitée</span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm">
-                <Globe className="w-4 h-4 text-green-600" />
-                <span className="font-sans text-dark-charcoal">{LANGUAGES.length} langues disponibles</span>
-              </div>
-            </motion.div>
           </div>
         </motion.header>
 

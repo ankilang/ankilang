@@ -3,8 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Sparkles, Tag, Globe, Lock, Users, Wand2 } from 'lucide-react'
-import { LANGUAGES } from '../../constants/languages'
+import { Sparkles, Tag, Globe, Lock, Users, Wand2, CheckCircle } from 'lucide-react'
+import { LANGUAGES, getLanguageByCode } from '../../constants/languages'
 import { CreateThemeSchema } from '@ankilang/shared'
 
 const themeFormSchema = z.object({
@@ -30,6 +30,7 @@ export default function ThemeForm({
   initialData 
 }: ThemeFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
+  const [selectedLang, setSelectedLang] = useState('')
   
   const {
     register,
@@ -42,6 +43,7 @@ export default function ThemeForm({
   })
 
   const watchedValues = watch()
+  const selectedLanguage = getLanguageByCode(selectedLang || watchedValues.targetLang)
 
   const handleFormSubmit = (data: ThemeFormData) => {
     const tags = data.tags 
@@ -150,95 +152,111 @@ export default function ThemeForm({
           )}
         </motion.div>
 
-        {/* Étape 2: Langue cible */}
+        {/* Étape 2: Langue cible - SANS dropdown */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
+          className="space-y-4"
         >
-          <label htmlFor="targetLang" className="label-field flex items-center gap-2">
+          <label className="label-field flex items-center gap-2">
             <Globe className="w-4 h-4 text-purple-600" />
-            Choisissez votre langue cible *
+            Langue que vous souhaitez apprendre
           </label>
           
-          {/* Sélecteur de langues avec drapeaux */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
-            {LANGUAGES.slice(0, 8).map((language) => (
-              language.code === 'oc' ? (
-                <motion.label
-                  key={language.code}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
-                    watchedValues.targetLang === language.code
+          {/* Grille de langues améliorée */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+            {LANGUAGES.map((language) => (
+              <motion.label
+                key={language.code}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`relative cursor-pointer p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 ${
+                  watchedValues.targetLang === language.code
+                    ? language.code === 'oc' 
                       ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-red-50 shadow-lg'
-                      : 'border-yellow-300 bg-gradient-to-br from-yellow-100 to-red-100 hover:border-yellow-400'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value={language.code}
-                    {...register('targetLang')}
-                    onFocus={() => setCurrentStep(2)}
-                    className="sr-only"
-                  />
-                  <div className="text-center">
-                    {/* Symbole spécial pour l'occitan au lieu du drapeau */}
-                    <div className="text-2xl mb-2 font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
-                      ÒC
-                    </div>
-                    <div className="font-sans font-medium text-sm text-dark-charcoal">
-                      {language.label}
-                    </div>
-                    {/* Badge "Gratuit" */}
-                    <div className="absolute -top-1 -right-1 px-2 py-1 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full text-xs text-white font-bold shadow-lg">
-                      GRATUIT
-                    </div>
-                  </div>
-                </motion.label>
-              ) : (
-                <motion.label
-                  key={language.code}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
-                    watchedValues.targetLang === language.code
-                      ? 'border-purple-500 bg-purple-50 shadow-lg'
+                      : 'border-purple-500 bg-purple-50 shadow-lg'
+                    : language.code === 'oc'
+                      ? 'border-yellow-300 bg-gradient-to-br from-yellow-100 to-red-100 hover:border-yellow-400'
                       : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value={language.code}
-                    {...register('targetLang')}
-                    onFocus={() => setCurrentStep(2)}
-                    className="sr-only"
-                  />
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">{language.flag}</div>
-                    <div className="font-sans font-medium text-sm text-dark-charcoal">
-                      {language.label}
-                    </div>
+                }`}
+              >
+                <input
+                  type="radio"
+                  value={language.code}
+                  {...register('targetLang')}
+                  onFocus={() => setCurrentStep(2)}
+                  onChange={(e) => setSelectedLang(e.target.value)}
+                  className="sr-only"
+                />
+                <div className="text-center">
+                  <div className="text-lg sm:text-2xl mb-1 sm:mb-2">
+                    {language.code === 'oc' ? (
+                      <div className="font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text text-sm sm:text-lg">
+                        ÒC
+                      </div>
+                    ) : (
+                      language.flag
+                    )}
                   </div>
-                </motion.label>
-              )
+                  <div className="font-sans font-medium text-xs sm:text-sm text-dark-charcoal leading-tight">
+                    {language.label}
+                  </div>
+                  {language.nativeName && (
+                    <div className="font-sans text-xs text-dark-charcoal/50 mt-1">
+                      {language.nativeName}
+                    </div>
+                  )}
+                  {language.code === 'oc' && (
+                    <div className="absolute -top-1 -right-1 px-1 sm:px-2 py-0.5 sm:py-1 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full text-xs text-white font-bold shadow-lg">
+                      <span className="hidden sm:inline">GRATUIT</span>
+                      <span className="sm:hidden">✨</span>
+                    </div>
+                  )}
+                </div>
+              </motion.label>
             ))}
           </div>
           
-          {/* Select classique pour toutes les langues */}
-          <select
-            {...register('targetLang')}
-            onFocus={() => setCurrentStep(2)}
-            className="input-field"
-            aria-describedby={errors.targetLang ? 'targetLang-error' : undefined}
-          >
-            <option value="">Ou sélectionnez dans la liste complète</option>
-            {LANGUAGES.map((language) => (
-              <option key={language.code} value={language.code}>
-                {language.flag} {language.label} {language.nativeName && `(${language.nativeName})`}
-              </option>
-            ))}
-          </select>
+          {/* Message d'aide si aucune langue sélectionnée */}
+          {!watchedValues.targetLang && (
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm text-dark-charcoal/60 text-center mt-3 font-sans"
+            >
+              Sélectionnez la langue que vous souhaitez apprendre
+            </motion.p>
+          )}
+          
+          {/* Message de confirmation de sélection */}
+          {watchedValues.targetLang && selectedLanguage && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-center gap-3 py-3 px-4 bg-green-50 border border-green-200 rounded-xl mt-4"
+            >
+              <div className="text-xl">
+                {selectedLanguage.code === 'oc' ? (
+                  <span className="font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
+                    ÒC
+                  </span>
+                ) : (
+                  selectedLanguage.flag
+                )}
+              </div>
+              <span className="font-sans text-sm text-green-800">
+                <strong>{selectedLanguage.label}</strong> sélectionné
+                {selectedLanguage.code === 'oc' && (
+                  <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">
+                    GRATUIT & ILLIMITÉ
+                  </span>
+                )}
+              </span>
+              <CheckCircle className="w-4 h-4 text-green-600" />
+            </motion.div>
+          )}
+          
           {errors.targetLang && (
             <p id="targetLang-error" className="error-message">
               {errors.targetLang.message}
