@@ -407,19 +407,36 @@ export default function ThemeForm({
         <motion.button
           type="submit"
           disabled={isLoading}
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(124, 58, 237, 0.3)" }}
           whileTap={{ scale: 0.98 }}
-          className="w-full btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-white text-lg py-4 rounded-2xl font-semibold shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden"
         >
+          {/* Effet de brillance au survol */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          />
+          
           {isLoading ? (
-            <span className="flex items-center justify-center gap-3">
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="flex items-center justify-center gap-3 relative z-10">
+              <motion.div 
+                className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
               Création de votre thème...
             </span>
           ) : (
-            <span className="flex items-center justify-center gap-3">
+            <span className="flex items-center justify-center gap-10 relative z-10">
               <Sparkles className="w-5 h-5" />
               Créer mon thème
+              <motion.div
+                animate={{ x: [0, 5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ✨
+              </motion.div>
             </span>
           )}
         </motion.button>
