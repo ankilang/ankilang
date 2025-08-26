@@ -79,9 +79,9 @@ export const getThemeColors = (code: string) => {
     'hi': { bg: 'bg-gradient-to-br from-orange-100 to-amber-100', border: 'border-orange-300', accent: '#ea580c', secondary: '#fed7aa' },
     'tr': { bg: 'bg-gradient-to-br from-red-100 to-rose-100', border: 'border-red-300', accent: '#e11d48', secondary: '#ffe4e6' },
     'pl': { bg: 'bg-gradient-to-br from-red-100 to-pink-100', border: 'border-red-300', accent: '#f87171', secondary: '#fee2e2' },
-    'sv': { bg: 'bg-gradient-to-br from-blue-100 to-cyan-100', border: 'border-blue-300', accent: '#0891b2', secondary: '#cffafe' },
+    'sv': { bg: 'bg-gradient-to-br from-blue-100 to-cyan-100', border: 'border-blue-300', accent: '#0891b2', secondary: '#e0e7ff' },
     'da': { bg: 'bg-gradient-to-br from-red-100 to-orange-100', border: 'border-red-300', accent: '#ea580c', secondary: '#fed7aa' },
-    'no': { bg: 'bg-gradient-to-br from-blue-100 to-indigo-100', border: 'border-blue-300', accent: '#4338ca', secondary: '#e0e7ff' },
+    'no': { bg: 'bg-gradient-to-br from-blue-100 to-indigo-100', border: 'border-blue-300', accent: '#4338ca', secondary: '#dbeafe' },
     'fi': { bg: 'bg-gradient-to-br from-blue-100 to-slate-100', border: 'border-blue-300', accent: '#475569', secondary: '#f1f5f9' }
   }
 
