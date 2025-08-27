@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,19 +8,16 @@ import {
   Volume2, Trash2, Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useRef } from 'react'
 import { CreateCardSchema } from '@ankilang/shared'
+import { useSubscription } from '../../contexts/SubscriptionContext'
+import PremiumTeaser from '../PremiumTeaser'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
-  // RECTO
   recto: z.string().min(1, 'Le contenu du recto est requis'),
-  rectoImage: z.string().optional(),
-  // VERSO
   verso: z.string().min(1, 'Le contenu du verso est requis'),
   versoImage: z.string().optional(),
   versoAudio: z.string().optional(),
-  // EXTRA
   extra: z.string().optional(),
   tags: z.string().optional()
 })
@@ -46,7 +43,7 @@ interface NewCardModalProps {
   isLoading?: boolean
   error?: string
   themeId: string
-  themeLanguage: string // 'fr', 'en', 'oc', etc.
+  themeLanguage: string
   themeColors: {
     primary: string
     secondary: string
@@ -69,6 +66,9 @@ export default function NewCardModal({
   const [selectedType, setSelectedType] = useState<'basic' | 'cloze'>('basic')
   const [isTranslating, setIsTranslating] = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
+  
+  // Subscription context
+  const { features, upgradeToPremium } = useSubscription()
 
   const {
     register,
@@ -92,23 +92,24 @@ export default function NewCardModal({
 
   const watchedValues = watch()
 
-  // Fonction de traduction (mock pour l'instant)
+  // Fonction de traduction
   const handleTranslate = async () => {
     if (selectedType !== 'basic') return
     
     const rectoText = getValues('recto')
     if (!rectoText.trim()) return
 
+    if (!features.canUseTranslation) {
+      upgradeToPremium()
+      return
+    }
+
     setIsTranslating(true)
     
     try {
-      // Mock API call - remplacer par vraie API
       await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Simulation de traduction
       const translatedText = `[Traduit en ${themeLanguage}] ${rectoText}`
       setValue('verso', translatedText)
-      
     } catch (error) {
       console.error('Erreur de traduction:', error)
     } finally {
@@ -117,14 +118,20 @@ export default function NewCardModal({
   }
 
   // Gestion des fichiers
-  const handleImageUpload = (field: 'rectoImage' | 'versoImage' | 'clozeImage') => {
-    // Mock upload - remplacer par vraie logique
+  const handleImageUpload = () => {
+    if (!features.canAddImages) {
+      upgradeToPremium()
+      return
+    }
     const mockImageUrl = `https://picsum.photos/400/300?random=${Date.now()}`
-    setValue(field, mockImageUrl)
+    setValue('versoImage', mockImageUrl)
   }
 
   const handleAudioUpload = () => {
-    // Mock upload - remplacer par vraie logique
+    if (!features.canAddAudio) {
+      upgradeToPremium()
+      return
+    }
     const mockAudioUrl = `audio_${Date.now()}.mp3`
     setValue('versoAudio', mockAudioUrl)
   }
@@ -294,65 +301,27 @@ export default function NewCardModal({
                             <h3 className="font-display text-lg font-semibold text-dark-charcoal">Recto</h3>
                           </div>
                           
-                          <div className="space-y-4">
-                            <div>
-                              <label htmlFor="recto" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                Contenu principal *
-                              </label>
-                              <textarea
-                                id="recto"
-                                {...register('recto')}
-                                rows={3}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
-                                placeholder="Texte en français à traduire..."
-                              />
-                              {(errors as any).recto && (
-                                <motion.p 
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="mt-1 text-sm text-red-600 flex items-center gap-1"
-                                >
-                                  <AlertCircle className="w-4 h-4" />
-                                  {(errors as any).recto.message}
-                                </motion.p>
-                              )}
-                            </div>
-
-                            {/* Image Recto */}
-                            <div>
-                              <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                Image (optionnelle)
-                              </label>
-                              {(watchedValues as any).rectoImage ? (
-                                <div className="relative">
-                                  <img 
-                                    src={(watchedValues as any).rectoImage} 
-                                    alt="Recto" 
-                                    className="w-full h-32 object-cover rounded-xl border border-gray-200"
-                                  />
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => removeMedia('rectoImage')}
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </motion.button>
-                                </div>
-                              ) : (
-                                <motion.button
-                                  type="button"
-                                  onClick={() => handleImageUpload('rectoImage')}
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
-                                >
-                                  <ImageIcon className="w-8 h-8 text-gray-400" />
-                                  <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                </motion.button>
-                              )}
-                            </div>
+                          <div>
+                            <label htmlFor="recto" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                              Contenu principal *
+                            </label>
+                            <textarea
+                              id="recto"
+                              {...register('recto')}
+                              rows={3}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                              placeholder="Texte en français à traduire..."
+                            />
+                                                         {(errors as any).recto && (
+                               <motion.p 
+                                 initial={{ opacity: 0, y: -10 }}
+                                 animate={{ opacity: 1, y: 0 }}
+                                 className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                               >
+                                 <AlertCircle className="w-4 h-4" />
+                                 {(errors as any).recto.message}
+                               </motion.p>
+                             )}
                           </div>
                         </div>
 
@@ -370,33 +339,46 @@ export default function NewCardModal({
                             </div>
                             
                             {/* Bouton Traduire */}
-                            <motion.button
-                              type="button"
-                              onClick={handleTranslate}
-                              disabled={isTranslating || !(watchedValues as any).recto?.trim()}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-                              style={{ 
-                                background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.accent})`
-                              }}
-                            >
-                              {isTranslating ? (
-                                <>
-                                  <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                                  />
-                                  Traduction...
-                                </>
-                              ) : (
-                                <>
-                                  <Languages className="w-4 h-4" />
-                                  Traduire
-                                </>
-                              )}
-                            </motion.button>
+                            {features.canUseTranslation ? (
+                              <motion.button
+                                type="button"
+                                onClick={handleTranslate}
+                                disabled={isTranslating || !(watchedValues as any).recto?.trim()}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                style={{ 
+                                  background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.accent})`
+                                }}
+                              >
+                                {isTranslating ? (
+                                  <>
+                                    <motion.div
+                                      animate={{ rotate: 360 }}
+                                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                      className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                    />
+                                    Traduction...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Languages className="w-4 h-4" />
+                                    Traduire
+                                  </>
+                                )}
+                              </motion.button>
+                            ) : (
+                              <motion.button
+                                type="button"
+                                onClick={upgradeToPremium}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg"
+                              >
+                                <Languages className="w-4 h-4" />
+                                Traduire (Premium)
+                              </motion.button>
+                            )}
                           </div>
                           
                           <div className="space-y-4">
@@ -429,104 +411,127 @@ export default function NewCardModal({
                                 <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
                                   Audio occitan (optionnel)
                                 </label>
-                                {(watchedValues as any).versoAudio ? (
-                                  <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-gray-200">
-                                    <motion.button
-                                      type="button"
-                                      onClick={() => setAudioPlaying(!audioPlaying)}
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
-                                      className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg"
-                                    >
-                                      {audioPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                                    </motion.button>
-                                    <div className="flex-1">
-                                      <div className="font-sans text-sm text-dark-charcoal">Audio enregistré</div>
-                                      <div className="text-xs text-dark-charcoal/60">{(watchedValues as any).versoAudio}</div>
+                                                                 {features.canAddAudio ? (
+                                   (watchedValues as any).versoAudio ? (
+                                    <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-gray-200">
+                                      <motion.button
+                                        type="button"
+                                        onClick={() => setAudioPlaying(!audioPlaying)}
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                      >
+                                        {audioPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                                      </motion.button>
+                                      <div className="flex-1">
+                                        <div className="font-sans text-sm text-dark-charcoal">Audio enregistré</div>
+                                        <div className="text-xs text-dark-charcoal/60">{(watchedValues as any).versoAudio}</div>
+                                      </div>
+                                      <motion.button
+                                        type="button"
+                                        onClick={() => removeMedia('versoAudio')}
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </motion.button>
                                     </div>
+                                  ) : (
                                     <motion.button
                                       type="button"
-                                      onClick={() => removeMedia('versoAudio')}
+                                      onClick={handleAudioUpload}
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                    >
+                                      <Volume2 className="w-6 h-6 text-gray-400" />
+                                      <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
+                                    </motion.button>
+                                  )
+                                ) : (
+                                  <PremiumTeaser feature="L'enregistrement audio" onUpgrade={upgradeToPremium}>
+                                    <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
+                                      <Volume2 className="w-6 h-6 text-gray-400" />
+                                      <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
+                                    </div>
+                                  </PremiumTeaser>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Image Verso */}
+                            <div>
+                              <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                Image d'illustration (optionnelle)
+                              </label>
+                                                             {features.canAddImages ? (
+                                 (watchedValues as any).versoImage ? (
+                                  <div className="relative">
+                                    <img 
+                                                                             src={(watchedValues as any).versoImage}  
+                                      alt="Illustration verso" 
+                                      className="w-full h-48 object-cover rounded-xl border border-gray-200"
+                                    />
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => removeMedia('versoImage')}
                                       whileHover={{ scale: 1.1 }}
                                       whileTap={{ scale: 0.9 }}
-                                      className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                      className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </motion.button>
                                   </div>
                                 ) : (
-                                  <motion.button
-                                    type="button"
-                                    onClick={handleAudioUpload}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors"
-                                  >
-                                    <Volume2 className="w-6 h-6 text-gray-400" />
-                                    <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
-                                  </motion.button>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Image Verso avec recherche Pexels */}
-                            <div>
-                              <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                Image d'illustration (optionnelle)
-                              </label>
-                              
-                              {(watchedValues as any).versoImage ? (
-                                <div className="relative">
-                                  <img 
-                                    src={(watchedValues as any).versoImage} 
-                                    alt="Illustration verso" 
-                                    className="w-full h-48 object-cover rounded-xl border border-gray-200"
-                                  />
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => removeMedia('versoImage')}
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </motion.button>
-                                </div>
-                              ) : (
-                                <div className="space-y-3">
-                                  {/* Barre de recherche Pexels */}
-                                  <div className="relative">
-                                    <input
-                                      type="text"
-                                      placeholder="Rechercher une image sur Pexels..."
-                                      className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
-                                      onKeyPress={(e) => {
-                                        if (e.key === 'Enter') {
-                                          e.preventDefault()
-                                          // TODO: Appeler API Pexels
-                                          console.log('Recherche Pexels:', (e.target as HTMLInputElement).value)
-                                        }
-                                      }}
-                                    />
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                  <div className="space-y-3">
+                                    <div className="relative">
+                                      <input
+                                        type="text"
+                                        placeholder="Rechercher une image sur Pexels..."
+                                        className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
+                                        onKeyPress={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            console.log('Recherche Pexels:', (e.target as HTMLInputElement).value)
+                                          }
+                                        }}
+                                      />
+                                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    </div>
+                                    
+                                    <motion.button
+                                      type="button"
+                                      onClick={handleImageUpload}
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                    >
+                                      <ImageIcon className="w-8 h-8 text-gray-400" />
+                                      <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                      <span className="font-sans text-xs text-gray-400">Recherche Pexels ou upload local</span>
+                                    </motion.button>
                                   </div>
-                                  
-                                  {/* Bouton d'ajout d'image */}
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => {
-                                      // TODO: Ouvrir sélecteur Pexels ou upload local
-                                      handleImageUpload('versoImage')
-                                    }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
-                                  >
-                                    <ImageIcon className="w-8 h-8 text-gray-400" />
-                                    <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                    <span className="font-sans text-xs text-gray-400">Recherche Pexels ou upload local</span>
-                                  </motion.button>
-                                </div>
+                                )
+                              ) : (
+                                <PremiumTeaser feature="L'ajout d'images" onUpgrade={upgradeToPremium}>
+                                  <div className="space-y-3">
+                                    <div className="relative">
+                                      <input
+                                        type="text"
+                                        placeholder="Rechercher une image sur Pexels..."
+                                        disabled
+                                        className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-400 font-sans"
+                                      />
+                                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    </div>
+                                    
+                                    <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                      <ImageIcon className="w-8 h-8 text-gray-400" />
+                                      <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                    </div>
+                                  </div>
+                                </PremiumTeaser>
                               )}
                             </div>
                           </div>
@@ -540,7 +545,6 @@ export default function NewCardModal({
                         exit={{ opacity: 0, y: -20 }}
                         className="space-y-4"
                       >
-                        {/* Cloze content */}
                         <div className="bg-white/50 rounded-2xl p-6 border border-white/60">
                           <div className="flex items-center gap-2 mb-4">
                             <div 
@@ -567,16 +571,16 @@ export default function NewCardModal({
                               <p className="mt-1 text-xs text-dark-charcoal/60 font-sans">
                                 Utilisez le format {'{{c1::réponse}}'} pour créer des trous
                               </p>
-                              {(errors as any).clozeTextTarget && (
-                                <motion.p 
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="mt-1 text-sm text-red-600 flex items-center gap-1"
-                                >
-                                  <AlertCircle className="w-4 h-4" />
-                                  {(errors as any).clozeTextTarget.message}
-                                </motion.p>
-                              )}
+                                                             {(errors as any).clozeTextTarget && (
+                                 <motion.p 
+                                   initial={{ opacity: 0, y: -10 }}
+                                   animate={{ opacity: 1, y: 0 }}
+                                   className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                                 >
+                                   <AlertCircle className="w-4 h-4" />
+                                   {(errors as any).clozeTextTarget.message}
+                                 </motion.p>
+                               )}
                             </div>
 
                             {/* Image Cloze */}
@@ -584,34 +588,43 @@ export default function NewCardModal({
                               <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
                                 Image (optionnelle)
                               </label>
-                              {(watchedValues as any).clozeImage ? (
-                                <div className="relative">
-                                  <img 
-                                    src={(watchedValues as any).clozeImage} 
-                                    alt="Cloze" 
-                                    className="w-full h-32 object-cover rounded-xl border border-gray-200"
-                                  />
+                                                             {features.canAddImages ? (
+                                 (watchedValues as any).clozeImage ? (
+                                  <div className="relative">
+                                    <img 
+                                                                             src={(watchedValues as any).clozeImage}  
+                                      alt="Cloze" 
+                                      className="w-full h-32 object-cover rounded-xl border border-gray-200"
+                                    />
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => removeMedia('clozeImage')}
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </motion.button>
+                                  </div>
+                                ) : (
                                   <motion.button
                                     type="button"
-                                    onClick={() => removeMedia('clozeImage')}
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                    onClick={() => handleImageUpload()}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                                    <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
                                   </motion.button>
-                                </div>
+                                )
                               ) : (
-                                <motion.button
-                                  type="button"
-                                  onClick={() => handleImageUpload('clozeImage')}
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
-                                >
-                                  <ImageIcon className="w-8 h-8 text-gray-400" />
-                                  <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                </motion.button>
+                                <PremiumTeaser feature="L'ajout d'images" onUpgrade={upgradeToPremium}>
+                                  <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                                    <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                  </div>
+                                </PremiumTeaser>
                               )}
                             </div>
                           </div>
@@ -625,18 +638,34 @@ export default function NewCardModal({
                     <h3 className="font-display text-lg font-semibold text-dark-charcoal mb-4">Informations supplémentaires</h3>
                     
                     <div className="space-y-4">
-                      <div>
-                        <label htmlFor="extra" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                          Contexte, mnémotechnique, exemple...
-                        </label>
-                        <textarea
-                          id="extra"
-                          {...register('extra')}
-                          rows={2}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
-                          placeholder="Informations complémentaires pour aider à la mémorisation"
-                        />
-                      </div>
+                      {features.canUseExtraField ? (
+                        <div>
+                          <label htmlFor="extra" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                            Contexte, mnémotechnique, exemple...
+                          </label>
+                          <textarea
+                            id="extra"
+                            {...register('extra')}
+                            rows={2}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                            placeholder="Informations complémentaires pour aider à la mémorisation"
+                          />
+                        </div>
+                      ) : (
+                        <PremiumTeaser feature="Les champs avancés" onUpgrade={upgradeToPremium}>
+                          <div>
+                            <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                              Contexte, mnémotechnique, exemple...
+                            </label>
+                            <textarea
+                              disabled
+                              rows={2}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-400 resize-none"
+                              placeholder="Informations complémentaires (Premium)"
+                            />
+                          </div>
+                        </PremiumTeaser>
+                      )}
 
                       <div>
                         <label htmlFor="tags" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
