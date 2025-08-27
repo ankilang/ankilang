@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { 
   X, Brain, Type, Sparkles, AlertCircle, Check, 
   Languages, Play, Pause, Image as ImageIcon,
-  Volume2, Trash2
+  Volume2, Trash2, Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useRef } from 'react'
@@ -469,17 +469,18 @@ export default function NewCardModal({
                               </div>
                             )}
 
-                            {/* Image Verso */}
+                            {/* Image Verso avec recherche Pexels */}
                             <div>
                               <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                Image (optionnelle)
+                                Image d'illustration (optionnelle)
                               </label>
+                              
                               {(watchedValues as any).versoImage ? (
                                 <div className="relative">
                                   <img 
                                     src={(watchedValues as any).versoImage} 
-                                    alt="Verso" 
-                                    className="w-full h-32 object-cover rounded-xl border border-gray-200"
+                                    alt="Illustration verso" 
+                                    className="w-full h-48 object-cover rounded-xl border border-gray-200"
                                   />
                                   <motion.button
                                     type="button"
@@ -492,16 +493,40 @@ export default function NewCardModal({
                                   </motion.button>
                                 </div>
                               ) : (
-                                <motion.button
-                                  type="button"
-                                  onClick={() => handleImageUpload('versoImage')}
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
-                                >
-                                  <ImageIcon className="w-8 h-8 text-gray-400" />
-                                  <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                </motion.button>
+                                <div className="space-y-3">
+                                  {/* Barre de recherche Pexels */}
+                                  <div className="relative">
+                                    <input
+                                      type="text"
+                                      placeholder="Rechercher une image sur Pexels..."
+                                      className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
+                                      onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault()
+                                          // TODO: Appeler API Pexels
+                                          console.log('Recherche Pexels:', (e.target as HTMLInputElement).value)
+                                        }
+                                      }}
+                                    />
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                  </div>
+                                  
+                                  {/* Bouton d'ajout d'image */}
+                                  <motion.button
+                                    type="button"
+                                    onClick={() => {
+                                      // TODO: Ouvrir sélecteur Pexels ou upload local
+                                      handleImageUpload('versoImage')
+                                    }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                  >
+                                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                                    <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                    <span className="font-sans text-xs text-gray-400">Recherche Pexels ou upload local</span>
+                                  </motion.button>
+                                </div>
                               )}
                             </div>
                           </div>
