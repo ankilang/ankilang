@@ -126,8 +126,8 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
           </div>
           <div>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-dark-charcoal">
-              {cards.length} carte{cards.length > 1 ? 's' : ''}
-            </h2>
+          {cards.length} carte{cards.length > 1 ? 's' : ''}
+        </h2>
             <p className="font-sans text-sm text-dark-charcoal/70">
               {viewMode === 'grid' ? 'Vue grille' : 'Vue liste'} • Page {currentPage}/{totalPages}
             </p>
@@ -168,8 +168,8 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
             >
               <List className="w-4 h-4" />
             </motion.button>
-          </div>
-          
+      </div>
+
           {/* Bouton d'ajout */}
           <motion.button
             onClick={onAddCard}
@@ -209,7 +209,7 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                 <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/80 h-full flex flex-col">
                   {/* Header compact */}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                       <div 
                         className="w-6 h-6 rounded-lg flex items-center justify-center"
                         style={{ backgroundColor: themeColors.secondary }}
@@ -228,7 +228,7 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                         }}
                       >
                         {card.type === 'basic' ? 'Q/R' : 'Cloze'}
-                      </span>
+                </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-dark-charcoal/50 font-sans">#{startIndex + index + 1}</span>
@@ -238,54 +238,54 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                         onDelete={onDeleteCard}
                         themeColors={themeColors}
                       />
-                    </div>
-                  </div>
+              </div>
+            </div>
 
                   {/* Contenu compact */}
                   <div className="space-y-2 flex-1">
-                    {card.type === 'basic' ? (
-                      <>
-                        <div>
+              {card.type === 'basic' ? (
+                <>
+                  <div>
                           <div className="text-xs font-medium text-dark-charcoal/60 mb-1 font-sans">Question</div>
                           <div className="font-sans text-sm text-dark-charcoal bg-white/50 rounded-lg p-2 line-clamp-2">
                             {card.frontFR}
                           </div>
-                        </div>
-                        <div>
+                  </div>
+                  <div>
                           <div className="text-xs font-medium text-dark-charcoal/60 mb-1 font-sans">Réponse</div>
                           <div className="font-sans text-sm text-dark-charcoal bg-white/50 rounded-lg p-2 line-clamp-2">
                             {card.backText}
                           </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div>
+                  </div>
+                </>
+              ) : (
+                <div>
                         <div className="text-xs font-medium text-dark-charcoal/60 mb-1 font-sans">Texte à trous</div>
                         <div className="font-sans text-sm text-dark-charcoal bg-white/50 rounded-lg p-2 line-clamp-3">
                           {card.clozeTextTarget}
-                        </div>
-                      </div>
-                    )}
+                </div>
+                </div>
+              )}
 
                     {/* Tags compacts */}
-                    {card.tags && card.tags.length > 0 && (
+              {card.tags && card.tags.length > 0 && (
                       <div className="flex items-center gap-1 flex-wrap pt-2 border-t border-white/40 mt-auto">
                         <Tag className="w-3 h-3 text-dark-charcoal/50" />
                         {card.tags.slice(0, 2).map((tag, tagIndex) => (
-                          <span 
-                            key={tagIndex}
+                    <span 
+                      key={tagIndex}
                             className="text-xs px-1.5 py-0.5 bg-white/60 text-dark-charcoal/70 rounded-md"
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                    >
+                      {tag}
+                    </span>
+                  ))}
                         {card.tags.length > 2 && (
                           <span className="text-xs text-dark-charcoal/50">+{card.tags.length - 2}</span>
                         )}
-                      </div>
-                    )}
-                  </div>
                 </div>
+              )}
+            </div>
+          </div>
               </motion.div>
             ))}
           </motion.div>
@@ -419,7 +419,7 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                 </span>
               </>
             )}
-          </div>
+      </div>
           
           <motion.button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
