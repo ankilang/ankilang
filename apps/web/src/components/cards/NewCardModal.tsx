@@ -2,15 +2,25 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X, Brain, Type, Sparkles, AlertCircle, Check } from 'lucide-react'
+import { 
+  X, Brain, Type, Sparkles, AlertCircle, Check, 
+  Languages, Play, Pause, Image as ImageIcon,
+  Volume2, Trash2
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { CreateCardSchema } from '@ankilang/shared'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
-  frontFR: z.string().min(1, 'La question est requise'),
-  backText: z.string().min(1, 'La réponse est requise'),
+  // RECTO
+  recto: z.string().min(1, 'Le contenu du recto est requis'),
+  rectoImage: z.string().optional(),
+  // VERSO
+  verso: z.string().min(1, 'Le contenu du verso est requis'),
+  versoImage: z.string().optional(),
+  versoAudio: z.string().optional(),
+  // EXTRA
   extra: z.string().optional(),
   tags: z.string().optional()
 })
@@ -21,12 +31,12 @@ const clozeCardSchema = z.object({
     (text) => /\{\{c\d+::[^}]+\}\}/.test(text),
     'Le texte doit contenir au moins un trou au format {{cN::...}}'
   ),
+  clozeImage: z.string().optional(),
   extra: z.string().optional(),
   tags: z.string().optional()
 })
 
 const cardSchema = z.discriminatedUnion('type', [basicCardSchema, clozeCardSchema])
-
 type CardFormData = z.infer<typeof cardSchema>
 
 interface NewCardModalProps {
@@ -36,6 +46,7 @@ interface NewCardModalProps {
   isLoading?: boolean
   error?: string
   themeId: string
+  themeLanguage: string // 'fr', 'en', 'oc', etc.
   themeColors: {
     primary: string
     secondary: string
@@ -51,30 +62,76 @@ export default function NewCardModal({
   isLoading = false, 
   error,
   themeId,
+  themeLanguage,
   themeColors
 }: NewCardModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   const [selectedType, setSelectedType] = useState<'basic' | 'cloze'>('basic')
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [audioPlaying, setAudioPlaying] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
     reset,
-    setValue
+    watch,
+    setValue,
+    getValues
   } = useForm<CardFormData>({
     resolver: zodResolver(cardSchema),
     defaultValues: {
       type: 'basic',
-      frontFR: '',
-      backText: '',
+      recto: '',
+      verso: '',
       extra: '',
       tags: ''
     },
     mode: 'onChange'
   })
 
+  const watchedValues = watch()
 
+  // Fonction de traduction (mock pour l'instant)
+  const handleTranslate = async () => {
+    if (selectedType !== 'basic') return
+    
+    const rectoText = getValues('recto')
+    if (!rectoText.trim()) return
+
+    setIsTranslating(true)
+    
+    try {
+      // Mock API call - remplacer par vraie API
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Simulation de traduction
+      const translatedText = `[Traduit en ${themeLanguage}] ${rectoText}`
+      setValue('verso', translatedText)
+      
+    } catch (error) {
+      console.error('Erreur de traduction:', error)
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  // Gestion des fichiers
+  const handleImageUpload = (field: 'rectoImage' | 'versoImage' | 'clozeImage') => {
+    // Mock upload - remplacer par vraie logique
+    const mockImageUrl = `https://picsum.photos/400/300?random=${Date.now()}`
+    setValue(field, mockImageUrl)
+  }
+
+  const handleAudioUpload = () => {
+    // Mock upload - remplacer par vraie logique
+    const mockAudioUrl = `audio_${Date.now()}.mp3`
+    setValue('versoAudio', mockAudioUrl)
+  }
+
+  const removeMedia = (field: string) => {
+    setValue(field as any, '')
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -84,45 +141,11 @@ export default function NewCardModal({
     }
   }, [isOpen, reset, setValue])
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
-      }
-    }
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        onClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.addEventListener('mousedown', handleClickOutside)
-      document.body.style.overflow = 'hidden'
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen, onClose])
-
   const handleTypeChange = (type: 'basic' | 'cloze') => {
     setSelectedType(type)
     setValue('type', type)
-    // Reset form fields when changing type
-    if (type === 'basic') {
-      setValue('frontFR', '')
-      setValue('backText', '')
-      setValue('clozeTextTarget', undefined as any)
-    } else {
-      setValue('clozeTextTarget', '')
-      setValue('frontFR', undefined as any)
-      setValue('backText', undefined as any)
-    }
+    reset()
+    setValue('type', type)
   }
 
   const handleFormSubmit = (data: CardFormData) => {
@@ -144,7 +167,6 @@ export default function NewCardModal({
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
         >
-          {/* Backdrop blur */}
           <div className="absolute inset-0 backdrop-blur-sm" />
           
           <motion.div
@@ -153,7 +175,7 @@ export default function NewCardModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden"
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden"
           >
             <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20">
               {/* Header */}
@@ -176,7 +198,7 @@ export default function NewCardModal({
                         Nouvelle carte
                       </h2>
                       <p className="font-sans text-sm text-dark-charcoal/70">
-                        Créez une carte pour enrichir votre apprentissage
+                        Langue cible : <span className="font-medium">{themeLanguage.toUpperCase()}</span>
                       </p>
                     </div>
                   </div>
@@ -194,7 +216,7 @@ export default function NewCardModal({
               {/* Content */}
               <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
                 <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-                  {/* Sélecteur de type de carte */}
+                  {/* Sélecteur de type */}
                   <div>
                     <label className="block font-sans text-sm font-medium text-dark-charcoal mb-3">
                       Type de carte
@@ -218,8 +240,8 @@ export default function NewCardModal({
                         <div className="flex items-center gap-3">
                           <Brain className="w-6 h-6" />
                           <div className="text-left">
-                            <div className="font-sans font-semibold">Basic</div>
-                            <div className="text-xs opacity-70">Question/Réponse</div>
+                            <div className="font-sans font-semibold">Recto/Verso</div>
+                            <div className="text-xs opacity-70">Carte classique</div>
                           </div>
                         </div>
                       </motion.button>
@@ -250,127 +272,363 @@ export default function NewCardModal({
                     </div>
                   </div>
 
-                  {/* Champs dynamiques selon le type */}
+                  {/* Contenu selon le type */}
                   <AnimatePresence mode="wait">
                     {selectedType === 'basic' ? (
                       <motion.div
                         key="basic"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="space-y-4"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="space-y-6"
                       >
-                        <div>
-                          <label htmlFor="frontFR" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                            Question *
-                          </label>
-                          <textarea
-                            id="frontFR"
-                            {...register('frontFR')}
-                            rows={3}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
-                            placeholder="Quelle est la capitale de la France ?"
-                          />
-                          {(errors as any).frontFR && (
-                            <motion.p 
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                        {/* RECTO */}
+                        <div className="bg-white/50 rounded-2xl p-6 border border-white/60">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div 
+                              className="w-8 h-8 rounded-lg flex items-center justify-center"
+                              style={{ backgroundColor: themeColors.secondary }}
                             >
-                              <AlertCircle className="w-4 h-4" />
-                              {(errors as any).frontFR.message}
-                            </motion.p>
-                          )}
+                              <span className="text-sm font-bold" style={{ color: themeColors.accent }}>R</span>
+                            </div>
+                            <h3 className="font-display text-lg font-semibold text-dark-charcoal">Recto</h3>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <label htmlFor="recto" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                Contenu principal *
+                              </label>
+                              <textarea
+                                id="recto"
+                                {...register('recto')}
+                                rows={3}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                                placeholder="Texte en français à traduire..."
+                              />
+                              {(errors as any).recto && (
+                                <motion.p 
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                                >
+                                  <AlertCircle className="w-4 h-4" />
+                                  {(errors as any).recto.message}
+                                </motion.p>
+                              )}
+                            </div>
+
+                            {/* Image Recto */}
+                            <div>
+                              <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                Image (optionnelle)
+                              </label>
+                              {(watchedValues as any).rectoImage ? (
+                                <div className="relative">
+                                  <img 
+                                    src={(watchedValues as any).rectoImage} 
+                                    alt="Recto" 
+                                    className="w-full h-32 object-cover rounded-xl border border-gray-200"
+                                  />
+                                  <motion.button
+                                    type="button"
+                                    onClick={() => removeMedia('rectoImage')}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </motion.button>
+                                </div>
+                              ) : (
+                                <motion.button
+                                  type="button"
+                                  onClick={() => handleImageUpload('rectoImage')}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                >
+                                  <ImageIcon className="w-8 h-8 text-gray-400" />
+                                  <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
-                        <div>
-                          <label htmlFor="backText" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                            Réponse *
-                          </label>
-                          <textarea
-                            id="backText"
-                            {...register('backText')}
-                            rows={3}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
-                            placeholder="Paris"
-                          />
-                          {(errors as any).backText && (
-                            <motion.p 
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                        {/* VERSO */}
+                        <div className="bg-white/50 rounded-2xl p-6 border border-white/60">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                                style={{ backgroundColor: themeColors.secondary }}
+                              >
+                                <span className="text-sm font-bold" style={{ color: themeColors.accent }}>V</span>
+                              </div>
+                              <h3 className="font-display text-lg font-semibold text-dark-charcoal">Verso</h3>
+                            </div>
+                            
+                            {/* Bouton Traduire */}
+                            <motion.button
+                              type="button"
+                              onClick={handleTranslate}
+                              disabled={isTranslating || !(watchedValues as any).recto?.trim()}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                              style={{ 
+                                background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.accent})`
+                              }}
                             >
-                              <AlertCircle className="w-4 h-4" />
-                              {(errors as any).backText.message}
-                            </motion.p>
-                          )}
+                              {isTranslating ? (
+                                <>
+                                  <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                  />
+                                  Traduction...
+                                </>
+                              ) : (
+                                <>
+                                  <Languages className="w-4 h-4" />
+                                  Traduire
+                                </>
+                              )}
+                            </motion.button>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <label htmlFor="verso" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                Contenu traduit *
+                              </label>
+                              <textarea
+                                id="verso"
+                                {...register('verso')}
+                                rows={3}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                                placeholder={`Traduction en ${themeLanguage}...`}
+                              />
+                              {(errors as any).verso && (
+                                <motion.p 
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                                >
+                                  <AlertCircle className="w-4 h-4" />
+                                  {(errors as any).verso.message}
+                                </motion.p>
+                              )}
+                            </div>
+
+                            {/* Audio Verso (spécial occitan) */}
+                            {themeLanguage === 'oc' && (
+                              <div>
+                                <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                  Audio occitan (optionnel)
+                                </label>
+                                {(watchedValues as any).versoAudio ? (
+                                  <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-gray-200">
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => setAudioPlaying(!audioPlaying)}
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                    >
+                                      {audioPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                                    </motion.button>
+                                    <div className="flex-1">
+                                      <div className="font-sans text-sm text-dark-charcoal">Audio enregistré</div>
+                                      <div className="text-xs text-dark-charcoal/60">{(watchedValues as any).versoAudio}</div>
+                                    </div>
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => removeMedia('versoAudio')}
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </motion.button>
+                                  </div>
+                                ) : (
+                                  <motion.button
+                                    type="button"
+                                    onClick={handleAudioUpload}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                  >
+                                    <Volume2 className="w-6 h-6 text-gray-400" />
+                                    <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
+                                  </motion.button>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Image Verso */}
+                            <div>
+                              <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                Image (optionnelle)
+                              </label>
+                              {(watchedValues as any).versoImage ? (
+                                <div className="relative">
+                                  <img 
+                                    src={(watchedValues as any).versoImage} 
+                                    alt="Verso" 
+                                    className="w-full h-32 object-cover rounded-xl border border-gray-200"
+                                  />
+                                  <motion.button
+                                    type="button"
+                                    onClick={() => removeMedia('versoImage')}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </motion.button>
+                                </div>
+                              ) : (
+                                <motion.button
+                                  type="button"
+                                  onClick={() => handleImageUpload('versoImage')}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                >
+                                  <ImageIcon className="w-8 h-8 text-gray-400" />
+                                  <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     ) : (
                       <motion.div
                         key="cloze"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
                         className="space-y-4"
                       >
-                        <div>
-                          <label htmlFor="clozeTextTarget" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                            Texte à trous *
-                          </label>
-                          <textarea
-                            id="clozeTextTarget"
-                            {...register('clozeTextTarget')}
-                            rows={4}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
-                            placeholder="La capitale de la France est {{c1::Paris}}."
-                          />
-                          <p className="mt-1 text-xs text-dark-charcoal/60 font-sans">
-                            Utilisez le format {'{{c1::réponse}}'} pour créer des trous
-                          </p>
-                          {(errors as any).clozeTextTarget && (
-                            <motion.p 
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                        {/* Cloze content */}
+                        <div className="bg-white/50 rounded-2xl p-6 border border-white/60">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div 
+                              className="w-8 h-8 rounded-lg flex items-center justify-center"
+                              style={{ backgroundColor: themeColors.secondary }}
                             >
-                              <AlertCircle className="w-4 h-4" />
-                              {(errors as any).clozeTextTarget.message}
-                            </motion.p>
-                          )}
+                              <Type className="w-4 h-4" style={{ color: themeColors.accent }} />
+                            </div>
+                            <h3 className="font-display text-lg font-semibold text-dark-charcoal">Texte à trous</h3>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <label htmlFor="clozeTextTarget" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                Texte avec trous *
+                              </label>
+                              <textarea
+                                id="clozeTextTarget"
+                                {...register('clozeTextTarget')}
+                                rows={4}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                                placeholder="La capitale de la France est {{c1::Paris}}."
+                              />
+                              <p className="mt-1 text-xs text-dark-charcoal/60 font-sans">
+                                Utilisez le format {'{{c1::réponse}}'} pour créer des trous
+                              </p>
+                              {(errors as any).clozeTextTarget && (
+                                <motion.p 
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="mt-1 text-sm text-red-600 flex items-center gap-1"
+                                >
+                                  <AlertCircle className="w-4 h-4" />
+                                  {(errors as any).clozeTextTarget.message}
+                                </motion.p>
+                              )}
+                            </div>
+
+                            {/* Image Cloze */}
+                            <div>
+                              <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                                Image (optionnelle)
+                              </label>
+                              {(watchedValues as any).clozeImage ? (
+                                <div className="relative">
+                                  <img 
+                                    src={(watchedValues as any).clozeImage} 
+                                    alt="Cloze" 
+                                    className="w-full h-32 object-cover rounded-xl border border-gray-200"
+                                  />
+                                  <motion.button
+                                    type="button"
+                                    onClick={() => removeMedia('clozeImage')}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </motion.button>
+                                </div>
+                              ) : (
+                                <motion.button
+                                  type="button"
+                                  onClick={() => handleImageUpload('clozeImage')}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                >
+                                  <ImageIcon className="w-8 h-8 text-gray-400" />
+                                  <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
 
-                  {/* Champs communs */}
-                  <div>
-                    <label htmlFor="extra" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                      Information supplémentaire (optionnel)
-                    </label>
-                    <textarea
-                      id="extra"
-                      {...register('extra')}
-                      rows={2}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
-                      placeholder="Contexte, mnémotechnique, exemple..."
-                    />
-                  </div>
+                  {/* Section EXTRA commune */}
+                  <div className="bg-white/30 rounded-2xl p-6 border border-white/40">
+                    <h3 className="font-display text-lg font-semibold text-dark-charcoal mb-4">Informations supplémentaires</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="extra" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                          Contexte, mnémotechnique, exemple...
+                        </label>
+                        <textarea
+                          id="extra"
+                          {...register('extra')}
+                          rows={2}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                          placeholder="Informations complémentaires pour aider à la mémorisation"
+                        />
+                      </div>
 
-                  <div>
-                    <label htmlFor="tags" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                      Tags (optionnel)
-                    </label>
-                    <input
-                      id="tags"
-                      type="text"
-                      {...register('tags')}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
-                      placeholder="géographie, capitale, france"
-                    />
-                    <p className="mt-1 text-xs text-dark-charcoal/60 font-sans">
-                      Séparez les tags par des virgules
-                    </p>
+                      <div>
+                        <label htmlFor="tags" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                          Tags
+                        </label>
+                        <input
+                          id="tags"
+                          type="text"
+                          {...register('tags')}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
+                          placeholder="géographie, capitale, france"
+                        />
+                        <p className="mt-1 text-xs text-dark-charcoal/60 font-sans">
+                          Séparez les tags par des virgules
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Message d'erreur */}

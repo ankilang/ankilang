@@ -277,6 +277,7 @@ export default function ThemeDetail() {
           isLoading={isLoading}
           error={error}
           themeId={theme.id}
+          themeLanguage={theme.targetLang}
           themeColors={colors}
         />
 

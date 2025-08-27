@@ -2,15 +2,23 @@ import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X, Brain, Type, Sparkles, AlertCircle, Check } from 'lucide-react'
+import { 
+  X, Brain, Type, Sparkles, AlertCircle, Check
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '@ankilang/shared'
 import type { Card } from '@ankilang/shared'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
-  frontFR: z.string().min(1, 'La question est requise'),
-  backText: z.string().min(1, 'La réponse est requise'),
+  // RECTO
+  recto: z.string().min(1, 'Le contenu du recto est requis'),
+  rectoImage: z.string().optional(),
+  // VERSO
+  verso: z.string().min(1, 'Le contenu du verso est requis'),
+  versoImage: z.string().optional(),
+  versoAudio: z.string().optional(),
+  // EXTRA
   extra: z.string().optional(),
   tags: z.string().optional()
 })
@@ -21,6 +29,7 @@ const clozeCardSchema = z.object({
     (text) => /\{\{c\d+::[^}]+\}\}/.test(text),
     'Le texte doit contenir au moins un trou au format {{cN::...}}'
   ),
+  clozeImage: z.string().optional(),
   extra: z.string().optional(),
   tags: z.string().optional()
 })
@@ -65,9 +74,9 @@ export default function EditCardModal({
     resolver: zodResolver(cardSchema),
     defaultValues: {
       type: card.type,
-      frontFR: card.type === 'basic' ? card.frontFR : '',
-      backText: card.type === 'basic' ? card.backText : '',
-      clozeTextTarget: card.type === 'cloze' ? card.clozeTextTarget : '',
+      recto: card.type === 'basic' ? card.frontFR || '' : '',
+      verso: card.type === 'basic' ? card.backText || '' : '',
+      clozeTextTarget: card.type === 'cloze' ? card.clozeTextTarget || '' : '',
       extra: card.extra || '',
       tags: card.tags ? card.tags.join(', ') : ''
     },
@@ -80,13 +89,13 @@ export default function EditCardModal({
       setSelectedType(card.type)
       setValue('type', card.type)
       if (card.type === 'basic') {
-        setValue('frontFR', card.frontFR || '')
-        setValue('backText', card.backText || '')
+        setValue('recto', card.frontFR || '')
+        setValue('verso', card.backText || '')
         setValue('clozeTextTarget', undefined as any)
       } else {
         setValue('clozeTextTarget', card.clozeTextTarget || '')
-        setValue('frontFR', undefined as any)
-        setValue('backText', undefined as any)
+        setValue('recto', undefined as any)
+        setValue('verso', undefined as any)
       }
       setValue('extra', card.extra || '')
       setValue('tags', card.tags ? card.tags.join(', ') : '')
@@ -124,13 +133,13 @@ export default function EditCardModal({
     setValue('type', type)
     // Reset form fields when changing type
     if (type === 'basic') {
-      setValue('frontFR', '')
-      setValue('backText', '')
+      setValue('recto', '')
+      setValue('verso', '')
       setValue('clozeTextTarget', undefined as any)
     } else {
       setValue('clozeTextTarget', '')
-      setValue('frontFR', undefined as any)
-      setValue('backText', undefined as any)
+      setValue('recto', undefined as any)
+      setValue('verso', undefined as any)
     }
   }
 
@@ -270,12 +279,12 @@ export default function EditCardModal({
                         className="space-y-4"
                       >
                         <div>
-                          <label htmlFor="frontFR" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                            Question *
-                          </label>
-                          <textarea
-                            id="frontFR"
-                            {...register('frontFR')}
+                                                      <label htmlFor="recto" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                              Question *
+                            </label>
+                            <textarea
+                              id="recto"
+                              {...register('recto')}
                             rows={3}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
                             placeholder="Quelle est la capitale de la France ?"
@@ -293,12 +302,12 @@ export default function EditCardModal({
                         </div>
 
                         <div>
-                          <label htmlFor="backText" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                            Réponse *
-                          </label>
-                          <textarea
-                            id="backText"
-                            {...register('backText')}
+                                                      <label htmlFor="verso" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                              Réponse *
+                            </label>
+                            <textarea
+                              id="verso"
+                              {...register('verso')}
                             rows={3}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
                             placeholder="Paris"
