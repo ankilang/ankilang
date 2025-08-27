@@ -184,10 +184,10 @@ export default function NewCardModal({
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden"
           >
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20">
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
               {/* Header */}
               <div 
-                className="relative px-6 py-6 border-b border-white/20"
+                className="relative px-6 py-6 border-b border-white/20 rounded-t-3xl"
                 style={{
                   background: `linear-gradient(135deg, ${themeColors.secondary} 0%, white 100%)`
                 }}
