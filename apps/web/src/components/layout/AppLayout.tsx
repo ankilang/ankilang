@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { Outlet, Link, NavLink } from 'react-router-dom'
 import { Settings, User, Menu, X } from 'lucide-react'
+import { motion } from 'framer-motion'
 import AnkilangLogo from '../ui/AnkilangLogo'
 import SafeArea from '../ui/SafeArea'
 import { usePWAContext } from '../../contexts/PWAContext'
+import { useSubscription } from '../../contexts/SubscriptionContext'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import TabBar from '../navigation/TabBar'
 
 export default function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { isInstalled } = usePWAContext()
+  const { plan, toggleTestMode } = useSubscription()
   const { isVisible: isTabBarVisible } = useTabBarVisibility()
 
   const toggleMobileMenu = () => {
@@ -82,6 +85,23 @@ export default function AppLayout() {
 
             {/* Actions utilisateur */}
             <div className="flex items-center gap-4">
+              {/* Bouton de test pour basculer entre modes gratuit/premium */}
+              {process.env.NODE_ENV === 'development' && (
+                <motion.button
+                  onClick={toggleTestMode}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    plan === 'test' 
+                      ? 'bg-green-100 text-green-700 border border-green-200' 
+                      : 'bg-red-100 text-red-700 border border-red-200'
+                  }`}
+                  title={`Actuellement en mode ${plan === 'test' ? 'Premium' : 'Gratuit'} - Cliquer pour basculer`}
+                >
+                  {plan === 'test' ? '👑 Premium' : '🔒 Gratuit'}
+                </motion.button>
+              )}
+
               <Link
                 to="/app/settings"
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
