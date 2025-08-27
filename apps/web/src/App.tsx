@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
 import { PWAProvider } from './contexts/PWAContext'
+import { SubscriptionProvider } from './contexts/SubscriptionContext'
 import PublicLayout from './components/layout/PublicLayout'
 import AppLayout from './components/layout/AppLayout'
 import AuthLayout from './components/layout/AuthLayout'
@@ -42,12 +43,13 @@ const LoadingFallback = () => (
 
 function App() {
   return (
-    <PWAProvider>
-      {/* Barre d'installation PWA */}
-      <InstallPrompt />
-      {/* Notification de mise à jour PWA */}
-      <UpdatePrompt />
-      <Routes>
+    <SubscriptionProvider>
+      <PWAProvider>
+        {/* Barre d'installation PWA */}
+        <InstallPrompt />
+        {/* Notification de mise à jour PWA */}
+        <UpdatePrompt />
+        <Routes>
         {/* Routes publiques */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Landing />} />
@@ -159,7 +161,8 @@ function App() {
           } />
         </Route>
       </Routes>
-    </PWAProvider>
+      </PWAProvider>
+    </SubscriptionProvider>
   )
 }
 
