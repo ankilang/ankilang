@@ -189,7 +189,10 @@ export default function AccountIndex() {
 
               {activeTab === 'security' && (
                 <div className="space-y-6">
-                  <SecurityForm />
+                  <SecurityForm onEmailChange={() => {
+                    // TODO: Implémenter la logique de changement d'email
+                    alert('Fonctionnalité de changement d\'email à implémenter')
+                  }} />
                   <SessionsList
                     sessions={account.sessions}
                     onSessionsUpdate={handleSessionsUpdate}
