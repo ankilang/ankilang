@@ -166,6 +166,7 @@ export default function AccountIndex() {
                   <ProfileCard 
                     user={account.user} 
                     subscription={account.subscription}
+                    onEdit={() => setIsEditingProfile(true)}
                   />
                   
                   {/* Formulaire d'édition */}
