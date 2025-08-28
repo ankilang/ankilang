@@ -13,6 +13,7 @@ export default function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { isInstalled } = usePWAContext()
   const { plan, toggleTestMode } = useSubscription()
+  const isPro = plan !== 'free'
   const { isVisible: isTabBarVisible } = useTabBarVisibility()
 
   const toggleMobileMenu = () => {
@@ -56,30 +57,34 @@ export default function AppLayout() {
                 >
                   Mes thèmes
                 </NavLink>
-                <NavLink
-                  to="/app/community"
-                  className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${
-                      isActive
-                        ? "text-blue-600"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`
-                  }
-                >
-                  Communauté
-                </NavLink>
-                <NavLink
-                  to="/app/lessons"
-                  className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${
-                      isActive
-                        ? "text-blue-600"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`
-                  }
-                >
-                  Leçons
-                </NavLink>
+                {isPro && (
+                  <>
+                    <NavLink
+                      to="/app/community"
+                      className={({ isActive }) =>
+                        `text-sm font-medium transition-colors ${
+                          isActive
+                            ? "text-blue-600"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`
+                      }
+                    >
+                      Communauté
+                    </NavLink>
+                    <NavLink
+                      to="/app/lessons"
+                      className={({ isActive }) =>
+                        `text-sm font-medium transition-colors ${
+                          isActive
+                            ? "text-blue-600"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`
+                      }
+                    >
+                      Leçons
+                    </NavLink>
+                  </>
+                )}
               </nav>
             </div>
 
@@ -156,28 +161,32 @@ export default function AppLayout() {
                 >
                   Mes thèmes
                 </NavLink>
-                <NavLink
-                  to="/app/community"
-                  onClick={closeMobileMenu}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-blue-600 font-medium py-2"
-                      : "text-gray-600 hover:text-gray-900 py-2"
-                  }
-                >
-                  Communauté
-                </NavLink>
-                <NavLink
-                  to="/app/lessons"
-                  onClick={closeMobileMenu}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-blue-600 font-medium py-2"
-                      : "text-gray-600 hover:text-gray-900 py-2"
-                  }
-                >
-                  Leçons
-                </NavLink>
+                {isPro && (
+                  <>
+                    <NavLink
+                      to="/app/community"
+                      onClick={closeMobileMenu}
+                      className={({ isActive }) =>
+                        isActive
+                          ? "text-blue-600 font-medium py-2"
+                          : "text-gray-600 hover:text-gray-900 py-2"
+                      }
+                    >
+                      Communauté
+                    </NavLink>
+                    <NavLink
+                      to="/app/lessons"
+                      onClick={closeMobileMenu}
+                      className={({ isActive }) =>
+                        isActive
+                          ? "text-blue-600 font-medium py-2"
+                          : "text-gray-600 hover:text-gray-900 py-2"
+                      }
+                    >
+                      Leçons
+                    </NavLink>
+                  </>
+                )}
               </nav>
             </div>
           </div>

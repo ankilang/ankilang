@@ -9,6 +9,7 @@ import LegalLayout from './components/layout/LegalLayout'
 import InstallPrompt from './components/ui/InstallPrompt'
 import UpdatePrompt from './components/ui/UpdatePrompt'
 import Landing from './pages/Landing'
+import ProOnly from './components/auth/ProOnly'
 import Dashboard from './pages/app/Dashboard'
 import Abonnement from './pages/Abonnement'
 import Offline from './pages/Offline'
@@ -125,24 +126,32 @@ function App() {
           {/* Communauté */}
           <Route path="community" element={
             <Suspense fallback={<LoadingFallback />}>
-              <CommunityIndex />
+              <ProOnly>
+                <CommunityIndex />
+              </ProOnly>
             </Suspense>
           } />
           <Route path="community/:deckId" element={
             <Suspense fallback={<LoadingFallback />}>
-              <CommunityDeck />
+              <ProOnly>
+                <CommunityDeck />
+              </ProOnly>
             </Suspense>
           } />
           
           {/* Leçons */}
           <Route path="lessons" element={
             <Suspense fallback={<LoadingFallback />}>
-              <LessonsIndex />
+              <ProOnly>
+                <LessonsIndex />
+              </ProOnly>
             </Suspense>
           } />
           <Route path="lessons/:lessonId" element={
             <Suspense fallback={<LoadingFallback />}>
-              <LessonDetail />
+              <ProOnly>
+                <LessonDetail />
+              </ProOnly>
             </Suspense>
           } />
           

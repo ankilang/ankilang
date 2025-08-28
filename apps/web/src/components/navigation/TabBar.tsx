@@ -5,6 +5,7 @@ import { useTabNavigation } from '../../hooks/useTabNavigation'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import FAB from './FAB'
+import { useSubscription } from '../../contexts/SubscriptionContext'
 
 interface TabItem {
   id: string
@@ -123,6 +124,8 @@ TabButton.displayName = 'TabButton'
 
 function TabBar() {
   const { isInstalled } = usePWAContext()
+  const { plan } = useSubscription()
+  const isPro = plan !== 'free'
   const { isTabActive, navigateToTab } = useTabNavigation()
   const isOnline = useOnlineStatus()
   const { isVisible, isCompact, isKeyboardOpen } = useTabBarVisibility()
@@ -188,7 +191,9 @@ function TabBar() {
         )}
         
         <div className="flex items-center justify-around h-full px-2">
-          {TAB_ITEMS.map((item) => (
+          {TAB_ITEMS.filter(item =>
+            isPro ? true : (item.id !== 'community' && item.id !== 'lessons')
+          ).map((item) => (
             <TabButton
               key={item.id}
               item={item}
