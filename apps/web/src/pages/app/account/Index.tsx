@@ -1,4 +1,10 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  User, Settings, Shield, Database, 
+  CheckCircle, AlertTriangle,
+  ArrowLeft
+} from 'lucide-react'
 import { getAccount, updateSubscription } from '../../../data/mockAccount'
 import ProfileCard from '../../../components/account/ProfileCard'
 import ProfileForm from '../../../components/account/ProfileForm'
@@ -6,11 +12,15 @@ import SubscriptionBadge from '../../../components/account/SubscriptionBadge'
 import SecurityForm from '../../../components/account/SecurityForm'
 import SessionsList from '../../../components/account/SessionsList'
 import DataControls from '../../../components/account/DataControls'
+
 import ConfirmModal from '../../../components/ui/ConfirmModal'
 import PageMeta from '../../../components/seo/PageMeta'
+import { useNavigate } from 'react-router-dom'
 
 export default function AccountIndex() {
+  const navigate = useNavigate()
   const [account, setAccount] = useState(getAccount())
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'data'>('profile')
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -21,6 +31,7 @@ export default function AccountIndex() {
   const handleProfileUpdate = (updatedUser: any) => {
     setAccount(prev => ({ ...prev, user: updatedUser }))
     setIsEditingProfile(false)
+    setMessage({ type: 'success', text: 'Profil mis à jour avec succès' })
   }
 
   const handleSessionsUpdate = (sessions: any[]) => {
@@ -38,174 +49,207 @@ export default function AccountIndex() {
     setMessage({ type: 'success', text: 'Demande de changement d\'email envoyée' })
   }
 
+  const tabs = [
+    { id: 'profile', label: 'Profil', icon: User },
+    { id: 'security', label: 'Sécurité', icon: Shield },
+    { id: 'preferences', label: 'Préférences', icon: Settings },
+    { id: 'data', label: 'Données', icon: Database }
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-pastel-purple via-pastel-green/30 to-pastel-rose/20">
       <PageMeta 
         title="Mon compte — Ankilang" 
         description="Profil, abonnement et préférences de votre compte."
       />
       
+      {/* Éléments décoratifs */}
+      <div className="fixed top-0 right-0 w-96 h-96 bg-pastel-rose/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-80 h-80 bg-pastel-purple/30 rounded-full blur-2xl pointer-events-none" />
+      
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Mon compte</h1>
-            <p className="text-gray-600">
-              Gérez votre profil, votre abonnement et vos paramètres de sécurité
-            </p>
+      <motion.header 
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative bg-white/60 backdrop-blur-md border-b border-white/40"
+        style={{ paddingTop: 'var(--safe-top, 0px)' }}
+      >
+        <div className="container mx-auto px-4 sm:px-6 py-6">
+          <div className="flex items-center gap-4 mb-6">
+            <motion.button
+              onClick={() => navigate('/app')}
+              whileHover={{ scale: 1.1, x: -2 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
+            >
+              <ArrowLeft size={18} />
+            </motion.button>
+            
+            <div>
+              <h1 className="font-display text-3xl sm:text-4xl font-bold text-dark-charcoal">
+                Mon Compte
+              </h1>
+              <p className="font-sans text-dark-charcoal/70 mt-1">
+                Gérez votre profil et vos préférences
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation tabs */}
+          <div className="flex flex-wrap gap-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <motion.button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-sans font-medium transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'bg-white text-dark-charcoal shadow-lg border border-white/40'
+                      : 'bg-white/40 text-dark-charcoal/70 hover:bg-white/60 border border-white/20'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </motion.button>
+              )
+            })}
           </div>
         </div>
-      </div>
+      </motion.header>
+
+      {/* Message de notification */}
+      <AnimatePresence>
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-20 right-4 z-50"
+          >
+            <div className={`px-4 py-3 rounded-xl shadow-lg backdrop-blur-md border ${
+              message.type === 'success' 
+                ? 'bg-green-50/90 border-green-200 text-green-800' 
+                : 'bg-red-50/90 border-red-200 text-red-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                {message.type === 'success' ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4" />
+                )}
+                <span className="font-sans text-sm font-medium">{message.text}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Contenu principal */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Bandeau hors-ligne */}
-          {isOffline && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-yellow-800 text-sm font-medium">
-                    Mode hors-ligne activé. Certaines fonctionnalités peuvent être limitées.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Message de feedback */}
-          {message && (
-            <div
-              aria-live="polite"
-              className={`p-4 rounded-lg border ${
-                message.type === 'success' 
-                  ? 'bg-green-50 text-green-800 border-green-200' 
-                  : 'bg-red-50 text-red-800 border-red-200'
-              }`}
+      <main className="container mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-4xl mx-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
             >
-              {message.text}
-            </div>
-          )}
+              {activeTab === 'profile' && (
+                <div className="space-y-6">
+                  {/* Carte de profil */}
+                  <ProfileCard 
+                    user={account.user} 
+                    subscription={account.subscription}
+                  />
+                  
+                  {/* Formulaire d'édition */}
+                  {isEditingProfile && (
+                    <ProfileForm
+                      user={account.user}
+                      onUpdate={handleProfileUpdate}
+                    />
+                  )}
 
-          {/* Section Profil */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Profil</h2>
-            
-            {!isEditingProfile ? (
-              <div className="space-y-4">
-                <ProfileCard user={account.user} subscription={account.subscription} />
-                <button
-                  onClick={() => setIsEditingProfile(true)}
-                  className="px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
-                >
-                  Modifier le profil
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <ProfileForm user={account.user} onUpdate={handleProfileUpdate} />
-                <button
-                  onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-3 sm:py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:outline-none"
-                >
-                  Annuler
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Section Abonnement */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Abonnement</h2>
-            
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <SubscriptionBadge 
-                  plan={account.subscription.plan} 
-                  status={account.subscription.status}
-                  renewsAt={account.subscription.renewsAt}
-                />
-              </div>
-              
-              {account.subscription.plan === 'pro' && (
-                <button
-                  onClick={() => setShowCancelModal(true)}
-                  className="px-4 py-3 sm:py-2 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors font-medium focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
-                >
-                  Annuler l'abonnement
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Section Sécurité */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Sécurité</h2>
-            
-            <div className="space-y-6">
-              {/* Email */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Adresse email</h3>
-                  <p className="text-sm text-gray-500">{account.user.email}</p>
+                  {/* Badge d'abonnement */}
+                  <SubscriptionBadge
+                    plan={account.subscription.plan}
+                    status={account.subscription.status}
+                  />
                 </div>
-                <button
-                  onClick={() => setShowEmailModal(true)}
-                  className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 transition-colors rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
-                >
-                  Modifier
-                </button>
-              </div>
+              )}
 
-              {/* Changement de mot de passe */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Changer le mot de passe</h3>
-                <SecurityForm />
-              </div>
-            </div>
-          </div>
+              {activeTab === 'security' && (
+                <div className="space-y-6">
+                  <SecurityForm />
+                  <SessionsList
+                    sessions={account.sessions}
+                    onSessionsUpdate={handleSessionsUpdate}
+                  />
+                </div>
+              )}
 
-          {/* Section Sessions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Sessions actives</h2>
-            <SessionsList 
-              sessions={account.sessions} 
-              onSessionsUpdate={handleSessionsUpdate}
-            />
-          </div>
+              {activeTab === 'preferences' && (
+                <div className="bg-white/80 backdrop-blur-md rounded-xl p-6 border border-white/40">
+                  <h3 className="text-lg font-semibold text-dark-charcoal mb-4">Préférences</h3>
+                  <p className="text-dark-charcoal/70">Les préférences seront bientôt disponibles.</p>
+                </div>
+              )}
 
-          {/* Section Données & Confidentialité */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Données & confidentialité</h2>
-            <DataControls accountId={account.user.id} />
-          </div>
+              {activeTab === 'data' && (
+                <DataControls accountId={account.user.id} />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </div>
+      </main>
 
       {/* Modales */}
       <ConfirmModal
         open={showEmailModal}
-        title="Changer l'adresse email"
-        description="Un email de confirmation sera envoyé à votre nouvelle adresse."
-        confirmLabel="Envoyer la demande"
-        onConfirm={handleEmailChange}
         onClose={() => setShowEmailModal(false)}
+        onConfirm={() => {
+          handleEmailChange()
+          setShowEmailModal(false)
+        }}
+        title="Changer d'adresse email"
+        description="Êtes-vous sûr de vouloir changer votre adresse email ? Un lien de confirmation sera envoyé à votre nouvelle adresse."
+        confirmLabel="Confirmer"
       />
 
       <ConfirmModal
         open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={() => {
+          handleCancelSubscription()
+          setShowCancelModal(false)
+        }}
         title="Annuler l'abonnement"
-        description="Êtes-vous sûr de vouloir annuler votre abonnement Pro ? Vous perdrez l'accès aux fonctionnalités premium."
+        description="Êtes-vous sûr de vouloir annuler votre abonnement ? Vous perdrez l'accès aux fonctionnalités premium à la fin de la période de facturation."
         confirmLabel="Annuler l'abonnement"
         isDanger={true}
-        onConfirm={handleCancelSubscription}
-        onClose={() => setShowCancelModal(false)}
       />
+
+      {/* Indicateur hors ligne */}
+      {isOffline && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-4 left-4 right-4 bg-orange-100/90 backdrop-blur-md border border-orange-200 rounded-xl p-4 shadow-lg"
+        >
+          <div className="flex items-center gap-2 text-orange-800">
+            <AlertTriangle className="w-4 h-4" />
+            <span className="font-sans text-sm font-medium">
+              Mode hors ligne - Certaines fonctionnalités peuvent être limitées
+            </span>
+          </div>
+        </motion.div>
+      )}
     </div>
   )
 }
