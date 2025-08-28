@@ -173,7 +173,8 @@ export default function AccountIndex() {
                   {isEditingProfile && (
                     <ProfileForm
                       user={account.user}
-                      onUpdate={handleProfileUpdate}
+                      onSubmit={handleProfileUpdate}
+                      onCancel={() => setIsEditingProfile(false)}
                     />
                   )}
 
