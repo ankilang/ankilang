@@ -13,9 +13,11 @@ import { CreateCardSchema } from '@ankilang/shared'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
 import { translate } from '../../services/translate'
+import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
 import { searchImages } from '../../services/images'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
@@ -76,7 +78,7 @@ export default function NewCardModal({
   // Subscription context
   const { features, upgradeToPremium } = useSubscription()
   
-  const isOccitan = themeLanguage === 'oc'
+  const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
   const canTranslate = features.canUseTranslation || isOccitan
   const canAddAudio = features.canAddAudio || isOccitan
 
@@ -147,6 +149,15 @@ export default function NewCardModal({
     }
   })
 
+  const deeplMutation = useMutation({
+    mutationFn: async (text: string) => {
+      // Utilise la fonction Deepl (Netlify) avec payload (text,targetLang)
+      const target = themeLanguage === 'no' ? 'nb' : themeLanguage
+      const res: DeeplResponse = await deeplTranslate(text, target, 'fr')
+      return res
+    }
+  })
+
   const handleTranslate = async () => {
     if (selectedType !== 'basic') return
     const rectoText = getValues('recto')
@@ -156,11 +167,29 @@ export default function NewCardModal({
 
     setIsTranslating(true)
     try {
-      const res = await translateMutation.mutateAsync(rectoText)
-      setValue('verso', res?.translatedText || '')
+      if (isOccitan) {
+        const r = await reviradaTranslate({
+          text: rectoText,
+          sourceLang: toReviCode('fr'),
+          targetLang: toReviCode(themeLanguage)
+        })
+        if ((r as any).success) {
+          const translated = (r as any).translated
+          setValue('verso', Array.isArray(translated) ? translated[0] : translated)
+        } else {
+          throw new Error((r as any).error || 'Revirada error')
+        }
+      } else {
+        const r = await deeplMutation.mutateAsync(rectoText)
+        if (r.success) {
+          const item = Array.isArray(r.result) ? r.result[0] : r.result
+          setValue('verso', item.translated)
+        } else {
+          throw new Error(r.error)
+        }
+      }
     } catch (err) {
       console.warn('Traduction indisponible, fallback mock.', err)
-      // Fallback temporaire: préfixe pour indiquer le target
       setValue('verso', `[${themeLanguage}] ${rectoText}`)
     } finally {
       setIsTranslating(false)

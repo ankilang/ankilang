@@ -43,6 +43,8 @@ export default function ThemeForm({
 
   const watchedValues = watch()
   const selectedLanguage = getLanguageByCode(watchedValues.targetLang)
+  const [ocDialect, setOcDialect] = useState<'oc' | 'oc-gascon'>('oc')
+  const [langQuery, setLangQuery] = useState('')
 
   const handleFormSubmit = (data: ThemeFormData) => {
     const tags = data.tags 
@@ -51,7 +53,7 @@ export default function ThemeForm({
     
     onSubmit({
       name: data.name,
-      targetLang: data.targetLang,
+      targetLang: (data.targetLang === 'oc' ? ocDialect : data.targetLang),
       tags
     } as z.infer<typeof CreateThemeSchema>)
   }
@@ -163,9 +165,28 @@ export default function ThemeForm({
             Langue que vous souhaitez apprendre
           </label>
           
+          {/* Recherche de langue */}
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="text"
+              value={langQuery}
+              onChange={(e) => setLangQuery(e.target.value)}
+              placeholder="Rechercher une langue (code, nom, natif)"
+              className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
+              aria-label="Rechercher une langue"
+            />
+          </div>
+
           {/* Grille de langues améliorée */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-            {LANGUAGES.map((language) => (
+            {(langQuery ? LANGUAGES.filter(l => {
+              const q = langQuery.trim().toLowerCase()
+              return (
+                l.code.toLowerCase().includes(q) ||
+                l.label.toLowerCase().includes(q) ||
+                (l.nativeName?.toLowerCase() || '').includes(q)
+              )
+            }) : LANGUAGES).map((language) => (
               <motion.label
                 key={language.code}
                 whileHover={{ scale: 1.05 }}
@@ -216,6 +237,67 @@ export default function ThemeForm({
               </motion.label>
             ))}
           </div>
+
+          {/* Dialecte occitan quand oc sélectionné */}
+          {watchedValues.targetLang === 'oc' && (
+            <div className="mt-5">
+              <div className="font-sans text-sm font-semibold text-dark-charcoal mb-2">
+                Dialecte occitan (pour la traduction Revirada)
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label
+                  className={`relative cursor-pointer rounded-2xl border-2 p-4 transition-all ${
+                    ocDialect === 'oc'
+                      ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-red-50 shadow-md'
+                      : 'border-gray-200 bg-white hover:border-yellow-400'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="ocDialect"
+                    className="sr-only"
+                    checked={ocDialect === 'oc'}
+                    onChange={() => setOcDialect('oc')}
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-red-500 flex items-center justify-center text-white font-bold">
+                      ÒC
+                    </div>
+                    <div>
+                      <div className="font-sans font-semibold text-dark-charcoal">Languedocien</div>
+                      <div className="text-xs text-dark-charcoal/60">Code Revirada: <code>oci</code></div>
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  className={`relative cursor-pointer rounded-2xl border-2 p-4 transition-all ${
+                    ocDialect === 'oc-gascon'
+                      ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-red-50 shadow-md'
+                      : 'border-gray-200 bg-white hover:border-yellow-400'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="ocDialect"
+                    className="sr-only"
+                    checked={ocDialect === 'oc-gascon'}
+                    onChange={() => setOcDialect('oc-gascon')}
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-red-500 flex items-center justify-center text-white font-bold">
+                      GS
+                    </div>
+                    <div>
+                      <div className="font-sans font-semibold text-dark-charcoal">Gascon</div>
+                      <div className="text-xs text-dark-charcoal/60">Code Revirada: <code>oci_gascon</code></div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+              <p className="mt-2 text-xs text-dark-charcoal/60">Le dialecte choisi affinent la traduction occitane.</p>
+            </div>
+          )}
           
           {/* Message d'aide si aucune langue sélectionnée */}
           {!watchedValues.targetLang && (
