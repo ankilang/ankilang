@@ -15,7 +15,7 @@ import PremiumTeaser from '../PremiumTeaser'
 import { translate } from '../../services/translate'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
-import { searchImages } from '../../services/images'
+import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
@@ -122,9 +122,15 @@ export default function NewCardModal({
 
   // Recherche d'images via Netlify Function (Pexels)
   const imagesQuery = useQuery({
-    queryKey: ['images', imageQuery, imagePage],
-    queryFn: () => searchImages(imageQuery, imagePage),
-    enabled: online && features.canAddImages && !!imageQuery,
+    queryKey: ['pexels', imageQuery, imagePage],
+    queryFn: () => {
+      const common = { per_page: 12, page: imagePage, orientation: 'landscape', size: 'medium', locale: 'fr-FR' }
+      if (imageQuery && imageQuery.trim()) {
+        return pexelsSearchPhotos(imageQuery.trim(), common)
+      }
+      return pexelsCurated(common)
+    },
+    enabled: online && features.canAddImages,
     staleTime: 1000 * 60 * 5,
   })
 
@@ -608,16 +614,16 @@ export default function NewCardModal({
                                       {imagesQuery.error && (
                                         <div className="text-sm text-red-600">Erreur de recherche d'images</div>
                                       )}
-                                      {imagesQuery.data?.results?.length ? (
+                                      {imagesQuery.data?.photos?.length ? (
                                         <div className="grid grid-cols-3 gap-2">
-                                          {imagesQuery.data.results.map(img => (
+                                          {imagesQuery.data.photos.map((img: any) => (
                                             <button
                                               key={img.id}
                                               type="button"
                                               className="relative group rounded-lg overflow-hidden border border-gray-200"
-                                              onClick={() => handlePickImage(img.src)}
+                                              onClick={() => handlePickImage(img.src?.large || img.src?.medium || img.src?.original)}
                                             >
-                                              <img src={img.src} alt={img.alt || ''} className="w-full h-24 object-cover" />
+                                              <img src={img.src?.medium || img.src?.small || img.src?.tiny} alt={img.alt || ''} className="w-full h-24 object-cover" />
                                               <span className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                                             </button>
                                           ))}
@@ -625,10 +631,32 @@ export default function NewCardModal({
                                       ) : (
                                         <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
                                           <ImageIcon className="w-8 h-8 text-gray-400" />
-                                          <span className="font-sans text-sm text-gray-500">Saisissez un mot-clé puis Entrée</span>
+                                          <span className="font-sans text-sm text-gray-500">Saisissez un mot-clé puis Entrée (ou explorez la sélection)</span>
                                         </div>
                                       )}
                                     </div>
+                                    {/* Pagination */}
+                                    {imagesQuery.data && (
+                                      <div className="mt-3 flex items-center justify-between">
+                                        <button
+                                          type="button"
+                                          className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm disabled:opacity-50"
+                                          disabled={imagesQuery.data.page <= 1}
+                                          onClick={() => setImagePage(p => Math.max(1, p - 1))}
+                                        >
+                                          Précédent
+                                        </button>
+                                        <div className="text-xs text-gray-500">Page {imagesQuery.data.page}</div>
+                                        <button
+                                          type="button"
+                                          className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm disabled:opacity-50"
+                                          disabled={!imagesQuery.data.next_page}
+                                          onClick={() => setImagePage(p => p + 1)}
+                                        >
+                                          Suivant
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 )
                               ) : (
@@ -749,16 +777,16 @@ export default function NewCardModal({
                                       {imagesQuery.error && (
                                         <div className="text-sm text-red-600">Erreur de recherche d'images</div>
                                       )}
-                                      {imagesQuery.data?.results?.length ? (
+                                      {imagesQuery.data?.photos?.length ? (
                                         <div className="grid grid-cols-3 gap-2">
-                                          {imagesQuery.data.results.map(img => (
+                                          {imagesQuery.data.photos.map((img: any) => (
                                             <button
                                               key={img.id}
                                               type="button"
                                               className="relative group rounded-lg overflow-hidden border border-gray-200"
-                                              onClick={() => handlePickImage(img.src)}
+                                              onClick={() => handlePickImage(img.src?.large || img.src?.medium || img.src?.original)}
                                             >
-                                              <img src={img.src} alt={img.alt || ''} className="w-full h-24 object-cover" />
+                                              <img src={img.src?.medium || img.src?.small || img.src?.tiny} alt={img.alt || ''} className="w-full h-24 object-cover" />
                                               <span className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                                             </button>
                                           ))}
