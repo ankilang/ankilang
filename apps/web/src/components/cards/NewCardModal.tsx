@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,6 +12,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '@ankilang/shared'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
+import { translate } from '../../services/translate'
+import { generateTTS } from '../../services/tts'
+import { searchImages } from '../../services/images'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
@@ -66,9 +71,14 @@ export default function NewCardModal({
   const [selectedType, setSelectedType] = useState<'basic' | 'cloze'>('basic')
   const [isTranslating, setIsTranslating] = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
+  const online = useOnlineStatus()
   
   // Subscription context
   const { features, upgradeToPremium } = useSubscription()
+  
+  const isOccitan = themeLanguage === 'oc'
+  const canTranslate = features.canUseTranslation || isOccitan
+  const canAddAudio = features.canAddAudio || isOccitan
 
   const {
     register,
@@ -91,49 +101,102 @@ export default function NewCardModal({
   })
 
   const watchedValues = watch()
+  const [imageQuery, setImageQuery] = useState('')
+  const [imagePage, setImagePage] = useState(1)
 
-  // Fonction de traduction
+  // Pré-remplir la recherche d'images avec le recto/verso ou cloze
+  useEffect(() => {
+    if (!imageQuery) {
+      if (selectedType === 'basic') {
+        const base = (watchedValues as any).verso || (watchedValues as any).recto || ''
+        if (base) setImageQuery(base)
+      } else {
+        const base = (watchedValues as any).clozeTextTarget || ''
+        if (base) setImageQuery(base.replace(/\{\{c\d+::|\}\}/g, ''))
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedType])
+
+  // Recherche d'images via Netlify Function (Pexels)
+  const imagesQuery = useQuery({
+    queryKey: ['images', imageQuery, imagePage],
+    queryFn: () => searchImages(imageQuery, imagePage),
+    enabled: online && features.canAddImages && !!imageQuery,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const handlePickImage = (src: string) => {
+    if (selectedType === 'basic') {
+      setValue('versoImage', src)
+    } else {
+      setValue('clozeImage', src)
+    }
+  }
+
+  // Traduction via Netlify Function (fallback sur mock si indisponible)
+  const translateAbort = useRef<AbortController | null>(null)
+  const translateMutation = useMutation({
+    mutationFn: async (text: string) => {
+      translateAbort.current = new AbortController()
+      try {
+        return await translate({ sourceLang: 'fr', targetLang: themeLanguage, text }, { signal: translateAbort.current.signal })
+      } finally {
+        translateAbort.current = null
+      }
+    }
+  })
+
   const handleTranslate = async () => {
     if (selectedType !== 'basic') return
-    
     const rectoText = getValues('recto')
-    if (!rectoText.trim()) return
-
-    if (!features.canUseTranslation) {
-      upgradeToPremium()
-      return
-    }
+    if (!rectoText?.trim()) return
+    if (!canTranslate) { upgradeToPremium(); return }
+    if (!online) return
 
     setIsTranslating(true)
-    
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      const translatedText = `[Traduit en ${themeLanguage}] ${rectoText}`
-      setValue('verso', translatedText)
-    } catch (error) {
-      console.error('Erreur de traduction:', error)
+      const res = await translateMutation.mutateAsync(rectoText)
+      setValue('verso', res?.translatedText || '')
+    } catch (err) {
+      console.warn('Traduction indisponible, fallback mock.', err)
+      // Fallback temporaire: préfixe pour indiquer le target
+      setValue('verso', `[${themeLanguage}] ${rectoText}`)
     } finally {
       setIsTranslating(false)
     }
   }
 
   // Gestion des fichiers
-  const handleImageUpload = () => {
-    if (!features.canAddImages) {
-      upgradeToPremium()
-      return
-    }
-    const mockImageUrl = `https://picsum.photos/400/300?random=${Date.now()}`
-    setValue('versoImage', mockImageUrl)
-  }
 
-  const handleAudioUpload = () => {
-    if (!features.canAddAudio) {
+  const ttsAbort = useRef<AbortController | null>(null)
+  const ttsMutation = useMutation({
+    mutationFn: async (text: string) => {
+      ttsAbort.current = new AbortController()
+      try {
+        return await generateTTS({ lang: 'oc', text }, { signal: ttsAbort.current.signal })
+      } finally {
+        ttsAbort.current = null
+      }
+    }
+  })
+
+  const handleAudioUpload = async () => {
+    if (!canAddAudio) {
       upgradeToPremium()
       return
     }
-    const mockAudioUrl = `audio_${Date.now()}.mp3`
-    setValue('versoAudio', mockAudioUrl)
+    if (!online) return
+    const text = getValues('verso') || getValues('recto') || ''
+    if (!text.trim()) return
+    try {
+      const res = await ttsMutation.mutateAsync(text)
+      setValue('versoAudio', res?.audioUrl || '')
+    } catch (err) {
+      console.warn('TTS indisponible, fallback mock.', err)
+      const mockAudioUrl = `audio_${Date.now()}.mp3`
+      setValue('versoAudio', mockAudioUrl)
+    }
   }
 
   const removeMedia = (field: string) => {
@@ -156,11 +219,19 @@ export default function NewCardModal({
   }
 
   const handleFormSubmit = (data: CardFormData) => {
-    const submitData = {
-      ...data,
+    const w: any = watchedValues
+    const common = {
       themeId,
+      extra: (data as any).extra || undefined,
+      imageUrl: w.versoImage || w.clozeImage || undefined,
+      audioUrl: w.versoAudio || undefined,
       tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
     }
+
+    const submitData = data.type === 'basic'
+      ? { type: 'basic', frontFR: (data as any).recto, backText: (data as any).verso, ...common }
+      : { type: 'cloze', clozeTextTarget: (data as any).clozeTextTarget, ...common }
+
     onSubmit(submitData as z.infer<typeof CreateCardSchema>)
   }
 
@@ -339,11 +410,11 @@ export default function NewCardModal({
                             </div>
                             
                             {/* Bouton Traduire */}
-                            {features.canUseTranslation ? (
+                            {canTranslate ? (
                               <motion.button
                                 type="button"
                                 onClick={handleTranslate}
-                                disabled={isTranslating || !(watchedValues as any).recto?.trim()}
+                                disabled={!online || isTranslating || !(watchedValues as any).recto?.trim()}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
@@ -411,7 +482,7 @@ export default function NewCardModal({
                                 <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
                                   Audio occitan (optionnel)
                                 </label>
-                                                                 {features.canAddAudio ? (
+                                                                 {canAddAudio ? (
                                    (watchedValues as any).versoAudio ? (
                                     <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-gray-200">
                                       <motion.button
@@ -488,29 +559,47 @@ export default function NewCardModal({
                                     <div className="relative">
                                       <input
                                         type="text"
+                                        value={imageQuery}
+                                        onChange={(e) => setImageQuery(e.target.value)}
                                         placeholder="Rechercher une image sur Pexels..."
                                         className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
-                                        onKeyPress={(e) => {
+                                        onKeyDown={(e) => {
                                           if (e.key === 'Enter') {
                                             e.preventDefault()
-                                            console.log('Recherche Pexels:', (e.target as HTMLInputElement).value)
+                                            setImagePage(1)
                                           }
                                         }}
                                       />
                                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     </div>
-                                    
-                                    <motion.button
-                                      type="button"
-                                      onClick={handleImageUpload}
-                                      whileHover={{ scale: 1.02 }}
-                                      whileTap={{ scale: 0.98 }}
-                                      className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
-                                    >
-                                      <ImageIcon className="w-8 h-8 text-gray-400" />
-                                      <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                      <span className="font-sans text-xs text-gray-400">Recherche Pexels ou upload local</span>
-                                    </motion.button>
+                                    <div className="mt-1">
+                                      {imagesQuery.isLoading && (
+                                        <div className="text-sm text-gray-500">Recherche d'images…</div>
+                                      )}
+                                      {imagesQuery.error && (
+                                        <div className="text-sm text-red-600">Erreur de recherche d'images</div>
+                                      )}
+                                      {imagesQuery.data?.results?.length ? (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {imagesQuery.data.results.map(img => (
+                                            <button
+                                              key={img.id}
+                                              type="button"
+                                              className="relative group rounded-lg overflow-hidden border border-gray-200"
+                                              onClick={() => handlePickImage(img.src)}
+                                            >
+                                              <img src={img.src} alt={img.alt || ''} className="w-full h-24 object-cover" />
+                                              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                          <ImageIcon className="w-8 h-8 text-gray-400" />
+                                          <span className="font-sans text-sm text-gray-500">Saisissez un mot-clé puis Entrée</span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 )
                               ) : (
@@ -607,16 +696,52 @@ export default function NewCardModal({
                                     </motion.button>
                                   </div>
                                 ) : (
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => handleImageUpload()}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
-                                  >
-                                    <ImageIcon className="w-8 h-8 text-gray-400" />
-                                    <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                  </motion.button>
+                                  <div className="space-y-3">
+                                    <div className="relative">
+                                      <input
+                                        type="text"
+                                        value={imageQuery}
+                                        onChange={(e) => setImageQuery(e.target.value)}
+                                        placeholder="Rechercher une image sur Pexels..."
+                                        className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            setImagePage(1)
+                                          }
+                                        }}
+                                      />
+                                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <div className="mt-1">
+                                      {imagesQuery.isLoading && (
+                                        <div className="text-sm text-gray-500">Recherche d'images…</div>
+                                      )}
+                                      {imagesQuery.error && (
+                                        <div className="text-sm text-red-600">Erreur de recherche d'images</div>
+                                      )}
+                                      {imagesQuery.data?.results?.length ? (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {imagesQuery.data.results.map(img => (
+                                            <button
+                                              key={img.id}
+                                              type="button"
+                                              className="relative group rounded-lg overflow-hidden border border-gray-200"
+                                              onClick={() => handlePickImage(img.src)}
+                                            >
+                                              <img src={img.src} alt={img.alt || ''} className="w-full h-24 object-cover" />
+                                              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                          <ImageIcon className="w-8 h-8 text-gray-400" />
+                                          <span className="font-sans text-sm text-gray-500">Saisissez un mot-clé puis Entrée</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 )
                               ) : (
                                 <PremiumTeaser feature="L'ajout d'images" onUpgrade={upgradeToPremium}>

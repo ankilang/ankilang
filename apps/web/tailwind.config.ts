@@ -8,6 +8,25 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        pastel: {
+          green: '#D4E2D4',
+          purple: '#D2B4DE',
+          rose: '#E6B0AA',
+          blue: '#CFE8FF',
+          mint: '#CFEDE6',
+          lilac: '#E4D7FF',
+          coral: '#FFD1C9',
+          sand: '#F5E6CC',
+          yellow: '#FCE7B2',
+        },
+        'dark-charcoal': '#333333',
+        'soft-white': '#FAFAFA',
+      },
+      fontFamily: {
+        playfair: ['"Playfair Display"', 'serif'],
+        inter: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       keyframes: {
         breathing: { '0%,100%': { transform:'scale(1)' }, '50%': { transform:'scale(1.012)' } },
         floatSlow: { '0%,100%': { transform:'translateY(0)' }, '50%': { transform:'translateY(-8px)' } },

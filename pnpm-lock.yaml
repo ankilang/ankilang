@@ -13,6 +13,12 @@ importers:
       '@ankilang/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@fontsource/inter':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/playfair-display':
+        specifier: ^5.2.6
+        version: 5.2.6
       '@hookform/resolvers':
         specifier: ^3.3.2
         version: 3.10.0(react-hook-form@7.62.0)
@@ -1429,6 +1435,14 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@fontsource/inter@5.2.6:
+    resolution: {integrity: sha512-CZs9S1CrjD0jPwsNy9W6j0BhsmRSQrgwlTNkgQXTsAeDRM42LBRLo3eo9gCzfH4GvV7zpyf78Ozfl773826csw==}
+    dev: false
+
+  /@fontsource/playfair-display@5.2.6:
+    resolution: {integrity: sha512-hWfFm2j+Dlg+UwabNJu5vi45otmLSG64hUzNFJ8pIDBgqWBviEPpVaDIZWHm2RYyIxhg9YXTPsZWdpvsu7fkqQ==}
+    dev: false
 
   /@formatjs/ecma402-abstract@2.3.4:
     resolution: {integrity: sha512-qrycXDeaORzIqNhBOx0btnhpD1c+/qFIHAN9znofuMJX6QBwtbrmlpWfD4oiUUD2vJUOIYFA/gYtg2KAMGG7sA==}
