@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test AnkiLang Microservice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test AnkiLang Microservice</h1>
+    
+    <div>
+        <h2>Flashcards simples</h2>
+        <button onclick="testBasicCards()">Tester flashcards basiques</button>
+        <div id="basic-result"></div>
+    </div>
+
+    <div>
+        <h2>Flashcards cloze</h2>
+        <button onclick="testClozeCards()">Tester flashcards cloze</button>
+        <div id="cloze-result"></div>
+    </div>
+
+    <div>
+        <h2>Génération de deck</h2>
+        <button onclick="generateDeck()">Générer deck complet</button>
+        <div id="deck-result"></div>
+    </div>
+
+    <script type="module">
+        import { ankiLang } from '../src/index.js';
+
+        window.testBasicCards = async function() {
+            const resultDiv = document.getElementById('basic-result');
+            resultDiv.innerHTML = '<p>Test en cours...</p>';
+
+            try {
+                await ankiLang.init();
+                
+                const cards = [
+                    {
+                        front: 'Bonjour',
+                        back: 'Hello',
+                        media: {
+                            audio: 'bonjour.mp3'
+                        },
+                        tags: ['français', 'salutations'],
+                        notes: 'Formule de politesse'
+                    },
+                    {
+                        front: 'Au revoir',
+                        back: 'Goodbye',
+                        tags: ['français', 'salutations']
+                    }
+                ];
+
+                const basicCards = ankiLang.createBasicCards(cards);
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ ${basicCards.length} flashcards basiques créées avec succès
+                    </div>
+                    <div class="card">
+                        <strong>Première carte:</strong><br>
+                        Recto: ${basicCards[0].front}<br>
+                        Verso: ${basicCards[0].back}<br>
+                        Tags: ${basicCards[0].tags.join(', ')}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        };
+
+        window.testClozeCards = async function() {
+            const resultDiv = document.getElementById('cloze-result');
+            resultDiv.innerHTML = '<p>Test en cours...</p>';
+
+            try {
+                await ankiLang.init();
+                
+                const cards = [
+                    {
+                        text: 'Le chat mange la souris',
+                        clozeText: 'Le ((c1::chat)) mange la ((c2::souris))',
+                        tags: ['cloze', 'français'],
+                        notes: 'Phrase avec deux mots à compléter'
+                    },
+                    {
+                        text: 'Paris est la capitale de la France',
+                        clozeText: 'Paris est la ((c1::capitale)) de la ((c2::France))',
+                        tags: ['cloze', 'géographie']
+                    }
+                ];
+
+                const clozeCards = ankiLang.createClozeCards(cards);
+                
+                // Valider les clozes
+                const validation = clozeCards[0].validateClozes();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ ${clozeCards.length} flashcards cloze créées avec succès
+                    </div>
+                    <div class="card">
+                        <strong>Première carte:</strong><br>
+                        Texte: ${clozeCards[0].text}<br>
+                        Cloze: ${clozeCards[0].clozeText}<br>
+                        Nombre de clozes: ${validation.clozeCount}<br>
+                        Tags: ${clozeCards[0].tags.join(', ')}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        };
+
+        window.generateDeck = async function() {
+            const resultDiv = document.getElementById('deck-result');
+            resultDiv.innerHTML = '<p>Génération en cours...</p>';
+
+            try {
+                await ankiLang.init();
+                
+                const basicCards = [
+                    {
+                        front: 'Bonjour',
+                        back: 'Hello',
+                        tags: ['français', 'salutations']
+                    }
+                ];
+
+                const clozeCards = [
+                    {
+                        text: 'Le chat mange la souris',
+                        clozeText: 'Le ((c1::chat)) mange la ((c2::souris))',
+                        tags: ['cloze', 'français']
+                    }
+                ];
+
+                // Générer les deux types de decks
+                const basicResult = await ankiLang.generateBasicDeck(
+                    'Test Basic',
+                    basicCards,
+                    'test-basic.apkg'
+                );
+
+                const clozeResult = await ankiLang.generateClozeDeck(
+                    'Test Cloze',
+                    clozeCards,
+                    'test-cloze.apkg'
+                );
+
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Decks générés avec succès
+                    </div>
+                    <div class="card">
+                        <strong>Deck basique:</strong><br>
+                        Nom: Test Basic<br>
+                        Cartes: ${basicResult.stats.totalCards}<br>
+                        Notes: ${basicResult.stats.totalNotes}
+                    </div>
+                    <div class="card">
+                        <strong>Deck cloze:</strong><br>
+                        Nom: Test Cloze<br>
+                        Cartes: ${clozeResult.stats.totalCards}<br>
+                        Notes: ${clozeResult.stats.totalNotes}<br>
+                        Clozes: ${clozeResult.stats.totalClozes}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        };
+    </script>
+</body>
+</html>

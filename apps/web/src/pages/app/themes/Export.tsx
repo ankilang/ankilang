@@ -1,15 +1,18 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Download, FileText, CheckCircle } from 'lucide-react'
 import { getThemeById, getCardsByThemeId } from '../../../data/mockData'
 import { getLanguageLabel } from '../../../constants/languages'
 import PageMeta from '../../../components/seo/PageMeta'
+// @ts-expect-error JS module without types
+import { useAnkiLang } from '../../../exporter/hooks/useAnkiLang.js'
 
 export default function ThemeExport() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isExporting, setIsExporting] = useState(false)
   const [exportSuccess, setExportSuccess] = useState(false)
+  const { isReady, isLoading, error, generateBasicDeck, generateClozeDeck, generateCombinedDeck } = useAnkiLang()
 
   const theme = getThemeById(id!)
   const cards = getCardsByThemeId(id!)
@@ -28,20 +31,67 @@ export default function ThemeExport() {
     )
   }
 
+  const safeFile = (name: string) =>
+    name
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9-_ ]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+
+  const toBasic = (c: any) => ({
+    front: c.frontFR || '',
+    back: c.backText || '',
+    media: {
+      image: c.imageUrl || undefined,
+      audio: c.audioUrl || undefined,
+    },
+    tags: c.tags || [],
+    notes: c.extra || '',
+  })
+
+  const toClozePair = (c: any) => {
+    const src = c.clozeTextTarget || ''
+    // Normaliser en format natif {{cN::...}}
+    const clozeText = /\(\(c\d+::/.test(src)
+      ? src.replace(/\(\(c(\d+)::([^:)]*?)(?::([^)]*?))?\)\)/g, (_m: string, n: string, ans: string, hint?: string) => `{{c${n}::${ans}${hint ? `:${hint}` : ''}}}`)
+      : src
+    // Texte plein: retirer les clozes
+    const text = clozeText.replace(/\{\{c\d+::([^}|]+?)(?::[^}|]+?)?\}\}/g, '$1')
+    return {
+      text,
+      clozeText,
+      media: {
+        image: c.imageUrl || undefined,
+        audio: c.audioUrl || undefined,
+      },
+      tags: c.tags || [],
+      notes: c.extra || '',
+    }
+  }
+
+  const { basicCards, clozeCards } = useMemo(() => {
+    const basics = cards.filter(c => c.type === 'basic').map(toBasic)
+    const clozes = cards.filter(c => c.type === 'cloze').map(toClozePair)
+    return { basicCards: basics, clozeCards: clozes }
+  }, [cards])
+
   const handleExport = async () => {
     setIsExporting(true)
     
     try {
-      // Mock: simuler un délai d'export
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      console.log('Exporting theme:', {
-        themeId: theme.id,
-        themeName: theme.name,
-        cardCount: cards.length,
-        cards: cards
-      })
-      
+      const base = safeFile(theme.name || 'ankilang-deck')
+
+      if (basicCards.length > 0 && clozeCards.length === 0) {
+        await generateBasicDeck(base, basicCards, `${base}.apkg`)
+      } else if (clozeCards.length > 0 && basicCards.length === 0) {
+        await generateClozeDeck(base, clozeCards, `${base}.apkg`)
+      } else if (basicCards.length > 0 && clozeCards.length > 0) {
+        await generateCombinedDeck(base, basicCards, clozeCards, base)
+      } else {
+        throw new Error('Aucune carte à exporter')
+      }
+
       setExportSuccess(true)
     } catch (err) {
       console.error('Export failed:', err)
@@ -208,11 +258,10 @@ export default function ThemeExport() {
                 <div className="text-center py-8">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Export simulé avec succès !
+                    Export terminé !
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Le fichier .apkg a été généré (simulation). Dans une vraie implémentation, 
-                    le fichier serait téléchargé automatiquement.
+                    Le(s) fichier(s) .apkg ont été générés et téléchargés.
                   </p>
                   <button
                     onClick={() => setExportSuccess(false)}
@@ -228,19 +277,19 @@ export default function ThemeExport() {
                       Format d'export
                     </h3>
                     <p className="text-blue-800 text-sm">
-                      Le thème sera exporté au format .apkg compatible avec Anki. 
-                      Toutes les cartes (Basic et Cloze) seront incluses avec leurs métadonnées.
+                      Export au format .apkg compatible Anki. 
+                      Cartes Basic et Cloze exportées; si les deux types sont présents, deux fichiers seront générés.
                     </p>
                   </div>
                   
                   <div className="flex gap-4">
                     <button
                       onClick={handleExport}
-                      disabled={isExporting || cards.length === 0}
+                      disabled={isExporting || cards.length === 0 || isLoading || !isReady || !!error}
                       className="btn-primary inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Download size={16} />
-                      {isExporting ? 'Export en cours...' : 'Simuler export'}
+                      {isExporting ? 'Export en cours...' : 'Exporter (.apkg)'}
                     </button>
                     
                     <button
@@ -251,10 +300,9 @@ export default function ThemeExport() {
                     </button>
                   </div>
                   
-                  {cards.length === 0 && (
+                  {(cards.length === 0 || !!error) && (
                     <p className="text-sm text-gray-500">
-                      ⚠️ Impossible d'exporter un thème sans cartes. 
-                      Ajoutez d'abord des cartes à votre thème.
+                      ⚠️ {error ? `Erreur d'initialisation export: ${error}` : 'Impossible d\'exporter un thème sans cartes.'}
                     </p>
                   )}
                 </div>

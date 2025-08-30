@@ -12,7 +12,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '@ankilang/shared'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
-import { translate } from '../../services/translate'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
 import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
@@ -29,11 +28,14 @@ const basicCardSchema = z.object({
   tags: z.string().optional()
 })
 
+// Valide le format Anki natif {{cN::réponse[:indice]}}
+const isValidClozeString = (s: string) => /\{\{c\d+::[^}]+\}\}/.test(s)
+
 const clozeCardSchema = z.object({
   type: z.literal('cloze'),
   clozeTextTarget: z.string().min(1, 'Le texte à trous est requis').refine(
-    (text) => /\{\{c\d+::[^}]+\}\}/.test(text),
-    'Le texte doit contenir au moins un trou au format {{cN::...}}'
+    (text) => isValidClozeString(text),
+    'Le texte doit contenir au moins un trou au format ((cN::réponse[:indice]))'
   ),
   clozeImage: z.string().optional(),
   extra: z.string().optional(),
@@ -79,7 +81,8 @@ export default function NewCardModal({
   const { features, upgradeToPremium } = useSubscription()
   
   const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
-  const canTranslate = features.canUseTranslation || isOccitan
+  // Traduction disponible pour tous (gratuit + premium), avec exception Occitan
+  const canTranslate = true
   const canAddAudio = features.canAddAudio || isOccitan
 
   const {
@@ -103,22 +106,36 @@ export default function NewCardModal({
   })
 
   const watchedValues = watch()
+  const clozeRef = useRef<HTMLTextAreaElement>(null)
+  const [clozeHint, setClozeHint] = useState('')
+  const [showClozeAnswers, setShowClozeAnswers] = useState(false)
   const [imageQuery, setImageQuery] = useState('')
+  const [imageInput, setImageInput] = useState('')
   const [imagePage, setImagePage] = useState(1)
 
   // Pré-remplir la recherche d'images avec le recto/verso ou cloze
   useEffect(() => {
-    if (!imageQuery) {
+    if (!imageQuery && !imageInput) {
       if (selectedType === 'basic') {
         const base = (watchedValues as any).verso || (watchedValues as any).recto || ''
-        if (base) setImageQuery(base)
+        if (base) setImageInput(base)
       } else {
         const base = (watchedValues as any).clozeTextTarget || ''
-        if (base) setImageQuery(base.replace(/\{\{c\d+::|\}\}/g, ''))
+        if (base) setImageInput(base.replace(/\{\{c\d+::|\}\}/g, ''))
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedType])
+
+  // Debounce la recherche pour limiter les requêtes
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const q = imageInput.trim()
+      setImagePage(1)
+      setImageQuery(q)
+    }, 500)
+    return () => clearTimeout(t)
+  }, [imageInput])
 
   // Recherche d'images via Netlify Function (Pexels)
   const imagesQuery = useQuery({
@@ -143,17 +160,6 @@ export default function NewCardModal({
   }
 
   // Traduction via Netlify Function (fallback sur mock si indisponible)
-  const translateAbort = useRef<AbortController | null>(null)
-  const translateMutation = useMutation({
-    mutationFn: async (text: string) => {
-      translateAbort.current = new AbortController()
-      try {
-        return await translate({ sourceLang: 'fr', targetLang: themeLanguage, text }, { signal: translateAbort.current.signal })
-      } finally {
-        translateAbort.current = null
-      }
-    }
-  })
 
   const deeplMutation = useMutation({
     mutationFn: async (text: string) => {
@@ -188,8 +194,8 @@ export default function NewCardModal({
       } else {
         const r = await deeplMutation.mutateAsync(rectoText)
         if (r.success) {
-          const item = Array.isArray(r.result) ? r.result[0] : r.result
-          setValue('verso', item.translated)
+          const item = Array.isArray(r.result) ? (r.result[0] ?? null) : r.result
+          if (item) setValue('verso', item.translated)
         } else {
           throw new Error(r.error)
         }
@@ -253,12 +259,78 @@ export default function NewCardModal({
     setValue('type', type)
   }
 
+  // Helpers Cloze
+  const nextClozeNumber = (text: string) => {
+    const nums: number[] = []
+    const re = /\{\{c(\d+)::/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(text))) nums.push(parseInt(m[1]!, 10))
+    return (nums.length ? Math.max(...nums) : 0) + 1
+  }
+
+  const insertClozeAtSelection = () => {
+    const el = clozeRef.current
+    if (!el) return
+    const value = el.value || ''
+    const start = el.selectionStart ?? 0
+    const end = el.selectionEnd ?? 0
+    const selected = value.slice(start, end)
+    const n = nextClozeNumber(value)
+    const answer = selected || 'réponse'
+    const hint = clozeHint.trim()
+    const cloze = `{{c${n}::${answer}${hint ? `:${hint}` : ''}}}`
+    const newText = value.slice(0, start) + cloze + value.slice(end)
+    setValue('clozeTextTarget', newText, { shouldValidate: true })
+    // replacer le curseur après l'insertion
+    setTimeout(() => {
+      const pos = start + cloze.length
+      el.focus()
+      el.setSelectionRange(pos, pos)
+    }, 0)
+  }
+
+  // Prévisualisation des clozes (affiche les réponses ou des blancs)
+  const renderClozePreview = (src: string) => {
+    if (!src) return null
+    const normalized = src
+    const re = /\{\{c(\d+)::([^}|]+?)(?::([^}|]+?))?\}\}/g
+    const out: React.ReactNode[] = []
+    let last = 0
+    let m: RegExpExecArray | null
+    while ((m = re.exec(normalized))) {
+      const [full, _num, ans, hint] = m as unknown as [string, string, string, string?]
+      if (m.index > last) {
+        out.push(<span key={`txt-${last}`}>{normalized.slice(last, m.index)}</span>)
+      }
+      if (showClozeAnswers) {
+        out.push(
+          <span key={`cloze-${m.index}`} className="px-1 rounded bg-yellow-100 text-yellow-900">
+            {ans}
+            {hint ? <span className="opacity-70"> ({hint})</span> : null}
+          </span>
+        )
+      } else {
+        out.push(
+          <span key={`blank-${m.index}`} className="px-1 rounded bg-gray-200 text-gray-600">
+            {hint ? `[${hint}]` : ' [...] '}
+          </span>
+        )
+      }
+      last = m.index + full.length
+    }
+    if (last < normalized.length) {
+      out.push(<span key={`tail-${last}`}>{normalized.slice(last)}</span>)
+    }
+    return out
+  }
+
   const handleFormSubmit = (data: CardFormData) => {
     const w: any = watchedValues
     const common = {
       themeId,
       extra: (data as any).extra || undefined,
-      imageUrl: w.versoImage || w.clozeImage || undefined,
+      // Images uniquement pour les abonnés (pas pour le plan gratuit)
+      imageUrl: features.canAddImages ? (w.versoImage || w.clozeImage || undefined) : undefined,
       audioUrl: w.versoAudio || undefined,
       tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
     }
@@ -573,11 +645,11 @@ export default function NewCardModal({
                               </label>
                                                              {features.canAddImages ? (
                                  (watchedValues as any).versoImage ? (
-                                  <div className="relative">
+                                  <div className="relative w-full h-40 bg-white rounded-xl border border-gray-200 flex items-center justify-center">
                                     <img 
-                                                                             src={(watchedValues as any).versoImage}  
+                                      src={(watchedValues as any).versoImage}  
                                       alt="Illustration verso" 
-                                      className="w-full h-48 object-cover rounded-xl border border-gray-200"
+                                      className="max-w-full max-h-full object-contain"
                                     />
                                     <motion.button
                                       type="button"
@@ -594,16 +666,10 @@ export default function NewCardModal({
                                     <div className="relative">
                                       <input
                                         type="text"
-                                        value={imageQuery}
-                                        onChange={(e) => setImageQuery(e.target.value)}
+                                        value={imageInput}
+                                        onChange={(e) => setImageInput(e.target.value)}
                                         placeholder="Rechercher une image sur Pexels..."
-                                        className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            e.preventDefault()
-                                            setImagePage(1)
-                                          }
-                                        }}
+                                        className="w-full px-4 py-2.5 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans text-sm"
                                       />
                                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     </div>
@@ -615,21 +681,28 @@ export default function NewCardModal({
                                         <div className="text-sm text-red-600">Erreur de recherche d'images</div>
                                       )}
                                       {imagesQuery.data?.photos?.length ? (
-                                        <div className="grid grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                           {imagesQuery.data.photos.map((img: any) => (
                                             <button
                                               key={img.id}
                                               type="button"
-                                              className="relative group rounded-lg overflow-hidden border border-gray-200"
+                                              className="relative group rounded-lg overflow-hidden border border-gray-200 hover:ring-2 hover:ring-purple-300"
                                               onClick={() => handlePickImage(img.src?.large || img.src?.medium || img.src?.original)}
                                             >
-                                              <img src={img.src?.medium || img.src?.small || img.src?.tiny} alt={img.alt || ''} className="w-full h-24 object-cover" />
-                                              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                              <div className="w-full h-24 bg-white flex items-center justify-center">
+                                                <img
+                                                  loading="lazy"
+                                                  src={img.src?.medium || img.src?.small || img.src?.tiny}
+                                                  alt={img.alt || ''}
+                                                  className="max-w-full max-h-full object-contain transition-transform duration-200 group-hover:scale-105"
+                                                />
+                                              </div>
+                                              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                                             </button>
                                           ))}
                                         </div>
                                       ) : (
-                                        <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                        <div className="w-full h-24 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
                                           <ImageIcon className="w-8 h-8 text-gray-400" />
                                           <span className="font-sans text-sm text-gray-500">Saisissez un mot-clé puis Entrée (ou explorez la sélection)</span>
                                         </div>
@@ -704,19 +777,62 @@ export default function NewCardModal({
                           
                           <div className="space-y-4">
                             <div>
-                              <label htmlFor="clozeTextTarget" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                Texte avec trous *
-                              </label>
-                              <textarea
-                                id="clozeTextTarget"
-                                {...register('clozeTextTarget')}
-                                rows={4}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
-                                placeholder="La capitale de la France est {{c1::Paris}}."
-                              />
+                              <div className="flex items-center justify-between mb-2">
+                                <label htmlFor="clozeTextTarget" className="block font-sans text-sm font-medium text-dark-charcoal">
+                                  Texte avec trous *
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={clozeHint}
+                                    onChange={(e) => setClozeHint(e.target.value)}
+                                    placeholder="Indice (optionnel)"
+                                    className="px-2 py-1 border border-gray-200 rounded-md text-xs"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={insertClozeAtSelection}
+                                    className="px-3 py-1.5 rounded-md bg-purple-600 text-white text-xs hover:bg-purple-700"
+                                    title="Créer un trou autour de la sélection"
+                                  >
+                                    + Ajouter un trou
+                                  </button>
+                                </div>
+                              </div>
+                              {(() => {
+                                const { ref: rhfRef, ...reg } = register('clozeTextTarget')
+                                return (
+                                  <textarea
+                                    id="clozeTextTarget"
+                                    {...reg}
+                                    ref={(el) => { rhfRef(el); (clozeRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el }}
+                                    rows={4}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                                    placeholder="La capitale de la France est {{c1::Paris:capitale}}."
+                                  />
+                                )
+                              })()}
                               <p className="mt-1 text-xs text-dark-charcoal/60 font-sans">
-                                Utilisez le format {'{{c1::réponse}}'} pour créer des trous
+                                Utilisez le format {'{{c1::réponse[:indice]}}'} et le bouton pour créer des trous rapidement.
                               </p>
+
+                              {/* Aperçu cloze */}
+                              <div className="mt-3 p-3 border rounded-lg bg-white/60">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-medium text-dark-charcoal">Prévisualisation</span>
+                                  <label className="flex items-center gap-2 text-xs text-dark-charcoal">
+                                    <input
+                                      type="checkbox"
+                                      checked={showClozeAnswers}
+                                      onChange={(e) => setShowClozeAnswers(e.target.checked)}
+                                    />
+                                    Afficher les réponses
+                                  </label>
+                                </div>
+                                <div className="mt-2 text-sm text-dark-charcoal leading-6">
+                                  {renderClozePreview(((watchedValues as any).clozeTextTarget || ''))}
+                                </div>
+                              </div>
                                                              {(errors as any).clozeTextTarget && (
                                  <motion.p 
                                    initial={{ opacity: 0, y: -10 }}
@@ -736,11 +852,11 @@ export default function NewCardModal({
                               </label>
                                                              {features.canAddImages ? (
                                  (watchedValues as any).clozeImage ? (
-                                  <div className="relative">
+                                  <div className="relative w-full h-40 bg-white rounded-xl border border-gray-200 flex items-center justify-center">
                                     <img 
-                                                                             src={(watchedValues as any).clozeImage}  
+                                      src={(watchedValues as any).clozeImage}  
                                       alt="Cloze" 
-                                      className="w-full h-32 object-cover rounded-xl border border-gray-200"
+                                      className="max-w-full max-h-full object-contain"
                                     />
                                     <motion.button
                                       type="button"
@@ -754,19 +870,13 @@ export default function NewCardModal({
                                   </div>
                                 ) : (
                                   <div className="space-y-3">
-                                    <div className="relative">
+                                  <div className="relative">
                                       <input
                                         type="text"
-                                        value={imageQuery}
-                                        onChange={(e) => setImageQuery(e.target.value)}
+                                        value={imageInput}
+                                        onChange={(e) => setImageInput(e.target.value)}
                                         placeholder="Rechercher une image sur Pexels..."
-                                        className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            e.preventDefault()
-                                            setImagePage(1)
-                                          }
-                                        }}
+                                        className="w-full px-4 py-2.5 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans text-sm"
                                       />
                                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     </div>
@@ -778,21 +888,28 @@ export default function NewCardModal({
                                         <div className="text-sm text-red-600">Erreur de recherche d'images</div>
                                       )}
                                       {imagesQuery.data?.photos?.length ? (
-                                        <div className="grid grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                           {imagesQuery.data.photos.map((img: any) => (
                                             <button
                                               key={img.id}
                                               type="button"
-                                              className="relative group rounded-lg overflow-hidden border border-gray-200"
+                                              className="relative group rounded-lg overflow-hidden border border-gray-200 hover:ring-2 hover:ring-purple-300"
                                               onClick={() => handlePickImage(img.src?.large || img.src?.medium || img.src?.original)}
                                             >
-                                              <img src={img.src?.medium || img.src?.small || img.src?.tiny} alt={img.alt || ''} className="w-full h-24 object-cover" />
-                                              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                              <div className="w-full h-24 bg-white flex items-center justify-center">
+                                                <img
+                                                  loading="lazy"
+                                                  src={img.src?.medium || img.src?.small || img.src?.tiny}
+                                                  alt={img.alt || ''}
+                                                  className="max-w-full max-h-full object-contain transition-transform duration-200 group-hover:scale-105"
+                                                />
+                                              </div>
+                                              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                                             </button>
                                           ))}
                                         </div>
                                       ) : (
-                                        <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                        <div className="w-full h-24 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
                                           <ImageIcon className="w-8 h-8 text-gray-400" />
                                           <span className="font-sans text-sm text-gray-500">Saisissez un mot-clé puis Entrée</span>
                                         </div>

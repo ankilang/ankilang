@@ -10,8 +10,8 @@ export default function TranslateDemo() {
     setLoading(true)
     const r = await translate(text, 'fr')
     if (r.success) {
-      const item = Array.isArray(r.result) ? r.result[0] : r.result
-      setOut(item.translated)
+      const item = Array.isArray(r.result) ? (r.result[0] ?? null) : r.result
+      setOut(item ? item.translated : '')
     } else {
       setOut(`Erreur: ${r.error}`)
     }
@@ -26,4 +26,3 @@ export default function TranslateDemo() {
     </div>
   )
 }
-
