@@ -14,6 +14,7 @@ import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
+import { ttsToBlob, type VotzLanguage } from '../../services/votz'
 import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
@@ -81,6 +82,7 @@ export default function NewCardModal({
   const { features, upgradeToPremium } = useSubscription()
   
   const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
+  const occitanDialect: VotzLanguage = themeLanguage === 'oc-gascon' ? 'gascon' : 'languedoc'
   // Traduction disponible pour tous (gratuit + premium), avec exception Occitan
   const canTranslate = true
   const canAddAudio = features.canAddAudio || isOccitan
@@ -211,6 +213,18 @@ export default function NewCardModal({
   // Gestion des fichiers
 
   const ttsAbort = useRef<AbortController | null>(null)
+  
+  // TTS pour l'occitan via Votz
+  const votzTtsMutation = useMutation({
+    mutationFn: async (text: string) => {
+      const blob = await ttsToBlob(text, occitanDialect)
+      // Créer une URL d'objet pour le blob audio
+      const audioUrl = URL.createObjectURL(blob)
+      return { audioUrl, blob }
+    }
+  })
+  
+  // TTS générique (fallback pour autres langues)
   const ttsMutation = useMutation({
     mutationFn: async (text: string) => {
       ttsAbort.current = new AbortController()
@@ -230,11 +244,21 @@ export default function NewCardModal({
     if (!online) return
     const text = getValues('verso') || getValues('recto') || ''
     if (!text.trim()) return
+    
     try {
-      const res = await ttsMutation.mutateAsync(text)
-      setValue('versoAudio', res?.audioUrl || '')
+      if (isOccitan && (themeLanguage === 'oc' || themeLanguage === 'oc-gascon')) {
+        // Utiliser Votz pour l'occitan (languedocien ou gascon)
+        console.log(`🔊 Génération TTS Votz (${occitanDialect}):`, text)
+        const res = await votzTtsMutation.mutateAsync(text)
+        setValue('versoAudio', res.audioUrl)
+      } else {
+        // Utiliser le TTS générique pour les autres langues
+        const res = await ttsMutation.mutateAsync(text)
+        setValue('versoAudio', res?.audioUrl || '')
+      }
     } catch (err) {
-      console.warn('TTS indisponible, fallback mock.', err)
+      console.error('Erreur TTS:', err)
+      // Fallback mock pour éviter de bloquer l'utilisateur
       const mockAudioUrl = `audio_${Date.now()}.mp3`
       setValue('versoAudio', mockAudioUrl)
     }
@@ -584,10 +608,10 @@ export default function NewCardModal({
                             </div>
 
                             {/* Audio Verso (spécial occitan) */}
-                            {themeLanguage === 'oc' && (
+                            {isOccitan && (
                               <div>
                                 <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                  Audio occitan (optionnel)
+                                  Audio occitan ({occitanDialect}) (optionnel)
                                 </label>
                                                                  {canAddAudio ? (
                                    (watchedValues as any).versoAudio ? (
@@ -619,12 +643,28 @@ export default function NewCardModal({
                                     <motion.button
                                       type="button"
                                       onClick={handleAudioUpload}
+                                      disabled={votzTtsMutation.isPending}
                                       whileHover={{ scale: 1.02 }}
                                       whileTap={{ scale: 0.98 }}
-                                      className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                      className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors disabled:opacity-50"
                                     >
-                                      <Volume2 className="w-6 h-6 text-gray-400" />
-                                      <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
+                                      {votzTtsMutation.isPending ? (
+                                        <>
+                                          <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                            className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full"
+                                          />
+                                          <span className="font-sans text-sm text-gray-500">Génération audio Votz...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Volume2 className="w-6 h-6 text-gray-400" />
+                                          <span className="font-sans text-sm text-gray-500">
+                                            Générer la prononciation ({occitanDialect})
+                                          </span>
+                                        </>
+                                      )}
                                     </motion.button>
                                   )
                                 ) : (
