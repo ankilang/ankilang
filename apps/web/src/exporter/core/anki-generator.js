@@ -456,8 +456,9 @@ export class AnkiGenerator {
           // Plus besoin de vérifier cloze_anything.js car nous utilisons les clozes natives
           
           try {
-            console.log(`📥 Téléchargement: ${mf.filename} depuis ${mf.url}`);
-            const res = await fetch(mf.url)
+            const downloadUrl = this.getMediaDownloadUrl(mf.url, mf.filename)
+            console.log(`📥 Téléchargement: ${mf.filename} depuis ${downloadUrl}`);
+            const res = await fetch(downloadUrl)
             
             if (!res.ok) {
               throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -491,6 +492,26 @@ export class AnkiGenerator {
       };
     } catch (error) {
       throw new Error(`Erreur d'export : ${error.message}`);
+    }
+  }
+
+  /**
+   * Retourne l'URL à utiliser pour télécharger un média (proxy si nécessaire)
+   */
+  getMediaDownloadUrl(url, filename) {
+    try {
+      const u = new URL(url)
+      // Proxy dédié pour Votz (CORS)
+      if (u.hostname === 'votz.eu') {
+        const LOCAL = 'http://localhost:8888/.netlify/functions/media-proxy'
+        const PROD = '/.netlify/functions/media-proxy'
+        const proxy = (import.meta?.env?.VITE_MEDIA_PROXY_URL) || (import.meta?.env?.DEV ? LOCAL : PROD)
+        const proxied = `${proxy}?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
+        return proxied
+      }
+      return url
+    } catch {
+      return url
     }
   }
 

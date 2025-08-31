@@ -1,7 +1,7 @@
-const LOCAL = 'http://localhost:8888/.netlify/functions/votz'
 const PROD = 'https://ankilangvotz.netlify.app/.netlify/functions/votz'
 
-const BASE = import.meta.env.VITE_VOTZ_URL || (import.meta.env.DEV ? LOCAL : PROD)
+// Utiliser l'URL de production par défaut (LOCAL disponible via variable d'env si besoin)
+const BASE = import.meta.env.VITE_VOTZ_URL || PROD
 
 export type VotzLanguage = 'languedoc' | 'gascon'
 
@@ -17,6 +17,23 @@ export type VotzResponse = {
   error?: string
 }
 
+// Certains liens Votz n'ont pas d'extension explicite. Quelques navigateurs
+// gèrent mal l'inférence du type. On normalise en ajoutant .mp3 si absent.
+function normalizeVotzAudioUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    const hasExtension = /\.[a-zA-Z0-9]+$/.test(u.pathname)
+    if (!hasExtension) {
+      u.pathname = `${u.pathname}.mp3`
+      return u.toString()
+    }
+    return url
+  } catch {
+    // Si ce n'est pas une URL absolue, on ne modifie pas
+    return url
+  }
+}
+
 /**
  * Génère une synthèse vocale via Votz pour l'occitan
  * @param text - Texte à synthétiser
@@ -28,36 +45,137 @@ export async function ttsToBlob(text: string, language: VotzLanguage = 'languedo
     throw new Error('Le texte ne peut pas être vide')
   }
 
-  try {
-    const response = await fetch(BASE, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: text.trim(),
-        language,
-        mode: 'file'
-      } as VotzRequest)
-    })
+  // Essayer d'abord l'URL configurée, puis fallback sur PROD
+  const urlsToTry = [
+    BASE,
+    ...(BASE !== PROD ? [PROD] : [])
+  ]
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Erreur TTS (${response.status}): ${errorText}`)
+  for (let i = 0; i < urlsToTry.length; i++) {
+    const url = urlsToTry[i]
+    try {
+      console.log(`🔄 Tentative ${i + 1}/${urlsToTry.length}: ${url}`)
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.trim(),
+          language,
+          mode: 'url'
+        } as VotzRequest)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Erreur TTS (${response.status}): ${errorText}`)
+      }
+
+      // En mode 'url', Votz retourne une réponse JSON avec l'URL du fichier audio
+      const result = await response.json()
+      
+      if (!result.success || !result.audioUrl) {
+        throw new Error(`Réponse Votz invalide: ${JSON.stringify(result)}`)
+      }
+
+      console.log(`✅ URL audio générée avec succès via ${url}:`, result.audioUrl)
+      
+      // Télécharger le fichier audio depuis l'URL fournie par Votz
+      const audioResponse = await fetch(result.audioUrl)
+      if (!audioResponse.ok) {
+        throw new Error(`Impossible de télécharger l'audio depuis ${result.audioUrl}`)
+      }
+      
+      const blob = await audioResponse.blob()
+      
+      // Vérifier que c'est bien un fichier audio
+      if (!blob.type.startsWith('audio/')) {
+        console.warn(`⚠️ Type MIME inattendu: ${blob.type}, mais on continue...`)
+      }
+
+      console.log(`✅ Audio téléchargé avec succès:`, { size: blob.size, type: blob.type })
+      return blob
+      
+    } catch (error) {
+      console.warn(`❌ Échec avec ${url}:`, error)
+      
+      // Si c'est la dernière tentative, lancer l'erreur
+      if (i === urlsToTry.length - 1) {
+        console.error('Erreur lors de la génération TTS:', error)
+        throw new Error(`Impossible de générer l'audio: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+      }
     }
-
-    const blob = await response.blob()
-    
-    // Vérifier que c'est bien un fichier audio
-    if (!blob.type.startsWith('audio/')) {
-      throw new Error(`Type de fichier invalide: ${blob.type}`)
-    }
-
-    return blob
-  } catch (error) {
-    console.error('Erreur lors de la génération TTS:', error)
-    throw new Error(`Impossible de générer l'audio: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
   }
+
+  // Cette ligne ne devrait jamais être atteinte
+  throw new Error('Toutes les tentatives ont échoué')
+}
+
+/**
+ * Génère une synthèse vocale et retourne l'URL temporaire Votz
+ * @param text - Texte à synthétiser
+ * @param language - Dialecte occitan
+ * @returns Promise<string> - URL temporaire Votz pour l'audio
+ */
+export async function ttsToTempURL(text: string, language: VotzLanguage = 'languedoc'): Promise<string> {
+  if (!text.trim()) {
+    throw new Error('Le texte ne peut pas être vide')
+  }
+
+  // Essayer d'abord l'URL configurée, puis fallback sur PROD
+  const urlsToTry = [
+    BASE,
+    ...(BASE !== PROD ? [PROD] : [])
+  ]
+
+  for (let i = 0; i < urlsToTry.length; i++) {
+    const url = urlsToTry[i]
+    try {
+      console.log(`🔄 Tentative ${i + 1}/${urlsToTry.length}: ${url}`)
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.trim(),
+          language,
+          mode: 'url'
+        } as VotzRequest)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Erreur TTS (${response.status}): ${errorText}`)
+      }
+
+      // En mode 'url', Votz retourne une réponse JSON avec l'URL du fichier audio
+      const result = await response.json()
+      
+      if (!result.success || !result.audioUrl) {
+        throw new Error(`Réponse Votz invalide: ${JSON.stringify(result)}`)
+      }
+
+      const normalizedUrl = normalizeVotzAudioUrl(result.audioUrl)
+      console.log(`✅ URL audio temporaire générée via ${url}:`, normalizedUrl)
+      return normalizedUrl
+      
+    } catch (error) {
+      console.warn(`❌ Échec avec ${url}:`, error)
+      
+      // Si c'est la dernière tentative, lancer l'erreur
+      if (i === urlsToTry.length - 1) {
+        console.error('Erreur lors de la génération TTS:', error)
+        throw new Error(`Impossible de générer l'audio: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+      }
+    }
+  }
+
+  // Cette ligne ne devrait jamais être atteinte
+  throw new Error('Toutes les tentatives ont échoué')
 }
 
 /**

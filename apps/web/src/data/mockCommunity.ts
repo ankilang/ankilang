@@ -386,5 +386,34 @@ export const getCommunityDeckById = (id: string): CommunityDeck | undefined => {
 }
 
 export const getCommunityDecks = (): CommunityDeck[] => {
-  return mockCommunityDecks
+  // Récupérer les thèmes communautaires depuis mockData
+  const { mockThemes } = require('./mockData')
+  const communityThemes = mockThemes.filter((theme: any) => theme.shareStatus === 'community')
+  
+  // Convertir les thèmes en format CommunityDeck
+  const convertedThemes: CommunityDeck[] = communityThemes.map((theme: any) => ({
+    id: theme.id,
+    name: theme.name,
+    author: 'Utilisateur Ankilang', // Mock author
+    targetLang: theme.targetLang,
+    tags: theme.tags || [],
+    level: 'intermediate' as const, // Default level
+    cardCount: theme.cardCount,
+    downloads: Math.floor(Math.random() * 500) + 50, // Mock downloads
+    description: `Deck partagé par la communauté Ankilang : ${theme.name}`,
+    updatedAt: theme.updatedAt,
+    previewCards: [
+      {
+        type: 'basic',
+        frontFR: `Exemple de carte pour ${theme.name}`,
+        backText: 'Traduction d\'exemple'
+      }
+    ]
+  }))
+  
+  // Combiner avec les decks mockés existants (en évitant les doublons par ID)
+  const existingIds = new Set(mockCommunityDecks.map(deck => deck.id))
+  const uniqueConverted = convertedThemes.filter(theme => !existingIds.has(theme.id))
+  
+  return [...mockCommunityDecks, ...uniqueConverted]
 }

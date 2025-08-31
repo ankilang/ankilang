@@ -14,7 +14,7 @@ import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
-import { ttsToBlob, type VotzLanguage } from '../../services/votz'
+import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
 import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
@@ -76,6 +76,8 @@ export default function NewCardModal({
   const [selectedType, setSelectedType] = useState<'basic' | 'cloze'>('basic')
   const [isTranslating, setIsTranslating] = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
+
   const online = useOnlineStatus()
   
   // Subscription context
@@ -217,10 +219,9 @@ export default function NewCardModal({
   // TTS pour l'occitan via Votz
   const votzTtsMutation = useMutation({
     mutationFn: async (text: string) => {
-      const blob = await ttsToBlob(text, occitanDialect)
-      // Créer une URL d'objet pour le blob audio
-      const audioUrl = URL.createObjectURL(blob)
-      return { audioUrl, blob }
+      const audioUrl = await ttsToTempURL(text, occitanDialect)
+      console.log('🎵 URL audio temporaire Votz générée:', audioUrl)
+      return { audioUrl }
     }
   })
   
@@ -250,7 +251,10 @@ export default function NewCardModal({
         // Utiliser Votz pour l'occitan (languedocien ou gascon)
         console.log(`🔊 Génération TTS Votz (${occitanDialect}):`, text)
         const res = await votzTtsMutation.mutateAsync(text)
+        
+        // Stocker l'URL temporaire Votz
         setValue('versoAudio', res.audioUrl)
+        console.log('✅ Audio Votz stocké:', { url: res.audioUrl })
       } else {
         // Utiliser le TTS générique pour les autres langues
         const res = await ttsMutation.mutateAsync(text)
@@ -266,15 +270,134 @@ export default function NewCardModal({
 
   const removeMedia = (field: string) => {
     setValue(field as any, '')
+    // Arrêter l'audio en cours si on supprime le média audio
+    if (field === 'versoAudio') {
+      if (currentAudio) {
+        currentAudio.pause()
+        setCurrentAudio(null)
+        setAudioPlaying(false)
+      }
+      // Note: Pas de nettoyage nécessaire pour les URLs temporaires Votz
+    }
+  }
+
+  // Fonction pour jouer/arrêter l'audio
+  const toggleAudioPlayback = async () => {
+    const audioUrl = getValues('versoAudio')
+    console.log('🎵 toggleAudioPlayback - URL audio:', audioUrl)
+    
+    if (!audioUrl) {
+      console.warn('⚠️ Aucune URL audio disponible')
+      return
+    }
+
+    try {
+      if (currentAudio && !currentAudio.paused) {
+        // Arrêter l'audio en cours
+        console.log('⏸️ Arrêt de l\'audio en cours')
+        currentAudio.pause()
+        setAudioPlaying(false)
+        setCurrentAudio(null)
+      } else {
+        // Vérifier que l'URL audio est valide
+        if (!audioUrl.startsWith('http')) {
+          console.error('❌ URL audio invalide:', audioUrl)
+          return
+        }
+        
+        // Normaliser l'URL Votz si nécessaire (ajout .mp3 si manquant)
+        const normalizedUrl = (() => {
+          try {
+            const u = new URL(audioUrl)
+            const hasExt = /\.[a-zA-Z0-9]+$/.test(u.pathname)
+            if (!hasExt) {
+              u.pathname = `${u.pathname}.mp3`
+              return u.toString()
+            }
+            return audioUrl
+          } catch {
+            return audioUrl
+          }
+        })()
+
+        console.log('▶️ Création et lecture de l\'audio')
+        const audio = new Audio(normalizedUrl)
+        audio.preload = 'auto'
+        
+        // Ajouter plus de logs pour debug
+        audio.addEventListener('loadstart', () => {
+          console.log('🔄 Début du chargement audio')
+        })
+        
+        audio.addEventListener('canplay', () => {
+          console.log('✅ Audio prêt à être joué')
+        })
+        
+        audio.addEventListener('ended', () => {
+          console.log('🏁 Audio terminé')
+          setAudioPlaying(false)
+          setCurrentAudio(null)
+        })
+        
+        audio.addEventListener('error', (e) => {
+          console.error('❌ Erreur de lecture audio:', e)
+          const target = e.target as HTMLAudioElement
+          console.error('❌ Audio error details:', {
+            error: target?.error,
+            networkState: target?.networkState,
+            readyState: target?.readyState,
+            src: target?.src
+          })
+          setAudioPlaying(false)
+          setCurrentAudio(null)
+        })
+        
+        // Tenter de jouer l'audio
+        console.log('🎵 Tentative de lecture...')
+        await audio.play()
+        console.log('✅ Audio en cours de lecture')
+        setCurrentAudio(audio)
+        setAudioPlaying(true)
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la lecture audio:', error)
+      if (error instanceof Error) {
+        console.error('❌ Error stack:', error.stack)
+      }
+      setAudioPlaying(false)
+      setCurrentAudio(null)
+    }
   }
 
   useEffect(() => {
     if (isOpen) {
+      // Réinitialiser le formulaire uniquement à l'ouverture de la modale
       reset()
       setSelectedType('basic')
       setValue('type', 'basic')
+      // Nettoyer l'audio en cours lors de l'ouverture/fermeture du modal
+      if (currentAudio) {
+        currentAudio.pause()
+        setCurrentAudio(null)
+        setAudioPlaying(false)
+      }
+      // Note: Pas de nettoyage nécessaire pour les URLs temporaires Votz
     }
-  }, [isOpen, reset, setValue])
+    // Important: ne pas mettre currentAudio/getValues en dépendances pour éviter
+    // un reset involontaire lors du changement d'état audio (lecture/pause)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
+
+  // Nettoyer l'audio lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        currentAudio.pause()
+        setCurrentAudio(null)
+      }
+      // Note: Pas de nettoyage nécessaire pour les URLs temporaires Votz
+    }
+  }, [currentAudio, getValues])
 
   const handleTypeChange = (type: 'basic' | 'cloze') => {
     setSelectedType(type)
@@ -613,12 +736,18 @@ export default function NewCardModal({
                                 <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
                                   Audio occitan ({occitanDialect}) (optionnel)
                                 </label>
+                                {/* Debug: afficher la valeur de versoAudio */}
+                                {process.env.NODE_ENV === 'development' && (
+                                  <div className="text-xs text-gray-500 mb-2">
+                                    Debug: versoAudio = {JSON.stringify((watchedValues as any).versoAudio)}
+                                  </div>
+                                )}
                                                                  {canAddAudio ? (
                                    (watchedValues as any).versoAudio ? (
                                     <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-gray-200">
                                       <motion.button
                                         type="button"
-                                        onClick={() => setAudioPlaying(!audioPlaying)}
+                                        onClick={toggleAudioPlayback}
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
                                         className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg"
