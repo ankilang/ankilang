@@ -4,7 +4,7 @@ export type TranslateResponse =
   | { success: false; error: string }
 
 const LOCAL = 'http://localhost:8888/.netlify/functions/translate'
-const PROD = '/.netlify/functions/translate'
+const PROD = 'https://ankilangdeepl.netlify.app/.netlify/functions/translate'
 
 const BASE_URL = import.meta.env.VITE_TRANSLATE_URL || (import.meta.env.DEV ? LOCAL : PROD)
 
