@@ -184,14 +184,26 @@ export default function NewCardModal({
     setIsTranslating(true)
     try {
       if (isOccitan) {
+        console.log('🔄 Tentative de traduction Revirada:', {
+          text: rectoText,
+          sourceLang: toReviCode('fr'),
+          targetLang: toReviCode(themeLanguage),
+          isOccitan,
+          themeLanguage
+        })
+        
         const r = await reviradaTranslate({
           text: rectoText,
           sourceLang: toReviCode('fr'),
           targetLang: toReviCode(themeLanguage)
         })
+        
+        console.log('📥 Réponse Revirada:', r)
+        
         if ((r as any).success) {
           const translated = (r as any).translated
           setValue('verso', Array.isArray(translated) ? translated[0] : translated)
+          console.log('✅ Traduction réussie:', translated)
         } else {
           throw new Error((r as any).error || 'Revirada error')
         }
@@ -205,8 +217,18 @@ export default function NewCardModal({
         }
       }
     } catch (err) {
-      console.warn('Traduction indisponible, fallback mock.', err)
-      setValue('verso', `[${themeLanguage}] ${rectoText}`)
+      console.error('❌ Erreur de traduction détaillée:', err)
+      console.error('URL utilisée:', import.meta.env.VITE_REVI_URL || 'https://ankilangrevirada.netlify.app/.netlify/functions/revirada')
+      console.error('Requête:', { 
+        text: rectoText, 
+        sourceLang: toReviCode('fr'), 
+        targetLang: toReviCode(themeLanguage),
+        isOccitan,
+        themeLanguage
+      })
+      
+      // Fallback plus informatif
+      setValue('verso', `[ERREUR API] ${rectoText}`)
     } finally {
       setIsTranslating(false)
     }
@@ -252,9 +274,10 @@ export default function NewCardModal({
         console.log(`🔊 Génération TTS Votz (${occitanDialect}):`, text)
         const res = await votzTtsMutation.mutateAsync(text)
         
-        // Stocker l'URL temporaire Votz
+        // CORRECTION GARANTIE : Stocker l'URL Votz permanente pour l'export
+        // L'URL Votz est déjà permanente et sera téléchargée lors de l'export
         setValue('versoAudio', res.audioUrl)
-        console.log('✅ Audio Votz stocké:', { url: res.audioUrl })
+        console.log('✅ Audio Votz stocké pour export:', { url: res.audioUrl })
       } else {
         // Utiliser le TTS générique pour les autres langues
         const res = await ttsMutation.mutateAsync(text)

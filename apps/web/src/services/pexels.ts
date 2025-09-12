@@ -1,7 +1,6 @@
-const LOCAL = 'http://localhost:8888/.netlify/functions/pexels'
 const PROD = 'https://ankilangpexels.netlify.app/.netlify/functions/pexels'
 
-const BASE = import.meta.env.VITE_PEXELS_URL || (import.meta.env.DEV ? LOCAL : PROD)
+const BASE = import.meta.env.VITE_PEXELS_URL || PROD
 
 type Opts = Record<string, string | number | boolean | undefined>
 

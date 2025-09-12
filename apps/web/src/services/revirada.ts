@@ -9,10 +9,9 @@ export type ReviradaResponse =
   | { success: true; translated: string | string[]; languagePair?: string; words?: number; translationTime?: number }
   | { success: false; error: string }
 
-const LOCAL = 'http://localhost:8888/.netlify/functions/revirada'
 const PROD = 'https://ankilangrevirada.netlify.app/.netlify/functions/revirada'
 
-const BASE_URL = import.meta.env.VITE_REVI_URL || (import.meta.env.DEV ? LOCAL : PROD)
+const BASE_URL = import.meta.env.VITE_REVI_URL || PROD
 
 export async function reviradaTranslate(req: ReviradaRequest) {
   const res = await fetch(BASE_URL, {

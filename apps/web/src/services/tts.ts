@@ -8,7 +8,7 @@ export type TTSResponse = {
 }
 
 export async function generateTTS(req: TTSRequest, opts?: { signal?: AbortSignal }): Promise<TTSResponse> {
-  const res = await fetch('/.netlify/functions/tts', {
+  const res = await fetch('https://ankilangtts.netlify.app/.netlify/functions/tts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
