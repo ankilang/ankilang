@@ -24,8 +24,8 @@ export default function FlagIcon({
   const getCountryCode = (langCode: string): string => {
     const mapping: Record<string, string> = {
       // Anglais
-      'en-GB': 'gb',
-      'en-US': 'us',
+      'en-gb': 'gb',
+      'en-us': 'us',
       'en': 'gb', // Fallback vers UK
       
       // Espagnol  
@@ -33,13 +33,13 @@ export default function FlagIcon({
       'es-419': 'mx', // Amérique latine → Mexique
       
       // Portugais
-      'pt-PT': 'pt',
-      'pt-BR': 'br',
+      'pt-pt': 'pt',
+      'pt-br': 'br',
       'pt': 'pt', // Fallback vers Portugal
       
       // Chinois
-      'zh-HANS': 'cn',
-      'zh-HANT': 'tw',
+      'zh-hans': 'cn',
+      'zh-hant': 'tw',
       'zh': 'cn', // Fallback vers Chine
       
       // Norvégien
@@ -76,7 +76,7 @@ export default function FlagIcon({
       'vi': 'vn', // Vietnamien → Vietnam
     }
     
-    return mapping[langCode.toLowerCase()] || 'gb' // Fallback vers UK
+    return mapping[langCode.toLowerCase()] || 'world' // Fallback vers monde
   }
   
   // Cas spécial pour l'Occitan - pas de drapeau
