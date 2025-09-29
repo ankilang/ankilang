@@ -18,6 +18,7 @@ export default function LearningIndex() {
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [isLoading, setIsLoading] = useState(true)
   const [hasInitializedFromURL, setHasInitializedFromURL] = useState(false)
+  const [isPremium, setIsPremium] = useState(false) // Simulation de l'état premium
 
   // Initialiser l'état depuis l'URL au mount (une seule fois)
   useEffect(() => {
@@ -287,7 +288,11 @@ export default function LearningIndex() {
             {filteredAndSortedDecks.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredAndSortedDecks.map((deck) => (
-                  <DeckCard key={deck.id} deck={deck} />
+                  <DeckCard 
+                    key={deck.id} 
+                    deck={deck} 
+                    isLocked={!deck.isFree && !isPremium} 
+                  />
                 ))}
               </div>
             ) : (

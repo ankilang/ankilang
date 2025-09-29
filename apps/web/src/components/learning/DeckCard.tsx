@@ -6,9 +6,10 @@ import { motion } from 'framer-motion'
 
 interface DeckCardProps {
   deck: LearningDeck
+  isLocked: boolean
 }
 
-export default function DeckCard({ deck }: DeckCardProps) {
+export default function DeckCard({ deck, isLocked }: DeckCardProps) {
   const isPopular = deck.downloads > 100
 
   // Couleurs pastel selon le niveau
