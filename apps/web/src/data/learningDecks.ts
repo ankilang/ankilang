@@ -1,4 +1,4 @@
-export interface CommunityDeck {
+export interface LearningDeck {
   id: string
   name: string
   author: string
@@ -9,6 +9,7 @@ export interface CommunityDeck {
   downloads: number
   description?: string
   updatedAt: string
+  isFree?: boolean
   previewCards: Array<{
     type: 'basic' | 'cloze'
     frontFR?: string
@@ -17,7 +18,7 @@ export interface CommunityDeck {
   }>
 }
 
-export const mockCommunityDecks: CommunityDeck[] = [
+export const mockLearningDecks: LearningDeck[] = [
   {
     id: '1',
     name: 'Vocabulaire de base - Anglais',
@@ -29,6 +30,7 @@ export const mockCommunityDecks: CommunityDeck[] = [
     downloads: 1247,
     description: 'Un deck complet pour apprendre les mots de base en anglais. Parfait pour les débutants qui veulent construire une base solide.',
     updatedAt: '2024-01-20T14:30:00Z',
+    isFree: true,
     previewCards: [
       {
         type: 'basic',
@@ -381,39 +383,10 @@ export const mockCommunityDecks: CommunityDeck[] = [
   }
 ]
 
-export const getCommunityDeckById = (id: string): CommunityDeck | undefined => {
-  return mockCommunityDecks.find(deck => deck.id === id)
+export const getLearningDeckById = (id: string): LearningDeck | undefined => {
+  return mockLearningDecks.find(deck => deck.id === id)
 }
 
-export const getCommunityDecks = (): CommunityDeck[] => {
-  // Récupérer les thèmes communautaires depuis mockData
-  const { mockThemes } = require('./mockData')
-  const communityThemes = mockThemes.filter((theme: any) => theme.shareStatus === 'community')
-  
-  // Convertir les thèmes en format CommunityDeck
-  const convertedThemes: CommunityDeck[] = communityThemes.map((theme: any) => ({
-    id: theme.id,
-    name: theme.name,
-    author: 'Utilisateur Ankilang', // Mock author
-    targetLang: theme.targetLang,
-    tags: theme.tags || [],
-    level: 'intermediate' as const, // Default level
-    cardCount: theme.cardCount,
-    downloads: Math.floor(Math.random() * 500) + 50, // Mock downloads
-    description: `Deck partagé par la communauté Ankilang : ${theme.name}`,
-    updatedAt: theme.updatedAt,
-    previewCards: [
-      {
-        type: 'basic',
-        frontFR: `Exemple de carte pour ${theme.name}`,
-        backText: 'Traduction d\'exemple'
-      }
-    ]
-  }))
-  
-  // Combiner avec les decks mockés existants (en évitant les doublons par ID)
-  const existingIds = new Set(mockCommunityDecks.map(deck => deck.id))
-  const uniqueConverted = convertedThemes.filter(theme => !existingIds.has(theme.id))
-  
-  return [...mockCommunityDecks, ...uniqueConverted]
+export const getLearningDecks = (): LearningDeck[] => {
+  return mockLearningDecks
 }

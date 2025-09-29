@@ -1,6 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { ArrowLeft, Download, User, Calendar, TrendingUp } from 'lucide-react'
-import { getCommunityDeckById } from '../../../data/mockCommunity'
+import { getLearningDeckById } from '../../../data/learningDecks'
 import { getLanguageLabel } from '../../../constants/languages'
 import { guardPro } from '../../../utils/pro'
 import PageMeta from '../../../components/seo/PageMeta'
@@ -12,7 +12,7 @@ export default function LearningDeck() {
     return <Navigate to="/app/learning" replace />
   }
 
-  const deck = getCommunityDeckById(deckId)
+  const deck = getLearningDeckById(deckId)
 
   if (!deck) {
     return (
