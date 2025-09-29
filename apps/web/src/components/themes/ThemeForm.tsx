@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Sparkles, Tag, Globe, Lock, Users, Wand2, CheckCircle } from 'lucide-react'
+import { Sparkles, Tag, Globe, Wand2, CheckCircle } from 'lucide-react'
 import { LANGUAGES, getLanguageByCode } from '../../constants/languages'
 import { CreateThemeSchema } from '@ankilang/shared'
 import FlagIcon from '../ui/FlagIcon'
@@ -12,7 +12,6 @@ const themeFormSchema = z.object({
   name: z.string().min(1, 'Le nom du thème est requis').max(128, 'Le nom est trop long'),
   targetLang: z.string().min(2, 'La langue cible est requise'),
   tags: z.string().optional(),
-  shareStatus: z.enum(['private', 'community']).default('private')
 })
 
 type ThemeFormData = z.infer<typeof themeFormSchema>
@@ -55,7 +54,7 @@ export default function ThemeForm({
     onSubmit({
       name: data.name,
       targetLang: (data.targetLang === 'oc' ? ocDialect : data.targetLang),
-      tags
+      tags,
     } as z.infer<typeof CreateThemeSchema>)
   }
 
@@ -369,60 +368,6 @@ export default function ThemeForm({
             <p className="mt-2 text-sm text-dark-charcoal/70 font-sans">
               Séparez les tags par des virgules pour mieux organiser vos thèmes
             </p>
-          </div>
-
-          <div>
-            <label className="label-field flex items-center gap-2 mb-4">
-              <Users className="w-4 h-4 text-purple-600" />
-              Partage et visibilité
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <motion.label
-                whileHover={{ scale: 1.02 }}
-                className={`cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
-                  watchedValues.shareStatus === 'private'
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-200 bg-white hover:border-purple-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  value="private"
-                  {...register('shareStatus')}
-                  className="sr-only"
-                />
-                <div className="flex items-center gap-3">
-                  <Lock className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="font-sans font-semibold text-dark-charcoal">Privé</div>
-                    <div className="text-sm text-dark-charcoal/70">Visible par vous uniquement</div>
-                  </div>
-                </div>
-              </motion.label>
-              
-              <motion.label
-                whileHover={{ scale: 1.02 }}
-                className={`cursor-pointer p-4 rounded-2xl border-2 transition-all duration-200 ${
-                  watchedValues.shareStatus === 'community'
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-200 bg-white hover:border-purple-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  value="community"
-                  {...register('shareStatus')}
-                  className="sr-only"
-                />
-                <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-green-600" />
-                  <div>
-                    <div className="font-sans font-semibold text-dark-charcoal">Communauté</div>
-                    <div className="text-sm text-dark-charcoal/70">Partageable avec d'autres</div>
-                  </div>
-                </div>
-              </motion.label>
-            </div>
           </div>
         </motion.div>
 
