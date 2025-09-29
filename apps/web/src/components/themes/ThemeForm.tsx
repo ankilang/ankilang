@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Sparkles, Tag, Globe, Lock, Users, Wand2, CheckCircle } from 'lucide-react'
 import { LANGUAGES, getLanguageByCode } from '../../constants/languages'
 import { CreateThemeSchema } from '@ankilang/shared'
+import FlagIcon from '../ui/FlagIcon'
 
 const themeFormSchema = z.object({
   name: z.string().min(1, 'Le nom du thème est requis').max(128, 'Le nom est trop long'),
@@ -210,14 +211,13 @@ export default function ThemeForm({
                   className="sr-only"
                 />
                 <div className="text-center">
-                  <div className="text-lg sm:text-2xl mb-1 sm:mb-2">
-                    {language.code === 'oc' ? (
-                      <div className="font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text text-sm sm:text-lg">
-                        ÒC
-                      </div>
-                    ) : (
-                      language.flag
-                    )}
+                  <div className="text-lg sm:text-2xl mb-1 sm:mb-2 flex justify-center items-center">
+                    <FlagIcon 
+                      languageCode={language.code}
+                      size={32}
+                      alt={`Drapeau ${language.label}`}
+                      className="sm:w-8 sm:h-8 w-6 h-6"
+                    />
                   </div>
                   <div className="font-sans font-medium text-xs sm:text-sm text-dark-charcoal leading-tight">
                     {language.label}

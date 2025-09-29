@@ -2,60 +2,60 @@ export interface Language {
   code: string
   label: string
   nativeName?: string
-  flag: string
+  flag: string // Maintenant utilisé pour les SVG via FlagIcon
   color: string
 }
 
 export const LANGUAGES: Language[] = [
-  // Spécial app
-  { code: 'oc', label: 'Occitan', nativeName: 'Occitan', flag: '', color: 'from-amber-400 to-orange-500' },
+  // Spécial app - Occitan utilise un style texte personnalisé
+  { code: 'oc', label: 'Occitan', nativeName: 'Occitan', flag: 'oc', color: 'from-amber-400 to-orange-500' },
 
   // Anglais (DeepL nécessite une variante)
-  { code: 'en-GB', label: 'Anglais (UK)', nativeName: 'English (UK)', flag: '🇬🇧', color: 'from-blue-500 to-indigo-600' },
-  { code: 'en-US', label: 'Anglais (US)', nativeName: 'English (US)', flag: '🇺🇸', color: 'from-blue-500 to-indigo-600' },
+  { code: 'en-GB', label: 'Anglais (UK)', nativeName: 'English (UK)', flag: 'en-GB', color: 'from-blue-500 to-indigo-600' },
+  { code: 'en-US', label: 'Anglais (US)', nativeName: 'English (US)', flag: 'en-US', color: 'from-blue-500 to-indigo-600' },
 
   // Espagnol
-  { code: 'es', label: 'Espagnol', nativeName: 'Español', flag: '🇪🇸', color: 'from-red-400 to-pink-500' },
-  { code: 'es-419', label: 'Espagnol (Am. latine)', nativeName: 'Español (LatAm)', flag: '🇲🇽', color: 'from-red-400 to-pink-500' },
+  { code: 'es', label: 'Espagnol', nativeName: 'Español', flag: 'es', color: 'from-red-400 to-pink-500' },
+  { code: 'es-419', label: 'Espagnol (Am. latine)', nativeName: 'Español (LatAm)', flag: 'es-419', color: 'from-red-400 to-pink-500' },
 
   // Portugais
-  { code: 'pt-PT', label: 'Portugais (PT)', nativeName: 'Português (PT)', flag: '🇵🇹', color: 'from-red-500 to-rose-600' },
-  { code: 'pt-BR', label: 'Portugais (BR)', nativeName: 'Português (BR)', flag: '🇧🇷', color: 'from-red-500 to-rose-600' },
+  { code: 'pt-PT', label: 'Portugais (PT)', nativeName: 'Português (PT)', flag: 'pt-PT', color: 'from-red-500 to-rose-600' },
+  { code: 'pt-BR', label: 'Portugais (BR)', nativeName: 'Português (BR)', flag: 'pt-BR', color: 'from-red-500 to-rose-600' },
 
   // Chinois
-  { code: 'zh-HANS', label: 'Chinois (simplifié)', nativeName: '中文（简体）', flag: '🇨🇳', color: 'from-red-600 to-orange-500' },
-  { code: 'zh-HANT', label: 'Chinois (traditionnel)', nativeName: '中文（繁體）', flag: '🇹🇼', color: 'from-red-600 to-orange-500' },
+  { code: 'zh-HANS', label: 'Chinois (simplifié)', nativeName: '中文（简体）', flag: 'zh-HANS', color: 'from-red-600 to-orange-500' },
+  { code: 'zh-HANT', label: 'Chinois (traditionnel)', nativeName: '中文（繁體）', flag: 'zh-HANT', color: 'from-red-600 to-orange-500' },
 
   // Autres langues supportées DeepL
-  { code: 'fr', label: 'Français', nativeName: 'Français', flag: '🇫🇷', color: 'from-blue-400 to-cyan-500' },
-  { code: 'de', label: 'Allemand', nativeName: 'Deutsch', flag: '🇩🇪', color: 'from-yellow-500 to-amber-600' },
-  { code: 'it', label: 'Italien', nativeName: 'Italiano', flag: '🇮🇹', color: 'from-green-400 to-emerald-500' },
-  { code: 'nl', label: 'Néerlandais', nativeName: 'Nederlands', flag: '🇳🇱', color: 'from-orange-400 to-red-500' },
-  { code: 'pl', label: 'Polonais', nativeName: 'Polski', flag: '🇵🇱', color: 'from-red-400 to-pink-400' },
-  { code: 'sv', label: 'Suédois', nativeName: 'Svenska', flag: '🇸🇪', color: 'from-blue-400 to-cyan-400' },
-  { code: 'da', label: 'Danois', nativeName: 'Dansk', flag: '🇩🇰', color: 'from-red-500 to-orange-400' },
-  { code: 'nb', label: 'Norvégien (Bokmål)', nativeName: 'Norsk (Bokmål)', flag: '🇳🇴', color: 'from-blue-500 to-indigo-500' },
-  { code: 'fi', label: 'Finnois', nativeName: 'Suomi', flag: '🇫🇮', color: 'from-blue-400 to-slate-500' },
-  { code: 'ru', label: 'Russe', nativeName: 'Русский', flag: '🇷🇺', color: 'from-blue-600 to-slate-700' },
-  { code: 'ja', label: 'Japonais', nativeName: '日本語', flag: '🇯🇵', color: 'from-red-500 to-pink-600' },
-  { code: 'ko', label: 'Coréen', nativeName: '한국어', flag: '🇰🇷', color: 'from-blue-500 to-purple-600' },
-  { code: 'ar', label: 'Arabe', nativeName: 'العربية', flag: '🇸🇦', color: 'from-green-500 to-teal-600' },
-  { code: 'tr', label: 'Turc', nativeName: 'Türkçe', flag: '🇹🇷', color: 'from-red-500 to-rose-500' },
-  { code: 'bg', label: 'Bulgare', nativeName: 'Български', flag: '🇧🇬', color: 'from-green-400 to-emerald-500' },
-  { code: 'cs', label: 'Tchèque', nativeName: 'Čeština', flag: '🇨🇿', color: 'from-blue-400 to-indigo-500' },
-  { code: 'el', label: 'Grec', nativeName: 'Ελληνικά', flag: '🇬🇷', color: 'from-blue-400 to-cyan-500' },
-  { code: 'et', label: 'Estonien', nativeName: 'Eesti', flag: '🇪🇪', color: 'from-blue-400 to-cyan-500' },
-  { code: 'he', label: 'Hébreu', nativeName: 'עברית', flag: '🇮🇱', color: 'from-blue-400 to-cyan-500' },
-  { code: 'hu', label: 'Hongrois', nativeName: 'Magyar', flag: '🇭🇺', color: 'from-red-400 to-pink-500' },
-  { code: 'id', label: 'Indonésien', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', color: 'from-red-400 to-pink-500' },
-  { code: 'lt', label: 'Lituanien', nativeName: 'Lietuvių', flag: '🇱🇹', color: 'from-yellow-400 to-amber-500' },
-  { code: 'lv', label: 'Letton', nativeName: 'Latviešu', flag: '🇱🇻', color: 'from-red-400 to-rose-500' },
-  { code: 'ro', label: 'Roumain', nativeName: 'Română', flag: '🇷🇴', color: 'from-yellow-400 to-amber-500' },
-  { code: 'sk', label: 'Slovaque', nativeName: 'Slovenčina', flag: '🇸🇰', color: 'from-blue-400 to-indigo-500' },
-  { code: 'sl', label: 'Slovène', nativeName: 'Slovenščina', flag: '🇸🇮', color: 'from-green-400 to-emerald-500' },
-  { code: 'th', label: 'Thaï', nativeName: 'ไทย', flag: '🇹🇭', color: 'from-red-400 to-rose-500' },
-  { code: 'uk', label: 'Ukrainien', nativeName: 'Українська', flag: '🇺🇦', color: 'from-blue-400 to-cyan-500' },
-  { code: 'vi', label: 'Vietnamien', nativeName: 'Tiếng Việt', flag: '🇻🇳', color: 'from-green-400 to-emerald-500' }
+  { code: 'fr', label: 'Français', nativeName: 'Français', flag: 'fr', color: 'from-blue-400 to-cyan-500' },
+  { code: 'de', label: 'Allemand', nativeName: 'Deutsch', flag: 'de', color: 'from-yellow-500 to-amber-600' },
+  { code: 'it', label: 'Italien', nativeName: 'Italiano', flag: 'it', color: 'from-green-400 to-emerald-500' },
+  { code: 'nl', label: 'Néerlandais', nativeName: 'Nederlands', flag: 'nl', color: 'from-orange-400 to-red-500' },
+  { code: 'pl', label: 'Polonais', nativeName: 'Polski', flag: 'pl', color: 'from-red-400 to-pink-400' },
+  { code: 'sv', label: 'Suédois', nativeName: 'Svenska', flag: 'sv', color: 'from-blue-400 to-cyan-400' },
+  { code: 'da', label: 'Danois', nativeName: 'Dansk', flag: 'da', color: 'from-red-500 to-orange-400' },
+  { code: 'nb', label: 'Norvégien (Bokmål)', nativeName: 'Norsk (Bokmål)', flag: 'nb', color: 'from-blue-500 to-indigo-500' },
+  { code: 'fi', label: 'Finnois', nativeName: 'Suomi', flag: 'fi', color: 'from-blue-400 to-slate-500' },
+  { code: 'ru', label: 'Russe', nativeName: 'Русский', flag: 'ru', color: 'from-blue-600 to-slate-700' },
+  { code: 'ja', label: 'Japonais', nativeName: '日本語', flag: 'ja', color: 'from-red-500 to-pink-600' },
+  { code: 'ko', label: 'Coréen', nativeName: '한국어', flag: 'ko', color: 'from-blue-500 to-purple-600' },
+  { code: 'ar', label: 'Arabe', nativeName: 'العربية', flag: 'ar', color: 'from-green-500 to-teal-600' },
+  { code: 'tr', label: 'Turc', nativeName: 'Türkçe', flag: 'tr', color: 'from-red-500 to-rose-500' },
+  { code: 'bg', label: 'Bulgare', nativeName: 'Български', flag: 'bg', color: 'from-green-400 to-emerald-500' },
+  { code: 'cs', label: 'Tchèque', nativeName: 'Čeština', flag: 'cs', color: 'from-blue-400 to-indigo-500' },
+  { code: 'el', label: 'Grec', nativeName: 'Ελληνικά', flag: 'el', color: 'from-blue-400 to-cyan-500' },
+  { code: 'et', label: 'Estonien', nativeName: 'Eesti', flag: 'et', color: 'from-blue-400 to-cyan-500' },
+  { code: 'he', label: 'Hébreu', nativeName: 'עברית', flag: 'he', color: 'from-blue-400 to-cyan-500' },
+  { code: 'hu', label: 'Hongrois', nativeName: 'Magyar', flag: 'hu', color: 'from-red-400 to-pink-500' },
+  { code: 'id', label: 'Indonésien', nativeName: 'Bahasa Indonesia', flag: 'id', color: 'from-red-400 to-pink-500' },
+  { code: 'lt', label: 'Lituanien', nativeName: 'Lietuvių', flag: 'lt', color: 'from-yellow-400 to-amber-500' },
+  { code: 'lv', label: 'Letton', nativeName: 'Latviešu', flag: 'lv', color: 'from-red-400 to-rose-500' },
+  { code: 'ro', label: 'Roumain', nativeName: 'Română', flag: 'ro', color: 'from-yellow-400 to-amber-500' },
+  { code: 'sk', label: 'Slovaque', nativeName: 'Slovenčina', flag: 'sk', color: 'from-blue-400 to-indigo-500' },
+  { code: 'sl', label: 'Slovène', nativeName: 'Slovenščina', flag: 'sl', color: 'from-green-400 to-emerald-500' },
+  { code: 'th', label: 'Thaï', nativeName: 'ไทย', flag: 'th', color: 'from-red-400 to-rose-500' },
+  { code: 'uk', label: 'Ukrainien', nativeName: 'Українська', flag: 'uk', color: 'from-blue-400 to-cyan-500' },
+  { code: 'vi', label: 'Vietnamien', nativeName: 'Tiếng Việt', flag: 'vi', color: 'from-green-400 to-emerald-500' }
 ]
 
 export const getLanguageByCode = (code: string): Language | undefined => {
@@ -76,8 +76,8 @@ export const getLanguageLabel = (code: string): string => {
 
 export const getLanguageFlag = (code: string): string => {
   const language = getLanguageByCode(code)
-  if (!language) return '🌍'
-  return language.flag || '🌍'
+  if (!language) return 'world' // Fallback code pour FlagIcon
+  return language.flag || 'world'
 }
 
 export const getLanguageColor = (code: string): string => {
