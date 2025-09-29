@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef } from 'react'
-import { Home, BookOpen, Users, GraduationCap, User } from 'lucide-react'
+import { Home, GraduationCap, User, Layers3 } from 'lucide-react'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useTabNavigation } from '../../hooks/useTabNavigation'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
@@ -24,14 +24,14 @@ const TAB_ITEMS: TabItem[] = [
   {
     id: 'themes',
     label: 'Thèmes',
-    icon: BookOpen,
+    icon: Layers3,
     ariaLabel: 'Accéder aux thèmes'
   },
   {
-    id: 'community',
-    label: 'Communauté',
-    icon: Users,
-    ariaLabel: 'Accéder à la communauté'
+    id: 'learning',
+    label: 'Apprentissage',
+    icon: GraduationCap,
+    ariaLabel: "Accéder à l'apprentissage"
   },
   {
     id: 'lessons',
@@ -192,7 +192,7 @@ function TabBar() {
         
         <div className="flex items-center justify-around h-full px-2">
           {TAB_ITEMS.filter(item =>
-            isPro ? true : (item.id !== 'community' && item.id !== 'lessons')
+            isPro ? true : (item.id !== 'learning' && item.id !== 'lessons')
           ).map((item) => (
             <TabButton
               key={item.id}

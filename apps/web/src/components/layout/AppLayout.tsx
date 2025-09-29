@@ -60,7 +60,7 @@ export default function AppLayout() {
                 {isPro && (
                   <>
                     <NavLink
-                      to="/app/community"
+                      to="/app/learning"
                       className={({ isActive }) =>
                         `text-sm font-medium transition-colors ${
                           isActive
@@ -69,7 +69,7 @@ export default function AppLayout() {
                         }`
                       }
                     >
-                      Communauté
+                      Apprentissage
                     </NavLink>
                     <NavLink
                       to="/app/lessons"
@@ -164,7 +164,7 @@ export default function AppLayout() {
                 {isPro && (
                   <>
                     <NavLink
-                      to="/app/community"
+                      to="/app/learning"
                       onClick={closeMobileMenu}
                       className={({ isActive }) =>
                         isActive
@@ -172,7 +172,7 @@ export default function AppLayout() {
                           : "text-gray-600 hover:text-gray-900 py-2"
                       }
                     >
-                      Communauté
+                      Apprentissage
                     </NavLink>
                     <NavLink
                       to="/app/lessons"
