@@ -6,7 +6,7 @@ import { LANGUAGES } from '../../../constants/languages'
 import DeckCard from '../../../components/learning/DeckCard'
 import Skeleton from '../../../components/ui/Skeleton'
 import PageMeta from '../../../components/seo/PageMeta'
-import CommunityOrbit from '../../../components/illustrations/CommunityOrbit'
+import LearningOrbit from '../../../components/illustrations/LearningOrbit'
 
 type SortOption = 'recent' | 'popular'
 
@@ -112,8 +112,8 @@ export default function LearningIndex() {
     return (
       <>
         <PageMeta 
-          title="Communauté — Ankilang" 
-          description="Explorez des milliers de decks de cartes partagés par la communauté. Recherchez par langue, niveau et popularité."
+          title="Apprentissage — Ankilang" 
+          description="Accélérez votre maîtrise avec notre catalogue de decks premium, conçus pour un apprentissage efficace."
         />
         {/* Hero pastel */}
         <section className="bg-pastel-mint relative overflow-hidden min-h-[40vh] flex items-center">
@@ -123,14 +123,14 @@ export default function LearningIndex() {
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
                 <h1 className="font-playfair text-4xl sm:text-5xl font-bold text-dark-charcoal mb-4">
-                  Communauté
+                  Apprentissage
                 </h1>
                 <p className="font-inter text-lg text-dark-charcoal/70 max-w-2xl">
-                  Découvrez et partagez des decks créés par la communauté.
+                  Accélérez votre maîtrise avec notre catalogue de decks premium.
                 </p>
               </div>
               <div className="hidden lg:block">
-                <CommunityOrbit className="mx-auto" />
+                <LearningOrbit className="mx-auto" />
               </div>
             </div>
           </div>
@@ -149,8 +149,8 @@ export default function LearningIndex() {
   return (
     <>
       <PageMeta 
-        title="Communauté — Ankilang" 
-        description="Explorez des milliers de decks de cartes partagés par la communauté. Recherchez par langue, niveau et popularité."
+        title="Apprentissage — Ankilang" 
+        description="Accélérez votre maîtrise avec notre catalogue de decks premium, conçus pour un apprentissage efficace."
       />
 
       {/* Hero pastel avec illustration */}
@@ -161,7 +161,7 @@ export default function LearningIndex() {
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <h1 className="font-playfair text-4xl sm:text-5xl md:text-6xl font-bold text-dark-charcoal mb-4">
-                Communauté
+                Apprentissage
               </h1>
               <p className="font-inter text-lg sm:text-xl text-dark-charcoal/70 mb-6 max-w-2xl">
                 Explorez des decks inspirants, filtrez par langue et niveau, et trouvez votre prochain apprentissage.
@@ -180,7 +180,7 @@ export default function LearningIndex() {
               </div>
             </div>
             <div className="hidden lg:block">
-              <CommunityOrbit className="mx-auto" />
+              <LearningOrbit className="mx-auto" />
             </div>
           </div>
         </div>
