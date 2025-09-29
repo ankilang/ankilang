@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
+import FlagEmoji from '../ui/FlagEmoji'
 
 interface LanguageSelectProps {
   value: string
@@ -34,7 +35,7 @@ export default function LanguageSelect({ value, onChange }: LanguageSelectProps)
         className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border-2 border-white/40 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <span className="text-lg">{selectedLanguage.flag}</span>
+          <FlagEmoji flag={selectedLanguage.flag} className="text-lg" />
           <span className="font-medium text-dark-charcoal">{selectedLanguage.name}</span>
         </div>
         <motion.div
@@ -67,7 +68,7 @@ export default function LanguageSelect({ value, onChange }: LanguageSelectProps)
                     language.code === value ? 'bg-pastel-purple/10 text-pastel-purple' : 'text-dark-charcoal hover:bg-gray-50/50'
                   }`}
                 >
-                  <span className="text-lg">{language.flag}</span>
+                  <FlagEmoji flag={language.flag} className="text-lg" />
                   <span className="font-medium">{language.name}</span>
                 </motion.button>
               ))}

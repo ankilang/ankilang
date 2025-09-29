@@ -29,6 +29,17 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
   }
+  
+  /* Support des émojis drapeau sur tous les systèmes */
+  .emoji-flag, .flag-emoji, [class*="flag"], [data-flag] {
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', 'EmojiSymbols-Legacy', 'Segoe UI Symbol', 'Twemoji Mozilla', 'Segoe UI', system-ui, sans-serif;
+    font-variant-emoji: emoji;
+    text-rendering: optimizeLegibility;
+    -webkit-font-feature-settings: "liga" 1, "kern" 1;
+    font-feature-settings: "liga" 1, "kern" 1;
+    display: inline-block;
+    vertical-align: middle;
+  }
 }
 
 /* Classes utilitaires pour les polices
@@ -580,6 +591,11 @@
   display: inline-block;
   white-space: nowrap; /* Empêche le retour à la ligne des drapeaux */
   font-size: 1.5rem; /* Taille des émojis */
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', 'EmojiSymbols-Legacy', 'Segoe UI Symbol', 'Twemoji Mozilla', 'Segoe UI', system-ui, sans-serif;
+  font-variant-emoji: emoji;
+  text-rendering: optimizeLegibility;
+  -webkit-font-feature-settings: "liga" 1, "kern" 1;
+  font-feature-settings: "liga" 1, "kern" 1;
 }
 
 /* (duplication supprimée) .text-gradient-occitan => version complète plus bas */
