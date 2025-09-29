@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, TrendingUp, Clock } from 'lucide-react'
+import { Search, TrendingUp, Clock, Sparkles, X } from 'lucide-react'
 import { getLearningDecks } from '../../../data/learningDecks'
 import { LANGUAGES } from '../../../constants/languages'
 import DeckCard from '../../../components/learning/DeckCard'
@@ -19,6 +19,20 @@ export default function LearningIndex() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasInitializedFromURL, setHasInitializedFromURL] = useState(false)
   const [isPremium, setIsPremium] = useState(false) // Simulation de l'état premium
+  const [isCtaVisible, setIsCtaVisible] = useState(false)
+
+  // Gérer la visibilité du bandeau CTA
+  useEffect(() => {
+    const ctaDismissed = localStorage.getItem('ankilang_premiumCtaDismissed')
+    if (ctaDismissed !== 'true') {
+      setIsCtaVisible(true)
+    }
+  }, [])
+
+  const handleDismissCta = () => {
+    setIsCtaVisible(false)
+    localStorage.setItem('ankilang_premiumCtaDismissed', 'true')
+  }
 
   // Initialiser l'état depuis l'URL au mount (une seule fois)
   useEffect(() => {
@@ -189,6 +203,32 @@ export default function LearningIndex() {
 
       <div className="w-full px-6 lg:px-12 py-10 bg-white">
         <div className="max-w-7xl mx-auto">
+          {/* Bandeau d'incitation Premium */}
+          {!isPremium && isCtaVisible && (
+            <div 
+              className="bg-pastel-purple/20 border-2 border-pastel-purple rounded-2xl p-4 mb-8 flex items-center justify-between gap-4"
+              role="alert"
+            >
+              <div className="flex items-center gap-4">
+                <Sparkles className="w-8 h-8 text-purple-600 hidden sm:block" />
+                <div>
+                  <h3 className="font-bold text-dark-charcoal">Passez à Ankilang Premium</h3>
+                  <p className="text-dark-charcoal/80 text-sm">Débloquez tous les decks, l'accès hors ligne et des fonctionnalités avancées.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="btn-secondary whitespace-nowrap">Découvrir</button>
+                <button 
+                  onClick={handleDismissCta} 
+                  className="p-2 rounded-full hover:bg-pastel-purple/40 transition-colors"
+                  aria-label="Fermer le bandeau"
+                >
+                  <X className="w-5 h-5 text-dark-charcoal/70" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Bandeau hors ligne */}
           {isOffline && (
             <div 
