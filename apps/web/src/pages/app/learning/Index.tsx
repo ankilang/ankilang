@@ -3,14 +3,14 @@ import { useSearchParams } from 'react-router-dom'
 import { Search, TrendingUp, Clock } from 'lucide-react'
 import { getCommunityDecks } from '../../../data/mockCommunity'
 import { LANGUAGES } from '../../../constants/languages'
-import DeckCard from '../../../components/community/DeckCard'
+import DeckCard from '../../../components/learning/DeckCard'
 import Skeleton from '../../../components/ui/Skeleton'
 import PageMeta from '../../../components/seo/PageMeta'
 import CommunityOrbit from '../../../components/illustrations/CommunityOrbit'
 
 type SortOption = 'recent' | 'popular'
 
-export default function CommunityIndex() {
+export default function LearningIndex() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('')

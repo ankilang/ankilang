@@ -28,8 +28,8 @@ const ThemesIndex = lazy(() => import('./pages/app/themes/Index'))
 const NewTheme = lazy(() => import('./pages/app/themes/New'))
 const ThemeDetail = lazy(() => import('./pages/app/themes/Detail'))
 const ThemeExport = lazy(() => import('./pages/app/themes/Export'))
-const CommunityIndex = lazy(() => import('./pages/app/community/Index'))
-const CommunityDeck = lazy(() => import('./pages/app/community/Deck'))
+const LearningIndex = lazy(() => import('./pages/app/learning/Index'))
+const LearningDeck = lazy(() => import('./pages/app/learning/Deck'))
 const LessonsIndex = lazy(() => import('./pages/app/lessons/Index'))
 const LessonDetail = lazy(() => import('./pages/app/lessons/Lesson'))
 const AccountIndex = lazy(() => import('./pages/app/account/Index'))
@@ -152,17 +152,17 @@ function App() {
           } />
           
           {/* Communauté */}
-          <Route path="community" element={
+          <Route path="learning" element={
             <Suspense fallback={<LoadingFallback />}>
               <ProOnly>
-                <CommunityIndex />
+                <LearningIndex />
               </ProOnly>
             </Suspense>
           } />
-          <Route path="community/:deckId" element={
+          <Route path="learning/:deckId" element={
             <Suspense fallback={<LoadingFallback />}>
               <ProOnly>
-                <CommunityDeck />
+                <LearningDeck />
               </ProOnly>
             </Suspense>
           } />

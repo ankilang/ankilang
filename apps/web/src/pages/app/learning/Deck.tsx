@@ -5,11 +5,11 @@ import { getLanguageLabel } from '../../../constants/languages'
 import { guardPro } from '../../../utils/pro'
 import PageMeta from '../../../components/seo/PageMeta'
 
-export default function CommunityDeck() {
+export default function LearningDeck() {
   const { deckId } = useParams<{ deckId: string }>()
   
   if (!deckId) {
-    return <Navigate to="/app/community" replace />
+    return <Navigate to="/app/learning" replace />
   }
 
   const deck = getCommunityDeckById(deckId)
@@ -23,11 +23,11 @@ export default function CommunityDeck() {
             Le deck que vous recherchez n'existe pas ou a été supprimé.
           </p>
           <Link
-            to="/app/community"
+            to="/app/learning"
             className="inline-flex items-center gap-2 px-4 py-2 border-2 border-pastel-purple rounded-xl text-purple-700 bg-white hover:bg-pastel-purple/10 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Retour à la communauté
+            Retour à l'apprentissage
           </Link>
         </div>
       </div>
@@ -45,17 +45,17 @@ export default function CommunityDeck() {
   return (
     <div className="container mx-auto px-4 py-8">
       <PageMeta 
-        title={`${deck.name} — Communauté Ankilang`}
+        title={`${deck.name} — Apprentissage Ankilang`}
         description={deck.description || `Deck de ${deck.author} pour apprendre ${getLanguageLabel(deck.targetLang)}`}
       />
 
       {/* Navigation */}
       <Link
-        to="/app/community"
+        to="/app/learning"
         className="inline-flex items-center gap-2 text-purple-700 hover:text-purple-800 mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        Retour à la communauté
+        Retour à l'apprentissage
       </Link>
 
       {/* En-tête */}
