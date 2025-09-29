@@ -39,7 +39,7 @@ export default function FlagIcon({
       
       // Chinois
       'zh-hans': 'cn',
-      'zh-hant': 'tw',
+      'zh-hant': 'cn', // Chinois traditionnel → Drapeau chinois
       'zh': 'cn', // Fallback vers Chine
       
       // Norvégien
