@@ -18,7 +18,7 @@ export default function LearningIndex() {
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [isLoading, setIsLoading] = useState(true)
   const [hasInitializedFromURL, setHasInitializedFromURL] = useState(false)
-  const [isPremium, setIsPremium] = useState(false) // Simulation de l'état premium
+  const [isPremium] = useState(false) // Simulation de l'état premium
   const [isCtaVisible, setIsCtaVisible] = useState(false)
 
   // Gérer la visibilité du bandeau CTA

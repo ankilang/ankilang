@@ -11,6 +11,7 @@ export const ThemeSchema = z.object({
   targetLang: z.string().min(2, 'Langue cible requise').max(10, 'Code langue trop long'),
   tags: z.array(z.string()).optional().default([]),
   cardCount: z.number().int().min(0).optional().default(0),
+  shareStatus: z.enum(['private', 'community']).optional().default('private'),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional()
 });

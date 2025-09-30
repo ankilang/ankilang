@@ -3,33 +3,52 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ThemeForm from '../../../components/themes/ThemeForm'
-import { addMockTheme } from '../../../data/mockData'
+import { themesService } from '../../../services/themes.service'
+import { useAuth } from '../../../hooks/useAuth'
 import { CreateThemeSchema } from '@ankilang/shared'
 import type { z } from 'zod'
 import PageMeta from '../../../components/seo/PageMeta'
 
 export default function NewTheme() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
 
   const handleSubmit = async (data: z.infer<typeof CreateThemeSchema>) => {
+    if (!user) {
+      setError('Vous devez être connecté pour créer un thème.')
+      return
+    }
+
     setIsLoading(true)
     setError(undefined)
     
     try {
-      // Mock: simuler un délai de création
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Creating theme with Appwrite:', data)
       
-      console.log('Creating theme:', data)
+      // Créer le thème via Appwrite
+      const newTheme = await themesService.createTheme(user.$id, data)
       
-      // Créer le thème mock
-      const newTheme = addMockTheme(data)
+      console.log('Theme created successfully:', newTheme)
       
       // Rediriger vers le détail du thème
-      navigate(`/app/themes/${newTheme.id}`)
+      navigate(`/app/themes/${newTheme.$id}`)
     } catch (err) {
-      setError('Erreur lors de la création du thème. Veuillez réessayer.')
+      console.error('Error creating theme:', err)
+      
+      // Gérer les erreurs spécifiques d'Appwrite
+      if (err instanceof Error) {
+        if (err.message.includes('Collection') && err.message.includes('not found')) {
+          setError('Collections Appwrite non créées. Vérifiez la configuration.')
+        } else if (err.message.includes('permission')) {
+          setError('Permissions insuffisantes. Vérifiez la configuration Appwrite.')
+        } else {
+          setError(`Erreur : ${err.message}`)
+        }
+      } else {
+        setError('Erreur lors de la création du thème. Vérifiez votre connexion.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -48,71 +67,46 @@ export default function NewTheme() {
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="bg-gradient-to-br from-pastel-purple via-pastel-green/50 to-pastel-rose/30 relative overflow-hidden"
-          style={{ paddingTop: 'var(--safe-top, 0px)' }}
+          className="bg-white shadow-sm border-b border-gray-100"
         >
-          {/* Éléments décoratifs */}
-          <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-pastel-rose/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-40 sm:w-80 h-40 sm:h-80 bg-pastel-purple/30 rounded-full blur-2xl" />
-          
-          <div className="relative container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-              <motion.button
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center gap-4">
+              <button
                 onClick={() => navigate('/app/themes')}
-                whileHover={{ scale: 1.1, x: -2 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Retour aux thèmes"
               >
-                <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
-              </motion.button>
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="flex-1"
-              >
-                <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold text-dark-charcoal mb-1 sm:mb-2">
-                  Studio de Création
+              <div>
+                <h1 className="text-2xl font-playfair font-bold text-dark-charcoal">
+                  Nouveau thème
                 </h1>
-                <p className="font-sans text-sm sm:text-lg text-dark-charcoal/70 max-w-2xl">
-                  Donnez vie à vos idées d'apprentissage. Créez un thème personnalisé pour organiser vos flashcards.
+                <p className="text-sm text-dark-charcoal/70 font-sans mt-1">
+                  Créez un nouveau thème de flashcards pour apprendre une langue
                 </p>
-              </motion.div>
+              </div>
             </div>
           </div>
         </motion.header>
 
-        <main className="container mx-auto px-6 py-12 -mt-6 relative z-10 sm:px-4 sm:py-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="max-w-4xl mx-auto sm:px-0"
-          >
-            <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12 sm:p-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="mb-8"
-              >
-                <h2 className="font-display text-2xl font-bold text-dark-charcoal mb-3">
-                  Créer un nouveau thème
-                </h2>
-                <p className="font-sans text-dark-charcoal/70 leading-relaxed">
-                  Un thème vous permet d'organiser vos flashcards par sujet ou langue. 
-                  Vous pourrez ensuite y ajouter des cartes Basic et Cloze pour un apprentissage structuré.
-                </p>
-              </motion.div>
-
+        {/* Contenu principal */}
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               <ThemeForm
                 onSubmit={handleSubmit}
                 isLoading={isLoading}
                 error={error}
+                
               />
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </main>
       </div>
     </>

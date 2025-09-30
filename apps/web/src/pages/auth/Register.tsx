@@ -1,15 +1,17 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { AppwriteException } from 'appwrite'
+import { signupSchema, type SignupData } from '@ankilang/shared'
+import { useAuth } from '../../hooks/useAuth'
 import AuthForm from '../../components/auth/AuthForm'
 import PageMeta from '../../components/seo/PageMeta'
 
-const registerSchema = z.object({
-  email: z.string().email('Adresse e-mail invalide'),
-  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+// Étendre le schéma partagé avec confirmation du mot de passe
+const registerSchema = signupSchema.extend({
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
@@ -20,6 +22,8 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function Register() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { signup, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
 
@@ -31,16 +35,57 @@ export default function Register() {
     resolver: zodResolver(registerSchema)
   })
 
+  // Rediriger automatiquement si déjà connecté
+  useEffect(() => {
+    if (user) {
+      const redirectTo = searchParams.get('redirectTo') || '/app'
+      navigate(redirectTo, { replace: true })
+    }
+  }, [user, navigate, searchParams])
+
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
     setError(undefined)
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Register data:', data)
-      navigate('/auth/verify-email')
+      // Extraire les données pour Appwrite (sans confirmPassword)
+      const signupData: SignupData = {
+        name: data.name,
+        email: data.email,
+        password: data.password
+      }
+      
+      // Inscription via Appwrite (crée automatiquement une session)
+      await signup(signupData)
+      
+      // Redirection vers la page demandée ou /app par défaut
+      const redirectTo = searchParams.get('redirectTo') || '/app'
+      navigate(redirectTo, { replace: true })
+      
     } catch (err) {
-      setError('Erreur lors de l\'inscription. Veuillez réessayer.')
+      // Gestion des erreurs Appwrite avec messages français
+      if (err instanceof AppwriteException) {
+        switch (err.code) {
+          case 409:
+            setError('Cette adresse e-mail est déjà utilisée.')
+            break
+          case 400:
+            setError('Données invalides. Veuillez vérifier vos informations.')
+            break
+          case 429:
+            setError('Trop de tentatives. Veuillez patienter avant de réessayer.')
+            break
+          default:
+            setError('Erreur lors de l\'inscription. Veuillez réessayer.')
+        }
+      } else {
+        setError('Erreur lors de l\'inscription. Veuillez vérifier votre connexion internet.')
+      }
+      
+      // Log en développement
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Register] Erreur:', err)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -65,6 +110,29 @@ export default function Register() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
+          <label htmlFor="name" className="label-field">
+            Nom complet
+          </label>
+          <input
+            id="name"
+            type="text"
+            {...register('name')}
+            className="input-field"
+            placeholder="Votre nom complet"
+            aria-describedby={errors.name ? 'name-error' : undefined}
+          />
+          {errors.name && (
+            <p id="name-error" className="error-message">
+              {errors.name.message}
+            </p>
+          )}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+        >
           <label htmlFor="email" className="label-field">
             Adresse e-mail
           </label>
@@ -86,7 +154,7 @@ export default function Register() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
         >
           <label htmlFor="password" className="label-field">
             Mot de passe
@@ -109,7 +177,7 @@ export default function Register() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
+          transition={{ duration: 0.5, delay: 0.9 }}
         >
           <label htmlFor="confirmPassword" className="label-field">
             Confirmer le mot de passe
@@ -132,7 +200,7 @@ export default function Register() {
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.9 }}
+          transition={{ duration: 0.5, delay: 1.0 }}
           className="text-center pt-4 border-t border-gray-100"
         >
           <p className="text-sm text-dark-charcoal/70 font-sans">

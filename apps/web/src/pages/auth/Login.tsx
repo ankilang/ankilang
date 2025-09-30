@@ -1,21 +1,18 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { AppwriteException } from 'appwrite'
+import { loginSchema, type LoginData } from '@ankilang/shared'
+import { useAuth } from '../../hooks/useAuth'
 import AuthForm from '../../components/auth/AuthForm'
 import PageMeta from '../../components/seo/PageMeta'
 
-const loginSchema = z.object({
-  email: z.string().email('Adresse e-mail invalide'),
-  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères')
-})
-
-type LoginFormData = z.infer<typeof loginSchema>
-
 export default function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { login, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
 
@@ -23,20 +20,51 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<LoginFormData>({
+  } = useForm<LoginData>({
     resolver: zodResolver(loginSchema)
   })
 
-  const onSubmit = async (data: LoginFormData) => {
+  // Rediriger automatiquement si déjà connecté
+  useEffect(() => {
+    if (user) {
+      const redirectTo = searchParams.get('redirectTo') || '/app'
+      navigate(redirectTo, { replace: true })
+    }
+  }, [user, navigate, searchParams])
+
+  const onSubmit = async (data: LoginData) => {
     setIsLoading(true)
     setError(undefined)
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Login data:', data)
-      navigate('/app')
+      // Authentification via Appwrite
+      await login(data)
+      
+      // Redirection vers la page demandée ou /app par défaut
+      const redirectTo = searchParams.get('redirectTo') || '/app'
+      navigate(redirectTo, { replace: true })
+      
     } catch (err) {
-      setError('Erreur de connexion. Veuillez réessayer.')
+      // Gestion des erreurs Appwrite avec messages français
+      if (err instanceof AppwriteException) {
+        switch (err.code) {
+          case 401:
+            setError('Email ou mot de passe incorrect.')
+            break
+          case 429:
+            setError('Trop de tentatives. Veuillez patienter avant de réessayer.')
+            break
+          default:
+            setError('Erreur de connexion. Veuillez réessayer.')
+        }
+      } else {
+        setError('Erreur de connexion. Veuillez vérifier votre connexion internet.')
+      }
+      
+      // Log en développement
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Login] Erreur:', err)
+      }
     } finally {
       setIsLoading(false)
     }

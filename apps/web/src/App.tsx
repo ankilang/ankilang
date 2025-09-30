@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { Suspense, lazy, useEffect } from 'react'
+import { AuthProvider } from './contexts/AuthContext'
 import { PWAProvider } from './contexts/PWAContext'
 import { SubscriptionProvider } from './contexts/SubscriptionContext'
 import PublicLayout from './components/layout/PublicLayout'
@@ -8,6 +9,7 @@ import AuthLayout from './components/layout/AuthLayout'
 import LegalLayout from './components/layout/LegalLayout'
 import InstallPrompt from './components/ui/InstallPrompt'
 import UpdatePrompt from './components/ui/UpdatePrompt'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 import Landing from './pages/Landing'
 import ProOnly from './components/auth/ProOnly'
 import Dashboard from './pages/app/Dashboard'
@@ -72,13 +74,14 @@ function App() {
   }, [])
 
   return (
-    <SubscriptionProvider>
-      <PWAProvider>
-        {/* Barre d'installation PWA */}
-        <InstallPrompt />
-        {/* Notification de mise à jour PWA */}
-        <UpdatePrompt />
-        <Routes>
+    <AuthProvider>
+      <SubscriptionProvider>
+        <PWAProvider>
+          {/* Barre d'installation PWA */}
+          <InstallPrompt />
+          {/* Notification de mise à jour PWA */}
+          <UpdatePrompt />
+          <Routes>
         {/* Routes publiques */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Landing />} />
@@ -125,8 +128,12 @@ function App() {
           } />
         </Route>
 
-        {/* Routes de l'application */}
-        <Route path="/app" element={<AppLayout />}>
+        {/* Routes de l'application - Protégées par authentification */}
+        <Route path="/app" element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Dashboard />} />
           
           {/* Thèmes */}
@@ -198,8 +205,9 @@ function App() {
           } />
         </Route>
       </Routes>
-      </PWAProvider>
-    </SubscriptionProvider>
+        </PWAProvider>
+      </SubscriptionProvider>
+    </AuthProvider>
   )
 }
 
