@@ -15,7 +15,7 @@ import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
-import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
+import { pexelsSearchPhotos, pexelsCurated, optimizeAndUploadImage } from '../../services/pexels'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
@@ -77,6 +77,7 @@ export default function NewCardModal({
   const [isTranslating, setIsTranslating] = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
+  const [isOptimizingImage, setIsOptimizingImage] = useState(false)
 
   const online = useOnlineStatus()
   
@@ -155,11 +156,36 @@ export default function NewCardModal({
     staleTime: 1000 * 60 * 5,
   })
 
-  const handlePickImage = (src: string) => {
-    if (selectedType === 'basic') {
-      setValue('versoImage', src)
-    } else {
-      setValue('clozeImage', src)
+  const handlePickImage = async (src: string) => {
+    setIsOptimizingImage(true)
+    try {
+      console.log('🖼️ Optimisation de l\'image Pexels...')
+      
+      // Optimiser et uploader l'image via Netlify Function
+      const result = await optimizeAndUploadImage(src)
+      
+      if (result.success) {
+        console.log(`✅ Image optimisée: ${result.savings}% de réduction (${result.originalSize} → ${result.optimizedSize} bytes)`)
+        
+        // Stocker l'URL Appwrite (optimisée)
+        if (selectedType === 'basic') {
+          setValue('versoImage', result.fileUrl)
+        } else {
+          setValue('clozeImage', result.fileUrl)
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'optimisation:', error)
+      
+      // Fallback: utiliser l'URL Pexels directe en cas d'erreur
+      console.log('⚠️ Fallback: utilisation de l\'URL Pexels directe')
+      if (selectedType === 'basic') {
+        setValue('versoImage', src)
+      } else {
+        setValue('clozeImage', src)
+      }
+    } finally {
+      setIsOptimizingImage(false)
     }
   }
 
@@ -866,6 +892,12 @@ export default function NewCardModal({
                                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     </div>
                                     <div className="mt-1">
+                                      {isOptimizingImage && (
+                                        <div className="text-sm text-purple-600 font-medium mb-2 flex items-center gap-2">
+                                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+                                          Optimisation de l'image en cours...
+                                        </div>
+                                      )}
                                       {imagesQuery.isLoading && (
                                         <div className="text-sm text-gray-500">Recherche d'images…</div>
                                       )}
@@ -1073,6 +1105,12 @@ export default function NewCardModal({
                                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     </div>
                                     <div className="mt-1">
+                                      {isOptimizingImage && (
+                                        <div className="text-sm text-purple-600 font-medium mb-2 flex items-center gap-2">
+                                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+                                          Optimisation de l'image en cours...
+                                        </div>
+                                      )}
                                       {imagesQuery.isLoading && (
                                         <div className="text-sm text-gray-500">Recherche d'images…</div>
                                       )}
