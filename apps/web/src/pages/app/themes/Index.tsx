@@ -1,18 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Filter } from 'lucide-react'
+import { Plus, Search, Filter, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ThemeCard from '../../../components/themes/ThemeCard'
-import { mockThemes, deleteMockTheme } from '../../../data/mockData'
+import { themesService, type AppwriteTheme } from '../../../services/themes.service'
+import { useAuth } from '../../../hooks/useAuth'
 import { LANGUAGES, getLanguageLabel } from '../../../constants/languages'
 import PageMeta from '../../../components/seo/PageMeta'
-import type { Theme } from '@ankilang/shared'
 
 export default function ThemesIndex() {
   const navigate = useNavigate()
-  const [themes, setThemes] = useState<Theme[]>([...mockThemes])
+  const { user } = useAuth()
+  const [themes, setThemes] = useState<AppwriteTheme[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string>()
+
+  // Charger les thèmes depuis Appwrite
+  useEffect(() => {
+    if (user) {
+      loadThemes()
+    }
+  }, [user])
+
+  const loadThemes = async () => {
+    if (!user) return
+
+    setIsLoading(true)
+    setError(undefined)
+    
+    try {
+      const userThemes = await themesService.getUserThemes(user.$id)
+      setThemes(userThemes)
+    } catch (err) {
+      console.error('Error loading themes:', err)
+      setError('Erreur lors du chargement des thèmes')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Filtrer les thèmes
   const filteredThemes = themes.filter(theme => {
@@ -22,15 +49,64 @@ export default function ThemesIndex() {
     return matchesSearch && matchesLanguage
   })
 
-  const handleEdit = (theme: Theme) => {
-    navigate(`/app/themes/${theme.id}?edit=1`)
+  const handleEdit = (theme: AppwriteTheme) => {
+    navigate(`/app/themes/${theme.$id}?edit=1`)
   }
 
-  const handleDelete = (theme: Theme) => {
-    if (confirm(`Supprimer le thème « ${theme.name} » ? Cette action est définitive.`)) {
-      deleteMockTheme(theme.id)
-      setThemes(prev => prev.filter(t => t.id !== theme.id))
+  const handleDelete = async (theme: AppwriteTheme) => {
+    if (!confirm(`Supprimer le thème « ${theme.name} » ? Cette action est définitive.`)) return
+    
+    try {
+      await themesService.deleteTheme(theme.$id, user!.$id)
+      // Recharger la liste
+      await loadThemes()
+    } catch (err) {
+      console.error('Error deleting theme:', err)
+      alert('Erreur lors de la suppression du thème')
     }
+  }
+
+  // États de chargement et d'erreur
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-white rounded-3xl p-8 shadow-xl"
+        >
+          <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-rose rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-dark-charcoal mb-2">Chargement...</h2>
+          <p className="text-dark-charcoal/70">Récupération de vos thèmes depuis Appwrite</p>
+        </motion.div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-white rounded-3xl p-8 shadow-xl"
+        >
+          <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-dark-charcoal mb-2">Erreur</h2>
+          <p className="text-dark-charcoal/70 mb-4">{error}</p>
+          <button 
+            onClick={loadThemes} 
+            className="btn-primary"
+          >
+            Réessayer
+          </button>
+        </motion.div>
+      </div>
+    )
   }
 
   return (
@@ -257,7 +333,7 @@ export default function ThemesIndex() {
             >
               {filteredThemes.map((theme, index) => (
                 <ThemeCard 
-                  key={theme.id} 
+                  key={theme.$id} 
                   theme={theme} 
                   index={index}
                   onEdit={handleEdit}

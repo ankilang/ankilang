@@ -4,13 +4,13 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { LANGUAGES } from '../../constants/languages'
 import { getPastelForTheme } from '../../constants/themes'
-import type { Theme } from '@ankilang/shared'
+import type { AppwriteTheme } from '../../services/themes.service'
 
 interface ThemeCardProps {
-  theme: Theme
+  theme: AppwriteTheme
   index: number
-  onEdit?: (theme: Theme) => void
-  onDelete?: (theme: Theme) => void
+  onEdit?: (theme: AppwriteTheme) => void
+  onDelete?: (theme: AppwriteTheme) => void
 }
 
 export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardProps) {
@@ -18,7 +18,7 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   
   const language = LANGUAGES.find(lang => lang.code === theme.targetLang)
-  const pastel = getPastelForTheme(theme.id || theme.name) // mapping stable
+  const pastel = getPastelForTheme(theme.$id || theme.name) // mapping stable
   const accent = pastel?.accent || '#6b7280' // fallback si pastel undefined
   
   return (
@@ -59,7 +59,7 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
         </motion.div>
       )}
       
-      <Link to={`/app/themes/${theme.id}`} className="block">
+      <Link to={`/app/themes/${theme.$id}`} className="block">
         <div className={`${pastel?.bg || 'bg-gray-100'} ${pastel?.border || 'border-gray-300'} border-2 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden`}>
           {/* Menu flottant accessible - repositionné */}
           {isMenuOpen && (
@@ -178,7 +178,7 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
                    <div className="flex items-center gap-2">
                      <Calendar className="w-4 h-4" style={{ color: accent }} />
                      <span className="font-sans text-sm text-dark-charcoal/70">
-                       {theme.updatedAt ? new Date(theme.updatedAt).toLocaleDateString('fr-FR', { 
+                       {theme.$updatedAt ? new Date(theme.$updatedAt).toLocaleDateString('fr-FR', { 
                          day: 'numeric', 
                          month: 'short' 
                        }) : 'Nouveau'}
