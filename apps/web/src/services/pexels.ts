@@ -35,3 +35,45 @@ export async function pexelsPhoto(id: number | string) {
   return res.json()
 }
 
+/**
+ * Optimise et uploade une image Pexels vers Appwrite Storage
+ * @param pexelsUrl - URL de l'image Pexels (medium ou large)
+ * @returns Informations sur l'image optimisée et uploadée
+ */
+export async function optimizeAndUploadImage(pexelsUrl: string) {
+  const url = toURL('/optimize', { url: pexelsUrl })
+  
+  // Récupérer le JWT Appwrite pour authentifier la requête
+  const { getSessionJWT } = await import('./appwrite')
+  const jwt = await getSessionJWT()
+  
+  if (!jwt) {
+    throw new Error('User not authenticated. Please log in to upload images.')
+  }
+  
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${jwt}`,
+      'Content-Type': 'application/json'
+    }
+  })
+  
+  if (!res.ok) {
+    const errorText = await res.text()
+    if (res.status === 401) {
+      throw new Error('Authentication failed. Please log in again.')
+    }
+    throw new Error(`Image optimization failed: ${res.status} - ${errorText}`)
+  }
+  
+  return res.json() as Promise<{
+    success: boolean
+    fileId: string
+    fileUrl: string
+    userId: string
+    originalSize: number
+    optimizedSize: number
+    savings: number
+  }>
+}
+
