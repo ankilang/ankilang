@@ -47,7 +47,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: true
+    host: true,
+    strictPort: true // Forcer le port 5173, ne pas utiliser d'alternative
   },
   build: {
     outDir: 'dist',
