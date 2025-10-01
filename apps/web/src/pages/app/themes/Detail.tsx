@@ -5,7 +5,9 @@ import { motion } from 'framer-motion'
 import CardList from '../../../components/cards/CardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
-import { getThemeById, getCardsByThemeId, addMockCard, updateMockCard, deleteMockCard } from '../../../data/mockData'
+import { getCardsByThemeId, addMockCard, updateMockCard, deleteMockCard } from '../../../data/mockData'
+import { themesService, type AppwriteTheme } from '../../../services/themes.service'
+import { useAuth } from '../../../hooks/useAuth'
 import { LANGUAGES } from '../../../constants/languages'
 import { getLanguageColor } from '../../../utils/languageColors'
 import { CreateCardSchema } from '@ankilang/shared'
@@ -16,25 +18,78 @@ import PageMeta from '../../../components/seo/PageMeta'
 export default function ThemeDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>()
   const [cards, setCards] = useState<Card[]>([])
+  const [theme, setTheme] = useState<AppwriteTheme | null>(null)
 
-  const theme = getThemeById(id!)
   const language = LANGUAGES.find(lang => lang.code === theme?.targetLang)
   const colors = getLanguageColor(theme?.targetLang || 'default')
 
-  // Charger les cartes au montage et quand l'ID change
+  // Charger le thème et les cartes depuis Appwrite
   useEffect(() => {
-    if (id) {
-      setCards(getCardsByThemeId(id))
+    if (id && user) {
+      loadThemeData()
     }
-  }, [id])
+  }, [id, user])
 
-  if (!theme) {
+  const loadThemeData = async () => {
+    if (!id || !user) return
+
+    setIsLoading(true)
+    setError(undefined)
+    
+    try {
+      // Charger le thème depuis Appwrite
+      const themeData = await themesService.getThemeById(id, user.$id)
+      setTheme(themeData)
+      
+      // Pour l'instant, charger les cartes depuis les données mockées
+      // TODO: Implémenter le service cards plus tard
+      setCards(getCardsByThemeId(id))
+      
+    } catch (err) {
+      console.error('Error loading theme:', err)
+      if (err instanceof Error) {
+        if (err.message.includes('not found') || err.message.includes('Document not found')) {
+          setError('Thème introuvable')
+        } else if (err.message.includes('non autorisé') || err.message.includes('unauthorized')) {
+          setError('Accès non autorisé à ce thème')
+        } else {
+          setError('Erreur lors du chargement du thème')
+        }
+      } else {
+        setError('Erreur inconnue')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // États de chargement et d'erreur
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/20"
+        >
+          <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-rose rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">Chargement...</h1>
+          <p className="font-sans text-dark-charcoal/70 mb-6">Récupération du thème depuis Appwrite</p>
+        </motion.div>
+      </div>
+    )
+  }
+
+  if (error || !theme) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20 flex items-center justify-center">
         <motion.div 
@@ -45,8 +100,14 @@ export default function ThemeDetail() {
           <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-rose rounded-full flex items-center justify-center mx-auto mb-4">
             <FileText className="w-8 h-8 text-white" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">Thème introuvable</h1>
-          <p className="font-sans text-dark-charcoal/70 mb-6">Le thème que vous recherchez n'existe pas.</p>
+          <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">
+            {error || 'Thème introuvable'}
+          </h1>
+          <p className="font-sans text-dark-charcoal/70 mb-6">
+            {error === 'Thème introuvable' 
+              ? 'Le thème que vous recherchez n\'existe pas dans vos thèmes.'
+              : 'Une erreur est survenue lors du chargement.'}
+          </p>
           <motion.button
             onClick={() => navigate('/app/themes')}
             whileHover={{ scale: 1.05 }}
@@ -203,7 +264,7 @@ export default function ThemeDetail() {
               <div className="flex items-center gap-2 sm:gap-3">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
-                    to={`/app/themes/${theme.id}/export`}
+                    to={`/app/themes/${theme.$id}/export`}
                     className="btn-secondary inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3"
                   >
                     <Download size={16} />
@@ -276,7 +337,7 @@ export default function ThemeDetail() {
           onSubmit={handleCardSubmit}
           isLoading={isLoading}
           error={error}
-          themeId={theme.id}
+          themeId={theme.$id}
           themeLanguage={theme.targetLang}
           themeColors={colors}
         />
