@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { LANGUAGES } from '../../constants/languages'
 import { getPastelForTheme } from '../../constants/themes'
 import type { AppwriteTheme } from '../../services/themes.service'
+import FlagIcon from '../ui/FlagIcon'
 
 interface ThemeCardProps {
   theme: AppwriteTheme
@@ -109,13 +110,12 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
             <div className="flex items-center gap-3">
               {/* Drapeau de la langue */}
               <div className="w-12 h-12 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md border border-white/40">
-                {language?.code === 'oc' ? (
-                  <span className="text-lg font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
-                    ÒC
-                  </span>
-                ) : (
-                  <span className="text-2xl">{language?.flag || '🌍'}</span>
-                )}
+                <FlagIcon 
+                  languageCode={theme.targetLang}
+                  size={32}
+                  alt={`Drapeau ${language?.label || theme.targetLang}`}
+                  className="w-8 h-8"
+                />
               </div>
               
               {/* Informations de base */}

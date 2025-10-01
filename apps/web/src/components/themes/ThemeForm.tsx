@@ -317,13 +317,12 @@ export default function ThemeForm({
               className="flex items-center justify-center gap-3 py-3 px-4 bg-green-50 border border-green-200 rounded-xl mt-4"
             >
               <div className="text-xl">
-                {selectedLanguage?.code === 'oc' ? (
-                  <span className="font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
-                    ÒC
-                  </span>
-                ) : (
-                  selectedLanguage?.flag
-                )}
+                <FlagIcon 
+                  languageCode={watchedValues.targetLang}
+                  size={24}
+                  alt={`Drapeau ${selectedLanguage?.label || watchedValues.targetLang}`}
+                  className="w-6 h-6"
+                />
               </div>
               <span className="font-sans text-sm text-green-800">
                 <strong>{selectedLanguage?.label}</strong> sélectionné

@@ -14,6 +14,7 @@ import { CreateCardSchema } from '@ankilang/shared'
 import type { z } from 'zod'
 import type { Card } from '@ankilang/shared'
 import PageMeta from '../../../components/seo/PageMeta'
+import FlagIcon from '../../../components/ui/FlagIcon'
 
 export default function ThemeDetail() {
   const { id } = useParams<{ id: string }>()
@@ -214,13 +215,12 @@ export default function ThemeDetail() {
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   {/* Drapeau de la langue */}
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md border border-white/40">
-                    {language?.code === 'oc' ? (
-                      <span className="text-lg sm:text-2xl font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text">
-                        ÒC
-                      </span>
-                    ) : (
-                      <span className="text-2xl sm:text-3xl">{language?.flag || '🌍'}</span>
-                    )}
+                    <FlagIcon 
+                      languageCode={theme.targetLang}
+                      size={48}
+                      alt={`Drapeau ${language?.label || theme.targetLang}`}
+                      className="w-10 h-10 sm:w-12 sm:h-12"
+                    />
                   </div>
                   
                   <div className="flex-1 min-w-0">
