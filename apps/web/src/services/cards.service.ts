@@ -71,9 +71,10 @@ export class CardsService {
       // Créer un blob
       const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
       
-      // Générer un nom de fichier unique
-      const timestamp = Date.now();
-      const filename = `audio_${userId}_${timestamp}.wav`;
+      // Générer un nom de fichier unique (max 36 chars, alphanumeric + underscore/hyphen)
+      const timestamp = Date.now().toString(36); // Base36 pour raccourcir
+      const userIdShort = userId.substring(0, 8); // Premiers 8 caractères
+      const filename = `audio-${userIdShort}-${timestamp}.wav`;
       
       // Uploader vers Appwrite Storage (utiliser le bucket flashcard-images existant)
       const file = await storageService.uploadFile('flashcard-images', filename, blob);
