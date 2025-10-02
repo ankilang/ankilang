@@ -92,11 +92,18 @@ export class CardsService {
     try {
       let audioUrl = cardData.audioUrl || '';
       
-      // Si l'audio est un blob base64, l'uploader vers Appwrite Storage
+      // Si l'audio est un blob base64, essayer de l'uploader vers Appwrite Storage
       if (audioUrl.startsWith('data:audio/')) {
-        console.log('📤 Upload de l\'audio vers Appwrite Storage...');
-        const fileId = await this.uploadAudioToStorage(audioUrl, userId);
-        audioUrl = fileId; // Stocker l'ID du fichier au lieu de l'URL base64
+        console.log('📤 Tentative d\'upload de l\'audio vers Appwrite Storage...');
+        try {
+          const fileId = await this.uploadAudioToStorage(audioUrl, userId);
+          audioUrl = fileId; // Stocker l'ID du fichier au lieu de l'URL base64
+          console.log('✅ Audio uploadé avec succès vers Appwrite Storage');
+        } catch (uploadError) {
+          console.warn('⚠️ Échec de l\'upload vers Appwrite Storage, utilisation du base64:', uploadError instanceof Error ? uploadError.message : String(uploadError));
+          // Garder l'URL base64 si l'upload échoue
+          // L'export gérera les deux cas (base64 et Appwrite)
+        }
       }
       
       const data = {
