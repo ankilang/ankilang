@@ -19,12 +19,12 @@ import { pexelsSearchPhotos, pexelsCurated, optimizeAndUploadImage } from '../..
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
-// Schéma unifié pour le formulaire (plus simple pour react-hook-form)
+// Schéma simplifié - validation basique sans refine complexe
 const cardSchema = z.object({
   type: z.enum(['basic', 'cloze']),
   // Champs Basic
-  recto: z.string().optional(),
-  verso: z.string().optional(),
+  recto: z.string().min(1, 'Le contenu du recto est requis'),
+  verso: z.string().min(1, 'Le contenu du verso est requis'),
   versoImage: z.string().optional(),
   versoAudio: z.string().optional(),
   // Champs Cloze
@@ -33,16 +33,6 @@ const cardSchema = z.object({
   // Champs communs
   extra: z.string().optional(),
   tags: z.string().optional()
-}).refine((data) => {
-  if (data.type === 'basic') {
-    return data.recto && data.recto.length > 0 && data.verso && data.verso.length > 0
-  } else if (data.type === 'cloze') {
-    return data.clozeTextTarget && data.clozeTextTarget.length > 0 && /\{\{c\d+::[^}]+\}\}/.test(data.clozeTextTarget)
-  }
-  return false
-}, {
-  message: "Les champs requis doivent être remplis",
-  path: ["type"]
 })
 
 type CardFormData = z.infer<typeof cardSchema>
