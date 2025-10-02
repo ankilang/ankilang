@@ -4,19 +4,22 @@ import { Plus, BookOpen, User } from 'lucide-react';
 import PageMeta from '../../components/seo/PageMeta';
 import StatCard from '../../components/dashboard/StatCard';
 import ActionCard from '../../components/dashboard/ActionCard';
+import { useAuth } from '../../hooks/useAuth';
 
 import { mockThemes } from '../../data/mockData';
-import { getAccount } from '../../data/mockAccount';
 
 export default function Dashboard() {
+  // Récupérer l'utilisateur authentifié
+  const { user } = useAuth();
+  
   // Calculer les statistiques
   const totalCards = mockThemes.reduce((sum, theme) => sum + theme.cardCount, 0);
   const totalThemes = mockThemes.length;
   // const avgCards = totalThemes > 0 ? Math.round(totalCards / totalThemes) : 0;
   
-  // Préparer l'affichage du pseudo (username/displayName) quand connecté
-  const account = getAccount();
-  const username = account?.user?.username || account?.user?.displayName || 'Ankilang';
+  // Extraire le prénom de l'utilisateur (premier mot du nom complet)
+  const firstName = user?.name?.split(' ')[0] || 'Ankilang';
+  const username = firstName;
 
   return (
     <>
