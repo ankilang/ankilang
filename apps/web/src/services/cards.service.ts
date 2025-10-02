@@ -77,7 +77,7 @@ export class CardsService {
       const filename = `audio-${userIdShort}-${timestamp}.wav`;
       
       // Uploader vers Appwrite Storage (utiliser le bucket flashcard-images existant)
-      const file = await storageService.uploadFile('flashcard-images', filename, blob);
+      const file = await storageService.uploadFile('flashcard-images', filename, blob, userId);
       
       console.log(`✅ Audio uploadé vers Appwrite Storage: ${file.$id}`);
       return file.$id;
@@ -119,7 +119,7 @@ export class CardsService {
         tags: cardData.tags || []
       };
 
-      return await databaseService.create<AppwriteCard>(this.collectionId, data);
+      return await databaseService.create<AppwriteCard>(this.collectionId, data, userId);
     } catch (error) {
       console.error('[CardsService] Error creating card:', error);
       throw error;

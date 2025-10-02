@@ -1,5 +1,5 @@
 import client from './appwrite';
-import { Databases, ID, Query } from 'appwrite';
+import { Databases, ID, Query, Permission, Role } from 'appwrite';
 
 // Instance databases
 const databases = new Databases(client);
@@ -8,14 +8,22 @@ const databases = new Databases(client);
 export class DatabaseService {
   private databaseId = "ankilang-main"; // Base de données par défaut
 
-  // CREATE - Créer un document
-  async create<T>(collectionId: string, data: Record<string, any>): Promise<T> {
+  // CREATE - Créer un document avec permissions owner-only
+  async create<T>(collectionId: string, data: Record<string, any>, userId?: string): Promise<T> {
     try {
+      // Permissions owner-only si userId fourni
+      const permissions = userId ? [
+        Permission.read(Role.user(userId)),
+        Permission.write(Role.user(userId)),
+        Permission.delete(Role.user(userId))
+      ] : undefined;
+
       const response = await databases.createDocument(
         this.databaseId,
         collectionId,
         ID.unique(),
-        data
+        data,
+        permissions
       );
       return response as T;
     } catch (error) {

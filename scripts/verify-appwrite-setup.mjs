@@ -54,7 +54,47 @@ async function verifySetup() {
     allGood = false;
   }
   
-  // 2. Vérifier le bucket
+  // 2. Vérifier les permissions des collections
+  console.log('\n🔒 Permissions des collections:');
+  try {
+    // Vérifier themes
+    const themesAttrs = await databases.listAttributes(DATABASE_ID, 'themes');
+    console.log('  ✅ themes - Attributs vérifiés');
+    
+    // Vérifier cards
+    const cardsAttrs = await databases.listAttributes(DATABASE_ID, 'cards');
+    console.log('  ✅ cards - Attributs vérifiés');
+    
+    // Vérifier les index pour les requêtes fréquentes
+    console.log('\n📊 Index des collections:');
+    try {
+      const themesIndexes = await databases.listIndexes(DATABASE_ID, 'themes');
+      const cardsIndexes = await databases.listIndexes(DATABASE_ID, 'cards');
+      
+      const hasUserIdIndex = (indexes) => indexes.indexes.some(idx => 
+        idx.key === 'userId' || idx.attributes.includes('userId')
+      );
+      
+      if (hasUserIdIndex(themesIndexes)) {
+        console.log('  ✅ themes - Index userId présent');
+      } else {
+        console.log('  ⚠️  themes - Index userId recommandé pour les requêtes');
+      }
+      
+      if (hasUserIdIndex(cardsIndexes)) {
+        console.log('  ✅ cards - Index userId présent');
+      } else {
+        console.log('  ⚠️  cards - Index userId recommandé pour les requêtes');
+      }
+    } catch (indexError) {
+      console.log('  ℹ️  Index non vérifiables (peut nécessiter des permissions admin)');
+    }
+  } catch (error) {
+    console.error('  ❌ Erreur permissions:', error.message);
+    allGood = false;
+  }
+  
+  // 3. Vérifier le bucket
   console.log('\n💾 Bucket de stockage:');
   try {
     const bucket = await storage.getBucket('flashcard-images');
@@ -63,6 +103,32 @@ async function verifySetup() {
     console.log(`     - Extensions: ${bucket.allowedFileExtensions.join(', ')}`);
     console.log(`     - Sécurité fichiers: ${bucket.fileSecurity ? 'Activée' : 'Désactivée'}`);
     console.log(`     - Chiffrement: ${bucket.encryption ? 'Activé' : 'Désactivé'}`);
+    
+    // Vérifications de sécurité
+    const securityIssues = [];
+    
+    if (!bucket.fileSecurity) {
+      securityIssues.push('Sécurité fichiers désactivée');
+    }
+    
+    if (bucket.maximumFileSize > 10000000) { // 10MB
+      securityIssues.push('Taille max trop élevée (>10MB)');
+    }
+    
+    const allowedExts = bucket.allowedFileExtensions;
+    const expectedExts = ['webp', 'jpg', 'jpeg', 'png', 'gif', 'mp3', 'wav', 'ogg', 'm4a'];
+    const unexpectedExts = allowedExts.filter(ext => !expectedExts.includes(ext));
+    if (unexpectedExts.length > 0) {
+      securityIssues.push(`Extensions inattendues: ${unexpectedExts.join(', ')}`);
+    }
+    
+    if (securityIssues.length > 0) {
+      console.log('  ⚠️  Problèmes de sécurité détectés:');
+      securityIssues.forEach(issue => console.log(`     - ${issue}`));
+      allGood = false;
+    } else {
+      console.log('  ✅ Configuration de sécurité OK');
+    }
   } catch (error) {
     if (error.code === 404) {
       console.log('  ❌ flashcard-images - MANQUANT');

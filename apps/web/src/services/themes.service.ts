@@ -29,7 +29,8 @@ export class ThemesService {
 
       const theme = await databaseService.create<AppwriteTheme>(
         this.collectionId, 
-        dataWithUserId
+        dataWithUserId,
+        userId // Passer userId pour permissions owner-only
       );
 
       return theme;

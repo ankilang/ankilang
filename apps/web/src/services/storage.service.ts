@@ -1,4 +1,4 @@
-import { Storage } from 'appwrite';
+import { Storage, Permission, Role } from 'appwrite';
 import client from './appwrite';
 
 export class StorageService {
@@ -8,18 +8,26 @@ export class StorageService {
     this.storage = new Storage(client);
   }
 
-  // Uploader un fichier vers Appwrite Storage
-  async uploadFile(bucketId: string, filename: string, file: Blob): Promise<any> {
+  // Uploader un fichier vers Appwrite Storage avec permissions owner-only
+  async uploadFile(bucketId: string, filename: string, file: Blob, userId?: string): Promise<any> {
     try {
       console.log(`📤 Upload du fichier ${filename} vers le bucket ${bucketId}...`);
       
       // Convertir Blob en File pour Appwrite
       const fileObj = new File([file], filename, { type: file.type });
       
+      // Permissions owner-only si userId fourni
+      const permissions = userId ? [
+        Permission.read(Role.user(userId)),
+        Permission.write(Role.user(userId)),
+        Permission.delete(Role.user(userId))
+      ] : undefined;
+      
       const result = await this.storage.createFile(
         bucketId,
         filename,
-        fileObj
+        fileObj,
+        permissions
       );
       
       console.log(`✅ Fichier uploadé avec succès: ${result.$id}`);

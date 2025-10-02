@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { 
   X, Brain, Type, Sparkles, AlertCircle, Check, 
   Languages, Play, Pause, Image as ImageIcon,
   Volume2, Trash2, Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CreateCardSchema } from '@ankilang/shared'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
@@ -19,28 +16,23 @@ import { pexelsSearchPhotos, pexelsCurated, optimizeAndUploadImage } from '../..
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
-// Schéma simplifié - validation basique sans refine complexe
-const cardSchema = z.object({
-  type: z.enum(['basic', 'cloze']),
-  // Champs Basic
-  recto: z.string().min(1, 'Le contenu du recto est requis'),
-  verso: z.string().min(1, 'Le contenu du verso est requis'),
-  versoImage: z.string().optional(),
-  versoAudio: z.string().optional(),
-  // Champs Cloze
-  clozeTextTarget: z.string().optional(),
-  clozeImage: z.string().optional(),
-  // Champs communs
-  extra: z.string().optional(),
-  tags: z.string().optional()
-})
-
-type CardFormData = z.infer<typeof cardSchema>
+// Type pour le formulaire (sans validation Zod)
+type CardFormData = {
+  type: 'basic' | 'cloze'
+  recto?: string
+  verso?: string
+  versoImage?: string
+  versoAudio?: string
+  clozeTextTarget?: string
+  clozeImage?: string
+  extra?: string
+  tags?: string
+}
 
 interface NewCardModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: z.infer<typeof CreateCardSchema>) => void
+  onSubmit: (data: any) => void
   isLoading?: boolean
   error?: string
   themeId: string
@@ -90,7 +82,7 @@ export default function NewCardModal({
     setValue,
     getValues
   } = useForm<CardFormData>({
-    resolver: zodResolver(cardSchema),
+    // Validation manuelle au lieu de Zod pour éviter les problèmes de compatibilité
     defaultValues: {
       type: 'basic',
       recto: '',
@@ -102,6 +94,32 @@ export default function NewCardModal({
   })
 
   const watchedValues = watch()
+  
+  // Validation manuelle pour remplacer Zod
+  const isFormValid = (() => {
+    if (watchedValues.type === 'basic') {
+      return watchedValues.recto && watchedValues.recto.trim().length > 0 && 
+             watchedValues.verso && watchedValues.verso.trim().length > 0
+    } else if (watchedValues.type === 'cloze') {
+      return watchedValues.clozeTextTarget && watchedValues.clozeTextTarget.trim().length > 0
+    }
+    return false
+  })()
+
+  // Debug détaillé pour voir les erreurs exactes
+  console.log('🔍 Validation détaillée:', {
+    isValid,
+    isFormValid, // Notre validation manuelle
+    errors: JSON.stringify(errors, null, 2),
+    formValues: watchedValues,
+    recto: watchedValues.recto,
+    verso: watchedValues.verso,
+    type: watchedValues.type,
+    hasRecto: !!watchedValues.recto,
+    hasVerso: !!watchedValues.verso,
+    rectoLength: watchedValues.recto?.length || 0,
+    versoLength: watchedValues.verso?.length || 0
+  })
   const clozeRef = useRef<HTMLTextAreaElement>(null)
   const [clozeHint, setClozeHint] = useState('')
   const [showClozeAnswers, setShowClozeAnswers] = useState(false)
@@ -532,7 +550,7 @@ export default function NewCardModal({
       ? { type: 'basic', frontFR: (data as any).recto, backText: (data as any).verso, ...common }
       : { type: 'cloze', clozeTextTarget: (data as any).clozeTextTarget, ...common }
 
-    onSubmit(submitData as z.infer<typeof CreateCardSchema>)
+    onSubmit(submitData)
   }
 
   return (
@@ -1239,12 +1257,12 @@ export default function NewCardModal({
                     
                     <motion.button
                       type="submit"
-                      disabled={!isValid || isLoading}
-                      whileHover={{ scale: isValid && !isLoading ? 1.02 : 1 }}
-                      whileTap={{ scale: isValid && !isLoading ? 0.98 : 1 }}
+                      disabled={!isFormValid || isLoading}
+                      whileHover={{ scale: isFormValid && !isLoading ? 1.02 : 1 }}
+                      whileTap={{ scale: isFormValid && !isLoading ? 0.98 : 1 }}
                       className="px-6 py-3 font-sans font-semibold text-white rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                       style={{ 
-                        background: isValid && !isLoading 
+                        background: isFormValid && !isLoading 
                           ? `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.accent})`
                           : '#9CA3AF'
                       }}
