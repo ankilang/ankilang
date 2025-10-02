@@ -89,8 +89,7 @@ export class AnkiGenerator {
         { name: "Notes" },
       ],
       req: [
-        [0, "all", [0, 1]], // Card 1: Front -> Back
-        [1, "all", [1, 0]], // Card 2: Back -> Front (si activé)
+        [0, "all", [0]], // Card 1: Front -> Back seulement
       ],
       tmpls: [
         {
@@ -104,22 +103,6 @@ export class AnkiGenerator {
             {{FrontSide}}
             <hr id="answer">
             <div class="back">{{Back}}</div>
-            {{#Media}}<div class="media">{{Media}}</div>{{/Media}}
-            {{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}
-            {{#Notes}}<div class="notes">{{Notes}}</div>{{/Notes}}
-          `,
-        },
-        {
-          name: "Verso → Recto",
-          qfmt: `
-            <div class="card">
-              <div class="back">{{Back}}</div>
-            </div>
-          `,
-          afmt: `
-            {{FrontSide}}
-            <hr id="answer">
-            <div class="front">{{Front}}</div>
             {{#Media}}<div class="media">{{Media}}</div>{{/Media}}
             {{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}
             {{#Notes}}<div class="notes">{{Notes}}</div>{{/Notes}}
@@ -296,10 +279,9 @@ export class AnkiGenerator {
     const basicModel = new Model({
       name: "AnkiLang Basic",
       flds: [ { name: 'Front' }, { name: 'Back' }, { name: 'Media' }, { name: 'Tags' }, { name: 'Notes' } ],
-      req: [ [0, 'all', [0,1]], [1, 'all', [1,0]] ],
+      req: [ [0, 'all', [0]] ],
       tmpls: [
-        { name: 'Recto → Verso', qfmt: `<div class="card"><div class="front">{{Front}}</div></div>`, afmt: `{{FrontSide}}<hr id="answer"><div class="back">{{Back}}</div>{{#Media}}<div class="media">{{Media}}</div>{{/Media}}{{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}{{#Notes}}<div class="notes">{{Notes}}</div>{{/Notes}}` },
-        { name: 'Verso → Recto', qfmt: `<div class="card"><div class="back">{{Back}}</div></div>`, afmt: `{{FrontSide}}<hr id="answer"><div class="front">{{Front}}</div>{{#Media}}<div class="media">{{Media}}</div>{{/Media}}{{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}{{#Notes}}<div class="notes">{{Notes}}</div>{{/Notes}}` }
+        { name: 'Recto → Verso', qfmt: `<div class="card"><div class="front">{{Front}}</div></div>`, afmt: `{{FrontSide}}<hr id="answer"><div class="back">{{Back}}</div>{{#Media}}<div class="media">{{Media}}</div>{{/Media}}{{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}{{#Notes}}<div class="notes">{{Notes}}</div>{{/Notes}}` }
       ],
       css: `.card{font-family:Arial,sans-serif;font-size:20px;text-align:center;color:black;background-color:white;padding:20px}.front{font-weight:bold;margin-bottom:10px}.back{color:#2563eb}.media{margin:10px 0}.tags{font-size:12px;color:#64748b;margin-top:10px}.notes{font-style:italic;color:#64748b;margin-top:10px}`
     })
