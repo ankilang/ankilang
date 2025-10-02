@@ -538,10 +538,12 @@ export class AnkiGenerator {
     try {
       const u = new URL(url)
       
-      // Votz : accès direct (le media-proxy n'est pas déployé en production)
+      // Votz : utiliser le proxy pour éviter les problèmes CORS
       if (u.hostname === 'votz.eu') {
-        console.log(`🎵 Accès direct Votz: ${url}`);
-        return url
+        const proxyBase = import.meta.env.VITE_MEDIA_PROXY_URL || '/.netlify/functions/media-proxy'
+        const proxyUrl = `${proxyBase}?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
+        console.log(`🔄 Proxy Votz: ${url} → ${proxyUrl}`);
+        return proxyUrl
       }
       
       // Appwrite Storage : accès direct avec les credentials du navigateur

@@ -80,3 +80,4 @@ function App() {
 ## Configuration
 
 Les fichiers WASM de SQL.js ont été copiés dans `public/`.
+

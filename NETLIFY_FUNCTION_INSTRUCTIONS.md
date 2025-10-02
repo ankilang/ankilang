@@ -18,6 +18,23 @@ function cors(extra = {}) {
 }
 ```
 
+## 🚀 Démarrage en développement
+
+### Prérequis
+- Netlify CLI installé : `npm install -g netlify-cli`
+- Terminal 1 : `netlify dev` (port 8888)
+- Terminal 2 : `pnpm -w dev` (port 5173)
+
+### Configuration locale
+1. Copier `.env.example` vers `.env.local`
+2. La variable `VITE_MEDIA_PROXY_URL=http://localhost:8888/.netlify/functions/media-proxy` est déjà configurée
+3. Redémarrer le serveur Vite après modification des variables d'environnement
+
+### Test de l'export audio
+- L'export APKG utilise le media-proxy Netlify pour les fichiers Votz
+- En dev : `http://localhost:8888/.netlify/functions/media-proxy`
+- En prod : `/.netlify/functions/media-proxy`
+
 **Pourquoi ?** Le frontend Ankilang envoie le JWT Appwrite via le header `Authorization: Bearer <jwt>` pour :
 - Authentifier l'utilisateur avant l'upload
 - Lier les fichiers uploadés à l'utilisateur avec les bonnes permissions Appwrite
