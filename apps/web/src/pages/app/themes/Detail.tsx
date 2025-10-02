@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import CardList from '../../../components/cards/CardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
-import { getCardsByThemeId, addMockCard, updateMockCard } from '../../../data/mockData'
 import { themesService, type AppwriteTheme } from '../../../services/themes.service'
 import { cardsService } from '../../../services/cards.service'
 import { useAuth } from '../../../hooks/useAuth'
@@ -50,9 +49,24 @@ export default function ThemeDetail() {
       const themeData = await themesService.getThemeById(id, user.$id)
       setTheme(themeData)
       
-      // Pour l'instant, charger les cartes depuis les données mockées
-      // TODO: Implémenter le service cards plus tard
-      setCards(getCardsByThemeId(id))
+      // Charger les cartes depuis Appwrite
+      const cardsData = await cardsService.getCardsByThemeId(id, user.$id)
+      const formattedCards = cardsData.map(card => ({
+        id: card.$id,
+        userId: card.userId,
+        themeId: card.themeId,
+        type: card.type,
+        frontFR: card.frontFR,
+        backText: card.backText,
+        clozeTextTarget: card.clozeTextTarget,
+        extra: card.extra,
+        imageUrl: card.imageUrl,
+        audioUrl: card.audioUrl,
+        tags: card.tags,
+        createdAt: card.$createdAt,
+        updatedAt: card.$updatedAt
+      }))
+      setCards(formattedCards)
       
     } catch (err) {
       console.error('Error loading theme:', err)
@@ -158,16 +172,59 @@ export default function ThemeDetail() {
   }
 
   const handleCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
+    if (!user || !id) return
+    
     setIsLoading(true)
     setError(undefined)
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Creating card:', data)
-      addMockCard(data)
-      setCards(getCardsByThemeId(id!))
+      console.log('Creating card in Appwrite:', data)
+      
+      // Créer la carte dans Appwrite
+      const newCard = await cardsService.createCard(user.$id, id, {
+        type: data.type,
+        themeId: id,
+        frontFR: data.frontFR,
+        backText: data.backText,
+        clozeTextTarget: data.clozeTextTarget,
+        extra: data.extra,
+        imageUrl: data.imageUrl || '',
+        audioUrl: data.audioUrl || '',
+        tags: data.tags || []
+      })
+      
+      // Mettre à jour l'état local avec la nouvelle carte
+      setCards(prevCards => [
+        {
+          id: newCard.$id,
+          userId: newCard.userId,
+          themeId: newCard.themeId,
+          type: newCard.type,
+          frontFR: newCard.frontFR,
+          backText: newCard.backText,
+          clozeTextTarget: newCard.clozeTextTarget,
+          extra: newCard.extra,
+          imageUrl: newCard.imageUrl,
+          audioUrl: newCard.audioUrl,
+          tags: newCard.tags,
+          createdAt: newCard.$createdAt,
+          updatedAt: newCard.$updatedAt
+        },
+        ...prevCards
+      ])
+      
+      // Mettre à jour le compteur du thème
+      if (theme) {
+        setTheme({
+          ...theme,
+          cardCount: theme.cardCount + 1
+        })
+      }
+      
       setIsModalOpen(false)
+      console.log('✅ Carte créée avec succès dans Appwrite')
     } catch (err) {
+      console.error('❌ Erreur lors de la création de la carte:', err)
       setError('Erreur lors de la création de la carte. Veuillez réessayer.')
     } finally {
       setIsLoading(false)
@@ -175,19 +232,53 @@ export default function ThemeDetail() {
   }
 
   const handleEditCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
-    if (!editingCard) return
+    if (!editingCard || !user) return
     
     setIsLoading(true)
     setError(undefined)
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Updating card:', data)
-      updateMockCard(editingCard.id, data)
-      setCards(getCardsByThemeId(id!))
+      console.log('Updating card in Appwrite:', data)
+      
+      // Mettre à jour la carte dans Appwrite
+      const updatedCard = await cardsService.updateCard(editingCard.id, user.$id, {
+        type: data.type,
+        themeId: data.themeId,
+        frontFR: data.frontFR,
+        backText: data.backText,
+        clozeTextTarget: data.clozeTextTarget,
+        extra: data.extra,
+        imageUrl: data.imageUrl || '',
+        audioUrl: data.audioUrl || '',
+        tags: data.tags || []
+      })
+      
+      // Mettre à jour l'état local
+      setCards(prevCards => prevCards.map(card => 
+        card.id === editingCard.id 
+          ? {
+              id: updatedCard.$id,
+              userId: updatedCard.userId,
+              themeId: updatedCard.themeId,
+              type: updatedCard.type,
+              frontFR: updatedCard.frontFR,
+              backText: updatedCard.backText,
+              clozeTextTarget: updatedCard.clozeTextTarget,
+              extra: updatedCard.extra,
+              imageUrl: updatedCard.imageUrl,
+              audioUrl: updatedCard.audioUrl,
+              tags: updatedCard.tags,
+              createdAt: updatedCard.$createdAt,
+              updatedAt: updatedCard.$updatedAt
+            }
+          : card
+      ))
+      
       setIsEditModalOpen(false)
       setEditingCard(null)
+      console.log('✅ Carte mise à jour avec succès dans Appwrite')
     } catch (err) {
+      console.error('❌ Erreur lors de la modification de la carte:', err)
       setError('Erreur lors de la modification de la carte. Veuillez réessayer.')
     } finally {
       setIsLoading(false)
