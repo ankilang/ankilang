@@ -111,9 +111,6 @@ export default function NewCardModal({
     mode: 'onChange'
   })
 
-  // Debug: afficher l'état de validation
-  console.log('Form validation state:', { isValid, errors, watchedValues: watch() })
-
   const watchedValues = watch()
   const clozeRef = useRef<HTMLTextAreaElement>(null)
   const [clozeHint, setClozeHint] = useState('')
