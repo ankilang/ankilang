@@ -1,28 +1,94 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Download, FileText, CheckCircle } from 'lucide-react'
-import { getThemeById, getCardsByThemeId } from '../../../data/mockData'
 import { getLanguageLabel } from '../../../constants/languages'
 import PageMeta from '../../../components/seo/PageMeta'
 // @ts-expect-error JS module without types
 import { useAnkiLang } from '../../../exporter/hooks/useAnkiLang.js'
+import { themesService, type AppwriteTheme } from '../../../services/themes.service'
+import { cardsService } from '../../../services/cards.service'
+import { useAuth } from '../../../hooks/useAuth'
+import type { Card } from '@ankilang/shared'
 
 export default function ThemeExport() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [isExporting, setIsExporting] = useState(false)
   const [exportSuccess, setExportSuccess] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
+  const [loadError, setLoadError] = useState<string>()
+  const [theme, setTheme] = useState<AppwriteTheme | null>(null)
+  const [cards, setCards] = useState<Card[]>([])
   const { isReady, isLoading, error, generateBasicDeck, generateClozeDeck, generateCombinedDeck } = useAnkiLang()
 
-  const theme = getThemeById(id!)
-  const cards = getCardsByThemeId(id!)
+  // Charger le thème et les cartes depuis Appwrite
+  useEffect(() => {
+    if (id && user) {
+      loadData()
+    }
+  }, [id, user])
 
-  if (!theme) {
+  const loadData = async () => {
+    if (!id || !user) return
+
+    setIsLoadingData(true)
+    setLoadError(undefined)
+    
+    try {
+      // Charger le thème depuis Appwrite
+      const themeData = await themesService.getThemeById(id, user.$id)
+      setTheme(themeData)
+      
+      // Charger les cartes depuis Appwrite
+      const cardsData = await cardsService.getCardsByThemeId(id, user.$id)
+      const formattedCards = cardsData.map(card => ({
+        id: card.$id,
+        userId: card.userId,
+        themeId: card.themeId,
+        type: card.type,
+        frontFR: card.frontFR,
+        backText: card.backText,
+        clozeTextTarget: card.clozeTextTarget,
+        extra: card.extra,
+        imageUrl: card.imageUrl,
+        audioUrl: card.audioUrl,
+        tags: card.tags,
+        createdAt: card.$createdAt,
+        updatedAt: card.$updatedAt
+      }))
+      setCards(formattedCards)
+    } catch (err) {
+      console.error('Error loading theme or cards:', err)
+      setLoadError('Erreur lors du chargement des données')
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
+
+  // Afficher le chargement pendant la récupération des données
+  if (isLoadingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Thème introuvable</h1>
-          <p className="text-gray-600 mb-6">Le thème que vous recherchez n'existe pas.</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des données...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Afficher l'erreur si échec de chargement
+  if (loadError || !theme) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            {loadError ? 'Erreur de chargement' : 'Thème introuvable'}
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {loadError || 'Le thème que vous recherchez n\'existe pas.'}
+          </p>
           <button onClick={() => navigate('/app/themes')} className="btn-primary">
             Retour aux thèmes
           </button>
@@ -113,7 +179,7 @@ export default function ThemeExport() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => navigate(`/app/themes/${theme.id}`)}
+                  onClick={() => navigate(`/app/themes/${theme.$id}`)}
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   <ArrowLeft size={20} />
@@ -293,7 +359,7 @@ export default function ThemeExport() {
                     </button>
                     
                     <button
-                      onClick={() => navigate(`/app/themes/${theme.id}`)}
+                      onClick={() => navigate(`/app/themes/${theme.$id}`)}
                       className="btn-secondary"
                     >
                       Retour au thème
