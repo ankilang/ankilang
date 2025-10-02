@@ -1,0 +1,18 @@
+{
+  "name": "ankilangdeepl",
+  "version": "1.0.0",
+  "description": "Traduction DeepL",
+  "main": "netlify/functions/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
