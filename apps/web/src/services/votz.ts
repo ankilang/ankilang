@@ -17,21 +17,17 @@ export type VotzResponse = {
   error?: string
 }
 
-// Certains liens Votz n'ont pas d'extension explicite. Quelques navigateurs
-// gèrent mal l'inférence du type. On normalise en ajoutant .mp3 si absent.
-function normalizeVotzAudioUrl(url: string): string {
-  try {
-    const u = new URL(url)
-    const hasExtension = /\.[a-zA-Z0-9]+$/.test(u.pathname)
-    if (!hasExtension) {
-      u.pathname = `${u.pathname}.mp3`
-      return u.toString()
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      resolve(result)
     }
-    return url
-  } catch {
-    // Si ce n'est pas une URL absolue, on ne modifie pas
-    return url
-  }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
 
 /**
@@ -64,7 +60,7 @@ export async function ttsToBlob(text: string, language: VotzLanguage = 'languedo
         body: JSON.stringify({
           text: text.trim(),
           language,
-          mode: 'url'
+          mode: 'file'
         } as VotzRequest)
       })
 
@@ -73,29 +69,22 @@ export async function ttsToBlob(text: string, language: VotzLanguage = 'languedo
         throw new Error(`Erreur TTS (${response.status}): ${errorText}`)
       }
 
-      // En mode 'url', Votz retourne une réponse JSON avec l'URL du fichier audio
-      const result = await response.json()
+      // En mode 'file', Votz retourne directement le fichier audio en base64
+      const contentType = response.headers.get('content-type') || 'audio/mpeg'
+      const arrayBuffer = await response.arrayBuffer()
       
-      if (!result.success || !result.audioUrl) {
-        throw new Error(`Réponse Votz invalide: ${JSON.stringify(result)}`)
-      }
-
-      console.log(`✅ URL audio générée avec succès via ${url}:`, result.audioUrl)
-      
-      // Télécharger le fichier audio depuis l'URL fournie par Votz
-      const audioResponse = await fetch(result.audioUrl)
-      if (!audioResponse.ok) {
-        throw new Error(`Impossible de télécharger l'audio depuis ${result.audioUrl}`)
+      if (arrayBuffer.byteLength === 0) {
+        throw new Error('Fichier audio vide reçu de Votz')
       }
       
-      const blob = await audioResponse.blob()
+      const blob = new Blob([arrayBuffer], { type: contentType })
       
       // Vérifier que c'est bien un fichier audio
-      if (!blob.type.startsWith('audio/')) {
-        console.warn(`⚠️ Type MIME inattendu: ${blob.type}, mais on continue...`)
+      if (!contentType.startsWith('audio/')) {
+        console.warn(`⚠️ Type MIME inattendu: ${contentType}, mais on continue...`)
       }
 
-      console.log(`✅ Audio téléchargé avec succès:`, { size: blob.size, type: blob.type })
+      console.log(`✅ Audio généré avec succès via ${url}:`, { size: blob.size, type: blob.type })
       return blob
       
     } catch (error) {
@@ -143,7 +132,7 @@ export async function ttsToTempURL(text: string, language: VotzLanguage = 'langu
         body: JSON.stringify({
           text: text.trim(),
           language,
-          mode: 'url'
+          mode: 'file'
         } as VotzRequest)
       })
 
@@ -152,16 +141,20 @@ export async function ttsToTempURL(text: string, language: VotzLanguage = 'langu
         throw new Error(`Erreur TTS (${response.status}): ${errorText}`)
       }
 
-      // En mode 'url', Votz retourne une réponse JSON avec l'URL du fichier audio
-      const result = await response.json()
+      // En mode 'file', Votz retourne directement le fichier audio
+      const contentType = response.headers.get('content-type') || 'audio/mpeg'
+      const arrayBuffer = await response.arrayBuffer()
       
-      if (!result.success || !result.audioUrl) {
-        throw new Error(`Réponse Votz invalide: ${JSON.stringify(result)}`)
+      if (arrayBuffer.byteLength === 0) {
+        throw new Error('Fichier audio vide reçu de Votz')
       }
-
-      const normalizedUrl = normalizeVotzAudioUrl(result.audioUrl)
-      console.log(`✅ URL audio temporaire générée via ${url}:`, normalizedUrl)
-      return normalizedUrl
+      
+      // Convertir en blob base64 pour l'export
+      const blob = new Blob([arrayBuffer], { type: contentType })
+      const base64 = await blobToBase64(blob)
+      
+      console.log(`✅ Audio généré avec succès via ${url}:`, { size: blob.size, type: blob.type })
+      return base64
       
     } catch (error) {
       console.warn(`❌ Échec avec ${url}:`, error)

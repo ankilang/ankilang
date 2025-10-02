@@ -472,6 +472,26 @@ export class AnkiGenerator {
           // Plus besoin de vérifier cloze_anything.js car nous utilisons les clozes natives
           
           try {
+            // Vérifier si c'est un blob base64 (mode 'file' de Votz)
+            if (mf.url.startsWith('data:audio/')) {
+              console.log(`📥 Blob base64 détecté: ${mf.filename}`);
+              
+              // Extraire les données base64
+              const base64Data = mf.url.split(',')[1];
+              const binaryData = atob(base64Data);
+              const arrayBuffer = new ArrayBuffer(binaryData.length);
+              const uint8Array = new Uint8Array(arrayBuffer);
+              
+              for (let i = 0; i < binaryData.length; i++) {
+                uint8Array[i] = binaryData.charCodeAt(i);
+              }
+              
+              ankiPackage.addMediaFile(mf.filename, arrayBuffer);
+              successfulMediaFiles.push(mf.filename);
+              console.log(`✅ ${mf.filename} ajouté directement (${arrayBuffer.byteLength} octets)`);
+              continue;
+            }
+            
             const downloadUrl = this.getMediaDownloadUrl(mf.url, mf.filename)
             console.log(`📥 Téléchargement: ${mf.filename} depuis ${downloadUrl}`);
             
@@ -538,12 +558,10 @@ export class AnkiGenerator {
     try {
       const u = new URL(url)
       
-      // Votz : utiliser le proxy pour éviter les problèmes CORS
+      // Votz : accès direct (plus de proxy nécessaire avec mode 'file')
       if (u.hostname === 'votz.eu') {
-        const proxyBase = import.meta.env.VITE_MEDIA_PROXY_URL || '/.netlify/functions/media-proxy'
-        const proxyUrl = `${proxyBase}?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
-        console.log(`🔄 Proxy Votz: ${url} → ${proxyUrl}`);
-        return proxyUrl
+        console.log(`🎵 Accès direct Votz: ${url}`);
+        return url
       }
       
       // Appwrite Storage : accès direct avec les credentials du navigateur
