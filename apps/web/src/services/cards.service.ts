@@ -1,8 +1,10 @@
 import { DatabaseService } from './database.service';
+import { StorageService } from './storage.service';
 import { Query } from 'appwrite';
 import type { Card } from '@ankilang/shared';
 
 const databaseService = new DatabaseService();
+const storageService = new StorageService();
 
 // Type Appwrite pour les cartes (avec métadonnées)
 export interface AppwriteCard extends Card {
@@ -50,9 +52,52 @@ export class CardsService {
     }
   }
 
+  // Uploader un fichier audio base64 vers Appwrite Storage
+  private async uploadAudioToStorage(audioDataUrl: string, userId: string): Promise<string> {
+    try {
+      // Extraire les données base64
+      const base64Data = audioDataUrl.split(',')[1];
+      if (!base64Data) {
+        throw new Error('Données base64 invalides');
+      }
+      const binaryData = atob(base64Data);
+      const arrayBuffer = new ArrayBuffer(binaryData.length);
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      for (let i = 0; i < binaryData.length; i++) {
+        uint8Array[i] = binaryData.charCodeAt(i);
+      }
+      
+      // Créer un blob
+      const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+      
+      // Générer un nom de fichier unique
+      const timestamp = Date.now();
+      const filename = `audio_${userId}_${timestamp}.wav`;
+      
+      // Uploader vers Appwrite Storage (utiliser le bucket flashcard-images existant)
+      const file = await storageService.uploadFile('flashcard-images', filename, blob);
+      
+      console.log(`✅ Audio uploadé vers Appwrite Storage: ${file.$id}`);
+      return file.$id;
+    } catch (error) {
+      console.error('[CardsService] Error uploading audio:', error);
+      throw error;
+    }
+  }
+
   // Créer une nouvelle carte
   async createCard(userId: string, themeId: string, cardData: Omit<Card, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<AppwriteCard> {
     try {
+      let audioUrl = cardData.audioUrl || '';
+      
+      // Si l'audio est un blob base64, l'uploader vers Appwrite Storage
+      if (audioUrl.startsWith('data:audio/')) {
+        console.log('📤 Upload de l\'audio vers Appwrite Storage...');
+        const fileId = await this.uploadAudioToStorage(audioUrl, userId);
+        audioUrl = fileId; // Stocker l'ID du fichier au lieu de l'URL base64
+      }
+      
       const data = {
         userId,
         themeId,
@@ -62,7 +107,7 @@ export class CardsService {
         clozeTextTarget: cardData.clozeTextTarget || '',
         extra: cardData.extra || '',
         imageUrl: cardData.imageUrl || '',
-        audioUrl: cardData.audioUrl || '',
+        audioUrl: audioUrl,
         tags: cardData.tags || []
       };
 

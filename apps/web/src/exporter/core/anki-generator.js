@@ -502,6 +502,35 @@ export class AnkiGenerator {
               continue;
             }
             
+            // Vérifier si c'est un ID de fichier Appwrite (après upload)
+            if (mf.url && !mf.url.startsWith('http') && !mf.url.startsWith('data:')) {
+              console.log(`📥 Fichier Appwrite détecté: ${mf.filename} (ID: ${mf.url})`);
+              
+              try {
+                // Télécharger le fichier depuis Appwrite Storage
+                const downloadUrl = `https://fra.cloud.appwrite.io/v1/storage/buckets/flashcard-images/files/${mf.url}/view?project=ankilang`;
+                const res = await fetch(downloadUrl, { credentials: 'include' });
+                
+                if (!res.ok) {
+                  throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                
+                const arrayBuffer = await res.arrayBuffer();
+                
+                if (arrayBuffer.byteLength === 0) {
+                  throw new Error('Fichier vide');
+                }
+                
+                ankiPackage.addMediaFile(mf.filename, arrayBuffer);
+                successfulMediaFiles.push(mf.filename);
+                console.log(`✅ ${mf.filename} téléchargé depuis Appwrite (${arrayBuffer.byteLength} octets)`);
+                continue;
+              } catch (error) {
+                console.error(`❌ Échec du téléchargement du fichier Appwrite ${mf.filename}:`, error.message);
+                // Ne pas ajouter le fichier échoué au package
+              }
+            }
+            
             const downloadUrl = this.getMediaDownloadUrl(mf.url, mf.filename)
             console.log(`📥 Téléchargement: ${mf.filename} depuis ${downloadUrl}`);
             
