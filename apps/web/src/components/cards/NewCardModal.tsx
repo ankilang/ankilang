@@ -19,31 +19,32 @@ import { pexelsSearchPhotos, pexelsCurated, optimizeAndUploadImage } from '../..
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
-const basicCardSchema = z.object({
-  type: z.literal('basic'),
-  recto: z.string().min(1, 'Le contenu du recto est requis'),
-  verso: z.string().min(1, 'Le contenu du verso est requis'),
+// Schéma unifié pour le formulaire (plus simple pour react-hook-form)
+const cardSchema = z.object({
+  type: z.enum(['basic', 'cloze']),
+  // Champs Basic
+  recto: z.string().optional(),
+  verso: z.string().optional(),
   versoImage: z.string().optional(),
   versoAudio: z.string().optional(),
-  extra: z.string().optional(),
-  tags: z.string().optional()
-})
-
-// Valide le format Anki natif {{cN::réponse[:indice]}}
-const isValidClozeString = (s: string) => /\{\{c\d+::[^}]+\}\}/.test(s)
-
-const clozeCardSchema = z.object({
-  type: z.literal('cloze'),
-  clozeTextTarget: z.string().min(1, 'Le texte à trous est requis').refine(
-    (text) => isValidClozeString(text),
-    'Le texte doit contenir au moins un trou au format ((cN::réponse[:indice]))'
-  ),
+  // Champs Cloze
+  clozeTextTarget: z.string().optional(),
   clozeImage: z.string().optional(),
+  // Champs communs
   extra: z.string().optional(),
   tags: z.string().optional()
+}).refine((data) => {
+  if (data.type === 'basic') {
+    return data.recto && data.recto.length > 0 && data.verso && data.verso.length > 0
+  } else if (data.type === 'cloze') {
+    return data.clozeTextTarget && data.clozeTextTarget.length > 0 && /\{\{c\d+::[^}]+\}\}/.test(data.clozeTextTarget)
+  }
+  return false
+}, {
+  message: "Les champs requis doivent être remplis",
+  path: ["type"]
 })
 
-const cardSchema = z.discriminatedUnion('type', [basicCardSchema, clozeCardSchema])
 type CardFormData = z.infer<typeof cardSchema>
 
 interface NewCardModalProps {
@@ -109,6 +110,9 @@ export default function NewCardModal({
     },
     mode: 'onChange'
   })
+
+  // Debug: afficher l'état de validation
+  console.log('Form validation state:', { isValid, errors, watchedValues: watch() })
 
   const watchedValues = watch()
   const clozeRef = useRef<HTMLTextAreaElement>(null)
