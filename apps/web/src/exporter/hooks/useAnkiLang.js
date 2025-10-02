@@ -114,14 +114,16 @@ export function useAnkiLang() {
       throw new Error('AnkiLang n\'est pas encore initialisé');
     }
     try {
-      const basic = basicCards || []
-      const cloze = clozeCards || []
-      const deckData = generator.createCombinedDeck(name, basic, cloze)
-      return await generator.exportToAnki(deckData, `${filename}.apkg`)
+      // Convertir les données en flashcards formatées
+      const basicFlashcards = createBasicCards(basicCards || []);
+      const clozeFlashcards = createClozeCards(clozeCards || []);
+      
+      const deckData = generator.createCombinedDeck(name, basicFlashcards, clozeFlashcards);
+      return await generator.exportToAnki(deckData, `${filename}.apkg`);
     } catch (err) {
-      throw new Error(`Erreur lors de la génération du deck combiné: ${err.message}`)
+      throw new Error(`Erreur lors de la génération du deck combiné: ${err.message}`);
     }
-  }, [generator])
+  }, [generator, createBasicCards, createClozeCards])
 
   // Valider des données de flashcards
   const validateCards = useCallback((cards, type = 'basic') => {
