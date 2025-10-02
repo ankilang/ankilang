@@ -386,8 +386,20 @@ export class AnkiGenerator {
         
         // Nettoyer l'URL pour extraire l'extension
         const cleanUrl = url.split('?')[0].split('#')[0];
-        const extMatch = cleanUrl.match(/\.([a-zA-Z0-9]+)$/)
-        const ext = extMatch ? extMatch[1].toLowerCase() : (prefix === 'IMG' ? 'jpg' : 'mp3')
+        
+        // Détection spéciale pour Votz : les URLs sans extension doivent être traitées comme MP3
+        let ext;
+        const isVotzUrl = cleanUrl.includes('votz.eu/uploads/');
+        
+        if (isVotzUrl && prefix === 'AUD') {
+          // Les URLs Votz sont des fichiers MP3 sans extension dans l'URL
+          ext = 'mp3';
+          console.log(`🎵 URL Votz détectée, extension forcée à mp3`);
+        } else {
+          // Regex stricte : uniquement 2-4 caractères alphabétiques après un point final
+          const extMatch = cleanUrl.match(/\.([a-zA-Z]{2,4})$/);
+          ext = extMatch ? extMatch[1].toLowerCase() : (prefix === 'IMG' ? 'jpg' : 'mp3');
+        }
         
         // Vérifier que l'extension est valide pour Anki
         const validImageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -404,7 +416,7 @@ export class AnkiGenerator {
         
         const name = `${prefix}_${this.simpleHash(url)}.${finalExt}`
         mediaFiles.push({ url, filename: name })
-        console.log(`📋 Média planifié: ${name} (${url})`);
+        console.log(`📋 Média planifié: ${name} (${url}) [ext: ${finalExt}]`);
         return name
       } catch (error) {
         console.error(`❌ Erreur lors de la préparation du média:`, error);
@@ -473,15 +485,30 @@ export class AnkiGenerator {
               throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             }
             
+            const contentType = res.headers.get('content-type') || 'unknown';
+            console.log(`📄 Content-Type: ${contentType}`);
+            
             const buf = await res.arrayBuffer()
             
             if (buf.byteLength === 0) {
               throw new Error('Fichier vide');
             }
             
+            // Vérifier que c'est bien un fichier média et pas une page HTML
+            const uint8 = new Uint8Array(buf);
+            const firstBytes = Array.from(uint8.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+            console.log(`🔍 Premiers octets: ${firstBytes}`);
+            
+            // Détecter si c'est du HTML (commence par '<' = 0x3C)
+            if (uint8[0] === 0x3C || uint8[0] === 0x7B) {
+              const textPreview = new TextDecoder().decode(uint8.slice(0, 100));
+              console.error(`❌ Le fichier semble être du texte/HTML, pas un média:`, textPreview);
+              throw new Error('Le fichier téléchargé n\'est pas un fichier média valide');
+            }
+            
             ankiPackage.addMediaFile(mf.filename, buf)
             successfulMediaFiles.push(mf.filename);
-            console.log(`✅ ${mf.filename} téléchargé (${buf.byteLength} octets)`);
+            console.log(`✅ ${mf.filename} téléchargé (${buf.byteLength} octets, type: ${contentType})`);
           } catch (e) {
             console.error(`❌ Échec du téléchargement de ${mf.filename}:`, e.message);
             // Ne pas ajouter le fichier échoué au package
