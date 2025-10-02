@@ -3,6 +3,22 @@
 // Sécurisé par une liste blanche stricte d'hôtes autorisés.
 
 export const handler: import('@netlify/functions').Handler = async (event) => {
+  // Générer un traceId pour cette requête
+  const traceId = event.headers['x-trace-id'] || `trace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
+  console.log(`[${traceId}] Media proxy request: ${event.httpMethod} ${event.path}`);
+  
+  // Validation CORS stricte
+  const origin = event.headers.origin || event.headers.Origin;
+  if (origin && !isAllowedOrigin(origin)) {
+    console.warn(`[${traceId}] Blocked request from unauthorized origin: ${origin}`);
+    return {
+      statusCode: 403,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: 'Origin not allowed' }),
+    };
+  }
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -15,6 +31,7 @@ export const handler: import('@netlify/functions').Handler = async (event) => {
   const filenameParam = event.queryStringParameters?.filename
 
   if (!url) {
+    console.warn(`[${traceId}] Missing url parameter`);
     return json(400, { error: 'Missing url parameter' })
   }
 
@@ -34,9 +51,17 @@ export const handler: import('@netlify/functions').Handler = async (event) => {
   }
 
   try {
-    const upstream = await fetch(target.toString(), { method: 'GET' })
+    console.log(`[${traceId}] Fetching media from: ${target.toString()}`);
+    
+    const upstream = await fetch(target.toString(), { 
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Ankilang-Media-Proxy/1.0',
+      }
+    });
 
     if (!upstream.ok) {
+      console.error(`[${traceId}] Upstream error: ${upstream.status} ${upstream.statusText}`);
       return json(upstream.status, { error: `Upstream error: ${upstream.status} ${upstream.statusText}` })
     }
 
@@ -47,6 +72,8 @@ export const handler: import('@netlify/functions').Handler = async (event) => {
     const ct = upstream.headers.get('content-type') || guessContentType(target.pathname)
     const filename = filenameParam || guessFilename(target.pathname, ct)
 
+    console.log(`[${traceId}] Successfully proxied media: ${filename} (${arrayBuf.byteLength} bytes, ${ct})`);
+
     return {
       statusCode: 200,
       isBase64Encoded: true,
@@ -55,19 +82,38 @@ export const handler: import('@netlify/functions').Handler = async (event) => {
         'Content-Type': ct,
         'Cache-Control': 'public, max-age=31536000, immutable',
         'Content-Disposition': `inline; filename="${sanitizeFilename(filename)}"`,
+        'X-Trace-Id': traceId,
       },
       body: b64,
     }
   } catch (err: any) {
+    console.error(`[${traceId}] Proxy failure:`, err);
     return json(500, { error: `Proxy failure: ${err?.message || 'unknown error'}` })
   }
 }
 
 function corsHeaders() {
+  // Origines autorisées (à configurer selon l'environnement)
+  const allowedOrigins = [
+    'http://localhost:5173',  // Dev local
+    'http://localhost:3000',   // Dev alternatif
+    'https://ankilang.netlify.app',  // Production
+    'https://ankilang.com',    // Domaine de production
+  ];
+  
+  // En production, utiliser l'origine spécifique au lieu de *
+  const origin = process.env.NODE_ENV === 'production' 
+    ? 'https://ankilang.netlify.app' 
+    : '*';
+  
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Trace-Id',
+    'Access-Control-Max-Age': '86400', // 24h cache pour preflight
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
   }
 }
 
@@ -107,5 +153,19 @@ function contentTypeToExt(ct: string): string {
 
 function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_')
+}
+
+/**
+ * Valide si une origine est autorisée
+ */
+function isAllowedOrigin(origin: string): boolean {
+  const allowedOrigins = [
+    'http://localhost:5173',  // Dev local
+    'http://localhost:3000',   // Dev alternatif
+    'https://ankilang.netlify.app',  // Production
+    'https://ankilang.com',    // Domaine de production
+  ];
+  
+  return allowedOrigins.includes(origin);
 }
 
