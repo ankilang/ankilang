@@ -1,5 +1,31 @@
 # 🔒 Instructions de sécurisation de la fonction Netlify Pexels
 
+## ⚠️ Configuration CORS requise
+
+**IMPORTANT** : La fonction Netlify Pexels doit autoriser le header `Authorization` dans les requêtes CORS pour permettre l'authentification JWT Appwrite.
+
+Dans `netlify/functions/pexels.js`, le header CORS doit être configuré comme suit :
+
+```javascript
+function cors(extra = {}) {
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization', // ← Authorization requis
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+    ...extra,
+  };
+}
+```
+
+**Pourquoi ?** Le frontend Ankilang envoie le JWT Appwrite via le header `Authorization: Bearer <jwt>` pour :
+- Authentifier l'utilisateur avant l'upload
+- Lier les fichiers uploadés à l'utilisateur avec les bonnes permissions Appwrite
+
+Sans ce header dans `Access-Control-Allow-Headers`, les requêtes preflight CORS échouent et l'optimisation d'images ne fonctionne pas.
+
+---
+
 ## ✅ Ce qui a été fait sur Ankilang
 
 1. ✅ **Bucket Appwrite sécurisé** : `fileSecurity` activé, plus de lecture publique

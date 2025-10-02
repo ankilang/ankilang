@@ -10,6 +10,46 @@ import { cardsService } from '../../../services/cards.service'
 import { useAuth } from '../../../hooks/useAuth'
 import type { Card } from '@ankilang/shared'
 
+// Helper functions (outside component for better performance)
+const safeFile = (name: string) =>
+  name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-_ ]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+
+const toBasic = (c: any) => ({
+  front: c.frontFR || '',
+  back: c.backText || '',
+  media: {
+    image: c.imageUrl || undefined,
+    audio: c.audioUrl || undefined,
+  },
+  tags: c.tags || [],
+  notes: c.extra || '',
+})
+
+const toClozePair = (c: any) => {
+  const src = c.clozeTextTarget || ''
+  // Normaliser en format natif {{cN::...}}
+  const clozeText = /\(\(c\d+::/.test(src)
+    ? src.replace(/\(\(c(\d+)::([^:)]*?)(?::([^)]*?))?\)\)/g, (_m: string, n: string, ans: string, hint?: string) => `{{c${n}::${ans}${hint ? `:${hint}` : ''}}}`)
+    : src
+  // Texte plein: retirer les clozes
+  const text = clozeText.replace(/\{\{c\d+::([^}|]+?)(?::[^}|]+?)?\}\}/g, '$1')
+  return {
+    text,
+    clozeText,
+    media: {
+      image: c.imageUrl || undefined,
+      audio: c.audioUrl || undefined,
+    },
+    tags: c.tags || [],
+    notes: c.extra || '',
+  }
+}
+
 export default function ThemeExport() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -66,6 +106,16 @@ export default function ThemeExport() {
     }
   }
 
+  // Mémoriser les cartes formatées pour l'export (AVANT les early returns pour respecter les règles des Hooks)
+  const { basicCards, clozeCards } = useMemo(() => {
+    if (cards.length === 0) {
+      return { basicCards: [], clozeCards: [] }
+    }
+    const basics = cards.filter(c => c.type === 'basic').map(toBasic)
+    const clozes = cards.filter(c => c.type === 'cloze').map(toClozePair)
+    return { basicCards: basics, clozeCards: clozes }
+  }, [cards])
+
   // Afficher le chargement pendant la récupération des données
   if (isLoadingData) {
     return (
@@ -96,51 +146,6 @@ export default function ThemeExport() {
       </div>
     )
   }
-
-  const safeFile = (name: string) =>
-    name
-      .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9-_ ]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-
-  const toBasic = (c: any) => ({
-    front: c.frontFR || '',
-    back: c.backText || '',
-    media: {
-      image: c.imageUrl || undefined,
-      audio: c.audioUrl || undefined,
-    },
-    tags: c.tags || [],
-    notes: c.extra || '',
-  })
-
-  const toClozePair = (c: any) => {
-    const src = c.clozeTextTarget || ''
-    // Normaliser en format natif {{cN::...}}
-    const clozeText = /\(\(c\d+::/.test(src)
-      ? src.replace(/\(\(c(\d+)::([^:)]*?)(?::([^)]*?))?\)\)/g, (_m: string, n: string, ans: string, hint?: string) => `{{c${n}::${ans}${hint ? `:${hint}` : ''}}}`)
-      : src
-    // Texte plein: retirer les clozes
-    const text = clozeText.replace(/\{\{c\d+::([^}|]+?)(?::[^}|]+?)?\}\}/g, '$1')
-    return {
-      text,
-      clozeText,
-      media: {
-        image: c.imageUrl || undefined,
-        audio: c.audioUrl || undefined,
-      },
-      tags: c.tags || [],
-      notes: c.extra || '',
-    }
-  }
-
-  const { basicCards, clozeCards } = useMemo(() => {
-    const basics = cards.filter(c => c.type === 'basic').map(toBasic)
-    const clozes = cards.filter(c => c.type === 'cloze').map(toClozePair)
-    return { basicCards: basics, clozeCards: clozes }
-  }, [cards])
 
   const handleExport = async () => {
     setIsExporting(true)
