@@ -475,7 +475,7 @@ export class AnkiGenerator {
             const downloadUrl = this.getMediaDownloadUrl(mf.url, mf.filename)
             console.log(`📥 Téléchargement: ${mf.filename} depuis ${downloadUrl}`);
             
-            // Déterminer si on doit inclure les credentials (pour Appwrite)
+            // Déterminer si on doit inclure les credentials (pour Appwrite uniquement)
             const isAppwrite = mf.url.includes('appwrite.io')
             const fetchOptions = isAppwrite ? { credentials: 'include' } : {}
             
@@ -538,14 +538,10 @@ export class AnkiGenerator {
     try {
       const u = new URL(url)
       
-      // Proxy dédié pour Votz (CORS)
+      // Votz : accès direct (le media-proxy n'est pas déployé en production)
       if (u.hostname === 'votz.eu') {
-        const LOCAL = 'http://localhost:8888/.netlify/functions/media-proxy'
-        const PROD = '/.netlify/functions/media-proxy'
-        const proxy = (import.meta?.env?.VITE_MEDIA_PROXY_URL) || (import.meta?.env?.DEV ? LOCAL : PROD)
-        const proxied = `${proxy}?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
-        console.log(`🔄 Proxy Votz: ${url} → ${proxied}`);
-        return proxied
+        console.log(`🎵 Accès direct Votz: ${url}`);
+        return url
       }
       
       // Appwrite Storage : accès direct avec les credentials du navigateur
