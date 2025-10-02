@@ -26,8 +26,10 @@ export const handler: import('@netlify/functions').Handler = async (event) => {
   }
 
   // Whitelist stricte des hôtes autorisés
-  const ALLOWED_HOSTS = new Set(['votz.eu'])
-  if (!ALLOWED_HOSTS.has(target.hostname)) {
+  const ALLOWED_HOSTS = new Set(['votz.eu', 'fra.cloud.appwrite.io'])
+  const isAppwriteDomain = target.hostname.endsWith('.appwrite.io')
+  
+  if (!ALLOWED_HOSTS.has(target.hostname) && !isAppwriteDomain) {
     return json(403, { error: 'Host not allowed' })
   }
 

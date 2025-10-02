@@ -354,17 +354,21 @@ export class AnkiGenerator {
   /**
    * Génère le HTML pour les médias
    * @param {Object} media - Objet contenant audio et/ou image
-   * @returns {string} - HTML des médias
+   * @returns {string} - HTML des médias au format Anki
    */
   generateMediaHtml(media) {
     if (!media) return '';
 
     let html = '';
     
+    // Format Anki pour l'audio : [sound:filename.mp3]
+    // Les balises HTML5 <audio> ne fonctionnent PAS dans Anki
     if (media.audio) {
-      html += `<audio controls><source src="${media.audio}" type="audio/mpeg">Votre navigateur ne supporte pas l'audio.</audio>`;
+      html += `[sound:${media.audio}]`;
     }
     
+    // Format Anki pour les images : <img src="filename.ext">
+    // Seul le nom de fichier (pas d'URL complète) doit être utilisé
     if (media.image) {
       html += `<img src="${media.image}" alt="Image" style="max-width: 100%; height: auto;">`;
     }
@@ -458,7 +462,12 @@ export class AnkiGenerator {
           try {
             const downloadUrl = this.getMediaDownloadUrl(mf.url, mf.filename)
             console.log(`📥 Téléchargement: ${mf.filename} depuis ${downloadUrl}`);
-            const res = await fetch(downloadUrl)
+            
+            // Déterminer si on doit inclure les credentials (pour Appwrite)
+            const isAppwrite = mf.url.includes('appwrite.io')
+            const fetchOptions = isAppwrite ? { credentials: 'include' } : {}
+            
+            const res = await fetch(downloadUrl, fetchOptions)
             
             if (!res.ok) {
               throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -501,14 +510,27 @@ export class AnkiGenerator {
   getMediaDownloadUrl(url, filename) {
     try {
       const u = new URL(url)
+      
       // Proxy dédié pour Votz (CORS)
       if (u.hostname === 'votz.eu') {
         const LOCAL = 'http://localhost:8888/.netlify/functions/media-proxy'
         const PROD = '/.netlify/functions/media-proxy'
         const proxy = (import.meta?.env?.VITE_MEDIA_PROXY_URL) || (import.meta?.env?.DEV ? LOCAL : PROD)
         const proxied = `${proxy}?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
+        console.log(`🔄 Proxy Votz: ${url} → ${proxied}`);
         return proxied
       }
+      
+      // Appwrite Storage : accès direct avec les credentials du navigateur
+      // L'utilisateur est déjà authentifié, donc fetch() avec credentials: 'include'
+      // fonctionnera grâce aux cookies de session Appwrite
+      if (u.hostname === 'fra.cloud.appwrite.io' || u.hostname.includes('appwrite.io')) {
+        console.log(`✅ Accès direct Appwrite (authentifié): ${url}`);
+        return url
+      }
+      
+      // URLs Pexels et autres : accès direct
+      console.log(`✅ Accès direct: ${url}`);
       return url
     } catch {
       return url
