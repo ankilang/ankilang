@@ -97,13 +97,20 @@ export class ThemesService {
     }
   }
 
-  // Supprimer un thème
+  // Supprimer un thème (avec suppression en cascade des cartes)
   async deleteTheme(themeId: string, userId: string): Promise<void> {
     try {
       // Vérifier les droits d'accès
       await this.getThemeById(themeId, userId);
       
+      // 1️⃣ Supprimer toutes les cartes associées en cascade
+      const { cardsService } = await import('./cards.service');
+      const deletedCardsCount = await cardsService.deleteCardsByThemeId(themeId, userId);
+      
+      // 2️⃣ Supprimer le thème
       await databaseService.delete(this.collectionId, themeId);
+      
+      console.log(`✅ Thème ${themeId} supprimé avec ${deletedCardsCount} carte(s) en cascade`);
     } catch (error) {
       console.error('[ThemesService] Error deleting theme:', error);
       throw error;

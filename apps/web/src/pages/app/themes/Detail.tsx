@@ -5,8 +5,9 @@ import { motion } from 'framer-motion'
 import CardList from '../../../components/cards/CardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
-import { getCardsByThemeId, addMockCard, updateMockCard, deleteMockCard } from '../../../data/mockData'
+import { getCardsByThemeId, addMockCard, updateMockCard } from '../../../data/mockData'
 import { themesService, type AppwriteTheme } from '../../../services/themes.service'
+import { cardsService } from '../../../services/cards.service'
 import { useAuth } from '../../../hooks/useAuth'
 import { LANGUAGES } from '../../../constants/languages'
 import { getLanguageColor } from '../../../utils/languageColors'
@@ -131,9 +132,29 @@ export default function ThemeDetail() {
     setIsEditModalOpen(true)
   }
 
-  const handleDeleteCard = (card: Card) => {
-    deleteMockCard(card.id)
-    setCards(getCardsByThemeId(id!))
+  const handleDeleteCard = async (card: Card) => {
+    if (!user) return
+
+    try {
+      // Supprimer la carte d'Appwrite
+      await cardsService.deleteCard(card.id, user.$id)
+      
+      // Mettre à jour l'état local
+      setCards(prevCards => prevCards.filter(c => c.id !== card.id))
+      
+      // Mettre à jour le compteur du thème
+      if (theme) {
+        setTheme({
+          ...theme,
+          cardCount: Math.max(0, theme.cardCount - 1)
+        })
+      }
+      
+      console.log('✅ Carte supprimée avec succès')
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression de la carte:', error)
+      setError('Impossible de supprimer la carte. Veuillez réessayer.')
+    }
   }
 
   const handleCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
