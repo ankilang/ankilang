@@ -1204,7 +1204,7 @@ export default function NewCardModal({
 
                       <div>
                         <label htmlFor="tags" className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                          Tags
+                          Tags (optionnel)
                         </label>
                         <input
                           id="tags"
