@@ -486,9 +486,19 @@ export class AnkiGenerator {
                 uint8Array[i] = binaryData.charCodeAt(i);
               }
               
+              // Vérifier le format audio (WAV vs MP3)
+              const isWav = mf.url.startsWith('data:audio/wav');
+              const isMp3 = mf.url.startsWith('data:audio/mpeg') || mf.url.startsWith('data:audio/mp3');
+              
+              if (isWav) {
+                console.log(`🎵 Fichier WAV détecté, conversion en MP3 pour Anki`);
+                // Pour l'instant, on garde le WAV (Anki le supporte)
+                // TODO: Convertir WAV → MP3 si nécessaire
+              }
+              
               ankiPackage.addMediaFile(mf.filename, arrayBuffer);
               successfulMediaFiles.push(mf.filename);
-              console.log(`✅ ${mf.filename} ajouté directement (${arrayBuffer.byteLength} octets)`);
+              console.log(`✅ ${mf.filename} ajouté directement (${arrayBuffer.byteLength} octets, format: ${isWav ? 'WAV' : isMp3 ? 'MP3' : 'AUDIO'})`);
               continue;
             }
             

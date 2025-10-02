@@ -348,14 +348,20 @@ export default function NewCardModal({
         setAudioPlaying(false)
         setCurrentAudio(null)
       } else {
-        // Vérifier que l'URL audio est valide
-        if (!audioUrl.startsWith('http')) {
+        // Vérifier que l'URL audio est valide (HTTP ou data:)
+        if (!audioUrl.startsWith('http') && !audioUrl.startsWith('data:audio/')) {
           console.error('❌ URL audio invalide:', audioUrl)
           return
         }
         
-        // Normaliser l'URL Votz si nécessaire (ajout .mp3 si manquant)
+        // Normaliser l'URL audio si nécessaire
         const normalizedUrl = (() => {
+          // Pour les URLs data:audio/, les utiliser directement
+          if (audioUrl.startsWith('data:audio/')) {
+            return audioUrl
+          }
+          
+          // Pour les URLs HTTP, normaliser Votz si nécessaire
           try {
             const u = new URL(audioUrl)
             const hasExt = /\.[a-zA-Z0-9]+$/.test(u.pathname)
