@@ -11,6 +11,7 @@ export interface AuthContextType {
   login: (data: LoginData) => Promise<Models.Session>;
   signup: (data: SignupData) => Promise<Models.User<Models.Preferences>>;
   logout: () => Promise<void>;
+  updateEmail: (newEmail: string, password: string) => Promise<Models.User<Models.Preferences>>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,12 +60,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const updateEmail = async (newEmail: string, password: string) => {
+    const updatedUser = await account.updateEmail(newEmail, password);
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   const value = {
     user,
     isLoading,
     login,
     signup,
     logout,
+    updateEmail,
   };
 
   return (

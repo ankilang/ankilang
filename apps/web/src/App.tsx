@@ -35,7 +35,6 @@ const LearningDeck = lazy(() => import('./pages/app/learning/Deck'))
 const LessonsIndex = lazy(() => import('./pages/app/lessons/Index'))
 const LessonDetail = lazy(() => import('./pages/app/lessons/Lesson'))
 const AccountIndex = lazy(() => import('./pages/app/account/Index'))
-const SettingsIndex = lazy(() => import('./pages/app/settings/Index'))
 
 // Fallback pour Suspense
 const LoadingFallback = () => (
@@ -69,7 +68,6 @@ function App() {
       import('./pages/app/themes/Index')
       import('./pages/app/themes/Detail')
       import('./pages/app/account/Index')
-      import('./pages/app/settings/Index')
     })
   }, [])
 
@@ -194,13 +192,6 @@ function App() {
           <Route path="account" element={
             <Suspense fallback={<LoadingFallback />}>
               <AccountIndex />
-            </Suspense>
-          } />
-          
-          {/* Paramètres */}
-          <Route path="settings" element={
-            <Suspense fallback={<LoadingFallback />}>
-              <SettingsIndex />
             </Suspense>
           } />
         </Route>

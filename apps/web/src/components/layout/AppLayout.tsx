@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom'
-import { Settings, User, Menu, X, LogOut } from 'lucide-react'
+import { User, Menu, X, LogOut } from 'lucide-react'
 import { motion } from 'framer-motion'
 import AnkilangLogo from '../ui/AnkilangLogo'
 import SafeArea from '../ui/SafeArea'
@@ -121,13 +121,6 @@ export default function AppLayout() {
                 </motion.button>
               )}
 
-              <Link
-                to="/app/settings"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Paramètres"
-              >
-                <Settings className="w-5 h-5" />
-              </Link>
               <Link
                 to="/app/account"
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"

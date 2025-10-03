@@ -6,8 +6,7 @@ const TABBAR_VISIBLE_PATHS = [
   '/app/themes',
   '/app/community',
   '/app/lessons',
-  '/app/account',
-  '/app/settings'
+  '/app/account'
 ]
 
 const TABBAR_HIDDEN_PATHS = [

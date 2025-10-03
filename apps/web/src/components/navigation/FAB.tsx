@@ -11,7 +11,6 @@ const FAB_HIDDEN_PATHS = [
   '/app/community/:deckId', // Détail deck
   '/app/lessons/:lessonId', // Détail leçon
   '/app/account', // Compte utilisateur
-  '/app/settings', // Paramètres
   '/', // Landing page
   '/auth', // Pages d'auth
   '/legal', // Pages légales

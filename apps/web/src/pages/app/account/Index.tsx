@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import PageMeta from '../../../components/seo/PageMeta'
 import { useAuth } from '../../../hooks/useAuth'
 import { useSubscription } from '../../../contexts/SubscriptionContext'
+import { AppwriteException } from 'appwrite'
 
 function getInitials(name?: string | null) {
   if (!name || !name.trim()) return 'A'
@@ -14,12 +16,42 @@ function getInitials(name?: string | null) {
 
 export default function AccountIndex() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, updateEmail } = useAuth()
   const { plan, upgradeToPremium } = useSubscription()
+
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [password, setPassword] = useState('')
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    setEmail(user?.email ?? '')
+  }, [user?.email])
 
   const handleLogout = async () => {
     await logout()
     navigate('/')
+  }
+
+  const handleEmailSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
+    evt.preventDefault()
+    if (!email.trim() || !password) {
+      setStatus({ type: 'error', message: 'Veuillez indiquer votre nouvelle adresse email et votre mot de passe actuel.' })
+      return
+    }
+
+    setIsSubmitting(true)
+    setStatus(null)
+    try {
+      await updateEmail(email.trim(), password)
+      setPassword('')
+      setStatus({ type: 'success', message: 'Adresse email mise à jour. Un email de confirmation peut vous être envoyé.' })
+    } catch (error) {
+      const message = error instanceof AppwriteException ? error.message : 'Impossible de mettre à jour votre email pour le moment.'
+      setStatus({ type: 'error', message })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -84,6 +116,58 @@ export default function AccountIndex() {
                 Se déconnecter
               </button>
             </div>
+
+            <form
+              onSubmit={handleEmailSubmit}
+              className="mt-4 w-full rounded-2xl border border-white/60 bg-white/70 p-5 text-left shadow-sm"
+            >
+              <h3 className="font-display text-lg font-semibold text-dark-charcoal">Changer d'adresse email</h3>
+              <p className="mt-1 text-sm text-dark-charcoal/70">
+                Utilisée pour votre connexion Appwrite. Un mot de passe valide est requis.
+              </p>
+              <div className="mt-4 space-y-3">
+                <label className="block text-sm font-medium text-dark-charcoal">
+                  Nouvelle adresse email
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-pastel-purple/30 bg-white px-3 py-2 text-dark-charcoal shadow-sm focus:border-pastel-purple focus:outline-none focus:ring-2 focus:ring-pastel-purple/40"
+                    required
+                  />
+                </label>
+                <label className="block text-sm font-medium text-dark-charcoal">
+                  Mot de passe actuel
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-pastel-purple/30 bg-white px-3 py-2 text-dark-charcoal shadow-sm focus:border-pastel-purple focus:outline-none focus:ring-2 focus:ring-pastel-purple/40"
+                    required
+                  />
+                </label>
+              </div>
+              {status && (
+                <div
+                  className={`mt-4 rounded-lg px-3 py-2 text-sm ${
+                    status.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}
+                >
+                  {status.message}
+                </div>
+              )}
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="rounded-xl bg-dark-charcoal px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Mise à jour…' : 'Mettre à jour mon email'}
+                </button>
+              </div>
+            </form>
           </div>
         </motion.section>
       </main>
