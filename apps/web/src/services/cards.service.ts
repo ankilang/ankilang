@@ -1,7 +1,7 @@
 import { DatabaseService } from './database.service';
 import { StorageService } from './storage.service';
 import { Query } from 'appwrite';
-import type { Card } from '@ankilang/shared';
+import type { Card } from '../types/shared';
 
 const databaseService = new DatabaseService();
 const storageService = new StorageService();

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Sparkles, Tag, Globe, Wand2, CheckCircle } from 'lucide-react'
 import { LANGUAGES, getLanguageByCode } from '../../constants/languages'
-import { CreateThemeSchema } from '@ankilang/shared'
+import { CreateThemeSchema } from '../../types/shared'
 import FlagIcon from '../ui/FlagIcon'
 
 const themeFormSchema = z.object({
@@ -47,14 +47,10 @@ export default function ThemeForm({
   const [langQuery, setLangQuery] = useState('')
 
   const handleFormSubmit = (data: ThemeFormData) => {
-    const tags = data.tags 
-      ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-      : []
-    
     onSubmit({
       name: data.name,
       targetLang: (data.targetLang === 'oc' ? ocDialect : data.targetLang),
-      tags,
+      shareStatus: 'private' as const,
     } as z.infer<typeof CreateThemeSchema>)
   }
 

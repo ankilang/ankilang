@@ -6,8 +6,8 @@ import {
   X, Brain, Type, Sparkles, AlertCircle, Check
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CreateCardSchema } from '@ankilang/shared'
-import type { Card } from '@ankilang/shared'
+import { CreateCardSchema } from '../../types/shared'
+import type { Card } from '../../types/shared'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),

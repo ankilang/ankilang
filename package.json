@@ -12,7 +12,8 @@
     "lint": "echo 'Lint configuration à venir'",
     "clean": "pnpm -r clean",
     "install:all": "pnpm install",
-    "prebuild": "corepack enable && pnpm install --frozen-lockfile"
+    "prebuild": "corepack enable && pnpm install --frozen-lockfile",
+    "build:cloudflare": "cd apps/web && npm run build"
   },
   "keywords": [
     "flashcards",

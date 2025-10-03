@@ -8,7 +8,7 @@ import { useAnkiLang } from '../../../exporter/hooks/useAnkiLang.js'
 import { themesService, type AppwriteTheme } from '../../../services/themes.service'
 import { cardsService } from '../../../services/cards.service'
 import { useAuth } from '../../../hooks/useAuth'
-import type { Card } from '@ankilang/shared'
+import type { Card } from '../../../types/shared'
 
 // Helper functions (outside component for better performance)
 const safeFile = (name: string) =>

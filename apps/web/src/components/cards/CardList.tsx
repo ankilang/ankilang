@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus, FileText, Tag, Sparkles, Brain, Type, Grid3X3, List, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Card } from '@ankilang/shared'
+import type { Card } from '../../types/shared'
 import CardActions from './CardActions'
 
 interface CardListProps {

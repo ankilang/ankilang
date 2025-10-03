@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Card } from '@ankilang/shared'
+import type { Card } from '../../types/shared'
 
 interface CardActionsProps {
   card: Card

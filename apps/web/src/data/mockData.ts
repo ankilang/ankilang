@@ -1,4 +1,4 @@
-import type { Theme, Card } from '@ankilang/shared'
+import type { Theme, Card } from '../types/shared'
 
 export const mockThemes: Theme[] = [
   {
@@ -6,7 +6,6 @@ export const mockThemes: Theme[] = [
     userId: 'user1',
     name: 'Vocabulaire de base - Anglais',
     targetLang: 'en',
-    tags: ['vocabulaire', 'débutant', 'anglais'],
     cardCount: 15,
     shareStatus: 'private',
     createdAt: '2024-01-15T10:00:00Z',
@@ -17,9 +16,8 @@ export const mockThemes: Theme[] = [
     userId: 'user1',
     name: 'Grammaire espagnole',
     targetLang: 'es',
-    tags: ['grammaire', 'intermédiaire', 'espagnol'],
     cardCount: 8,
-    shareStatus: 'community',
+    shareStatus: 'public',
     createdAt: '2024-01-10T09:00:00Z',
     updatedAt: '2024-01-18T16:45:00Z'
   },
@@ -28,9 +26,8 @@ export const mockThemes: Theme[] = [
     userId: 'user1',
     name: 'Expressions occitanes',
     targetLang: 'oc',
-    tags: ['expressions', 'culture', 'occitan'],
     cardCount: 12,
-    shareStatus: 'community',
+    shareStatus: 'public',
     createdAt: '2024-01-05T11:00:00Z',
     updatedAt: '2024-01-22T13:20:00Z'
   },
@@ -39,7 +36,6 @@ export const mockThemes: Theme[] = [
     userId: 'user1',
     name: 'Verbes allemands',
     targetLang: 'de',
-    tags: ['verbes', 'conjugaison', 'allemand'],
     cardCount: 6,
     shareStatus: 'private',
     createdAt: '2024-01-12T15:00:00Z',

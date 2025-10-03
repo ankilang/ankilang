@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import ThemeForm from '../../../components/themes/ThemeForm'
 import { themesService } from '../../../services/themes.service'
 import { useAuth } from '../../../hooks/useAuth'
-import { CreateThemeSchema } from '@ankilang/shared'
+import { CreateThemeSchema } from '../../../types/shared'
 import type { z } from 'zod'
 import PageMeta from '../../../components/seo/PageMeta'
 

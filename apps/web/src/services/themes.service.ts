@@ -1,5 +1,5 @@
 import { databaseService, DatabaseService } from './database.service';
-import type { CreateTheme } from '@ankilang/shared';
+import type { CreateTheme } from '../types/shared';
 
 // Interface pour les thèmes avec métadonnées Appwrite
 export interface AppwriteTheme {

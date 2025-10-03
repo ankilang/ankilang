@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { account } from '../services/appwrite';
 import { AppwriteException, ID } from 'appwrite';
 import type { Models } from 'appwrite';
-import type { LoginData, SignupData } from '@ankilang/shared';
+import type { LoginData, SignupData } from '../types/shared';
 
 export interface AuthContextType {
   user: Models.User<Models.Preferences> | null;
