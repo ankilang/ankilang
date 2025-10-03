@@ -81,20 +81,21 @@ export default function FlagIcon({
   alt
 }: FlagIconProps) {
   
-  // Cas spécial pour l'Occitan - pas de drapeau
+  // Cas spécial pour l'Occitan - utiliser l'icône Ankilang
   if (languageCode === 'oc' || languageCode === 'oc-gascon') {
     return (
-      <div 
-        className={`inline-flex items-center justify-center font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text ${className}`}
+      <img
+        src="/icon-512.png"
+        alt={alt || 'Occitan'}
+        width={size}
+        height={size}
+        className={`inline-block object-contain ${className}`}
         style={{ 
-          width: size, 
-          height: size, 
-          fontSize: Math.max(8, size * 0.4) 
+          minWidth: size, 
+          minHeight: size 
         }}
         title={alt || 'Occitan'}
-      >
-        ÒC
-      </div>
+      />
     )
   }
   

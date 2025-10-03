@@ -6,7 +6,6 @@ import { LANGUAGES } from '../../../constants/languages'
 import DeckCard from '../../../components/learning/DeckCard'
 import Skeleton from '../../../components/ui/Skeleton'
 import PageMeta from '../../../components/seo/PageMeta'
-import LearningOrbit from '../../../components/illustrations/LearningOrbit'
 
 type SortOption = 'recent' | 'popular'
 
@@ -145,7 +144,7 @@ export default function LearningIndex() {
                 </p>
               </div>
               <div className="hidden lg:block">
-                <LearningOrbit className="mx-auto" />
+                {/* Illustration removed */}
               </div>
             </div>
           </div>
@@ -195,7 +194,7 @@ export default function LearningIndex() {
               </div>
             </div>
             <div className="hidden lg:block">
-              <LearningOrbit className="mx-auto" />
+              {/* Illustration removed */}
             </div>
           </div>
         </div>
