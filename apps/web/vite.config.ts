@@ -52,6 +52,19 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
-  }
+    sourcemap: true,
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          // Garder les drapeaux dans un dossier flags/
+          if (assetInfo.name && assetInfo.name.endsWith('.svg') && assetInfo.name.includes('flag')) {
+            return 'assets/flags/[name].[ext]'
+          }
+          return 'assets/[name]-[hash].[ext]'
+        }
+      }
+    }
+  },
+  publicDir: 'public'
 })

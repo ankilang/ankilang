@@ -11,27 +11,68 @@ interface FlagIconProps {
 }
 
 /**
- * Composant d'icône de drapeau utilisant les SVG Twemoji
+ * Composant d'icône de drapeau utilisant Twemoji
  * Résout les problèmes d'affichage des émojis sur Windows
  */
-const flagModules = import.meta.glob('../assets/flags/*.svg', {
-  eager: true,
-  import: 'default'
-}) as Record<string, string>
 
-const SVG_FLAGS: Record<string, string> = Object.fromEntries(
-  Object.entries(flagModules)
-    .map(([path, url]) => {
-      const match = path.match(/\/([^/]+)\.svg$/)
-      if (!match) return null
-      const name = match[1]
-      if (!name) return null
-      return [name.toLowerCase(), url] as [string, string]
-    })
-    .filter((entry): entry is [string, string] => Array.isArray(entry))
-)
-
-const DEFAULT_FLAG = SVG_FLAGS.world ?? ''
+// Mapping des codes de langue vers les émojis de drapeaux
+const getFlagEmoji = (languageCode: string): string => {
+  const mapping: Record<string, string> = {
+    // Anglais
+    'en-gb': '🇬🇧',
+    'en-us': '🇺🇸', 
+    'en': '🇬🇧', // Fallback vers UK
+    
+    // Espagnol  
+    'es': '🇪🇸',
+    'es-419': '🇲🇽', // Amérique latine → Mexique
+    
+    // Portugais
+    'pt-pt': '🇵🇹',
+    'pt-br': '🇧🇷',
+    'pt': '🇵🇹', // Fallback vers Portugal
+    
+    // Chinois
+    'zh-hans': '🇨🇳',
+    'zh-hant': '🇹🇼', // Chinois traditionnel → Taiwan
+    'zh': '🇨🇳', // Fallback vers Chine
+    
+    // Norvégien
+    'nb': '🇳🇴', // Bokmål → Norvège
+    
+    // Langues avec correspondance directe
+    'fr': '🇫🇷',
+    'de': '🇩🇪', 
+    'it': '🇮🇹',
+    'nl': '🇳🇱',
+    'pl': '🇵🇱',
+    'sv': '🇸🇪', // Suédois → Suède
+    'da': '🇩🇰', // Danois → Danemark
+    'fi': '🇫🇮',
+    'ru': '🇷🇺',
+    'ja': '🇯🇵', // Japonais → Japon
+    'ko': '🇰🇷', // Coréen → Corée du Sud
+    'ar': '🇸🇦', // Arabe → Arabie Saoudite
+    'tr': '🇹🇷',
+    'bg': '🇧🇬',
+    'cs': '🇨🇿', // Tchèque → République Tchèque
+    'el': '🇬🇷', // Grec → Grèce
+    'et': '🇪🇪', // Estonien → Estonie
+    'he': '🇮🇱', // Hébreu → Israël
+    'hu': '🇭🇺',
+    'id': '🇮🇩',
+    'lt': '🇱🇹',
+    'lv': '🇱🇻',
+    'ro': '🇷🇴',
+    'sk': '🇸🇰',
+    'sl': '🇸🇮', // Slovène → Slovénie
+    'th': '🇹🇭',
+    'uk': '🇺🇦', // Ukrainien → Ukraine
+    'vi': '🇻🇳', // Vietnamien → Vietnam
+  }
+  
+  return mapping[languageCode.toLowerCase()] || '🌍' // Fallback vers monde
+}
 
 export default function FlagIcon({
   languageCode,
@@ -39,64 +80,6 @@ export default function FlagIcon({
   className = '',
   alt
 }: FlagIconProps) {
-  // Mapping des codes de langue vers les codes de pays pour les drapeaux
-  const getCountryCode = (langCode: string): string => {
-    const mapping: Record<string, string> = {
-      // Anglais
-      'en-gb': 'gb',
-      'en-us': 'us',
-      'en': 'gb', // Fallback vers UK
-      
-      // Espagnol  
-      'es': 'es',
-      'es-419': 'mx', // Amérique latine → Mexique
-      
-      // Portugais
-      'pt-pt': 'pt',
-      'pt-br': 'br',
-      'pt': 'pt', // Fallback vers Portugal
-      
-      // Chinois
-      'zh-hans': 'cn',
-      'zh-hant': 'cn', // Chinois traditionnel → Drapeau chinois
-      'zh': 'cn', // Fallback vers Chine
-      
-      // Norvégien
-      'nb': 'no', // Bokmål → Norvège
-      
-      // Langues avec correspondance directe
-      'fr': 'fr',
-      'de': 'de', 
-      'it': 'it',
-      'nl': 'nl',
-      'pl': 'pl',
-      'sv': 'se', // Suédois → Suède
-      'da': 'dk', // Danois → Danemark
-      'fi': 'fi',
-      'ru': 'ru',
-      'ja': 'jp', // Japonais → Japon
-      'ko': 'kr', // Coréen → Corée du Sud
-      'ar': 'sa', // Arabe → Arabie Saoudite
-      'tr': 'tr',
-      'bg': 'bg',
-      'cs': 'cz', // Tchèque → République Tchèque
-      'el': 'gr', // Grec → Grèce
-      'et': 'ee', // Estonien → Estonie
-      'he': 'il', // Hébreu → Israël
-      'hu': 'hu',
-      'id': 'id',
-      'lt': 'lt',
-      'lv': 'lv',
-      'ro': 'ro',
-      'sk': 'sk',
-      'sl': 'si', // Slovène → Slovénie
-      'th': 'th',
-      'uk': 'ua', // Ukrainien → Ukraine
-      'vi': 'vn', // Vietnamien → Vietnam
-    }
-    
-    return mapping[langCode.toLowerCase()] || 'world' // Fallback vers monde
-  }
   
   // Cas spécial pour l'Occitan - pas de drapeau
   if (languageCode === 'oc' || languageCode === 'oc-gascon') {
@@ -115,30 +98,22 @@ export default function FlagIcon({
     )
   }
   
-  const countryCode = getCountryCode(languageCode).toLowerCase()
-  const flagPath = SVG_FLAGS[countryCode] || DEFAULT_FLAG
+  const flagEmoji = getFlagEmoji(languageCode)
   const altText = alt || `Drapeau ${languageCode.toUpperCase()}`
 
   return (
-    <img
-      src={flagPath}
-      alt={altText}
-      width={size}
-      height={size}
-      className={`inline-block object-contain ${className}`}
+    <span
+      className={`inline-block ${className}`}
       style={{ 
-        minWidth: size, 
-        minHeight: size 
+        fontSize: `${size}px`,
+        lineHeight: 1,
+        display: 'inline-block'
       }}
-      onError={(e) => {
-        const target = e.target as HTMLImageElement
-        target.style.display = 'none'
-        const fallback = document.createElement('span')
-        fallback.textContent = '🌍'
-        fallback.style.fontSize = `${size * 0.8}px`
-        fallback.title = altText
-        target.parentNode?.appendChild(fallback)
-      }}
-    />
+      title={altText}
+      role="img"
+      aria-label={altText}
+    >
+      {flagEmoji}
+    </span>
   )
 }
