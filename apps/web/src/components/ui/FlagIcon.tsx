@@ -1,3 +1,5 @@
+import { memo } from 'react'
+import ankilangIcon from '/icon-512.png'
 
 interface FlagIconProps {
   /** Code de la langue (ex: 'fr', 'en-GB', 'es') */
@@ -74,7 +76,7 @@ const getFlagEmoji = (languageCode: string): string => {
   return mapping[languageCode.toLowerCase()] || '🌍' // Fallback vers monde
 }
 
-export default function FlagIcon({
+export default memo(function FlagIcon({
   languageCode,
   size = 24,
   className = '',
@@ -85,7 +87,7 @@ export default function FlagIcon({
   if (languageCode === 'oc' || languageCode === 'oc-gascon') {
     return (
       <img
-        src="/icon-512.png"
+        src={ankilangIcon}
         alt={alt || 'Occitan'}
         width={size}
         height={size}
@@ -117,4 +119,4 @@ export default function FlagIcon({
       {flagEmoji}
     </span>
   )
-}
+})
