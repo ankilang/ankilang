@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   User, Settings, Shield, Database, 
   CheckCircle, AlertTriangle,
-  ArrowLeft
+  ArrowLeft, LogOut
 } from 'lucide-react'
 import { getAccount, updateSubscription } from '../../../data/mockAccount'
 import ProfileCard from '../../../components/account/ProfileCard'
@@ -12,7 +12,7 @@ import SubscriptionBadge from '../../../components/account/SubscriptionBadge'
 import SecurityForm from '../../../components/account/SecurityForm'
 import SessionsList from '../../../components/account/SessionsList'
 import DataControls from '../../../components/account/DataControls'
-
+import { useAuth } from '../../../hooks/useAuth'
 
 import ConfirmModal from '../../../components/ui/ConfirmModal'
 import PageMeta from '../../../components/seo/PageMeta'
@@ -20,10 +20,12 @@ import { useNavigate } from 'react-router-dom'
 
 export default function AccountIndex() {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const [account, setAccount] = useState(getAccount())
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'data'>('profile')
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
@@ -48,6 +50,16 @@ export default function AccountIndex() {
   const handleEmailChange = () => {
     console.log('request email change')
     setMessage({ type: 'success', text: 'Demande de changement d\'email envoyée' })
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de la déconnexion' })
+    }
   }
 
   const tabs = [
@@ -118,6 +130,17 @@ export default function AccountIndex() {
                 </motion.button>
               )
             })}
+            
+            {/* Bouton de déconnexion */}
+            <motion.button
+              onClick={() => setShowLogoutModal(true)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-sans font-medium transition-all duration-200 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+            >
+              <LogOut className="w-4 h-4" />
+              Se déconnecter
+            </motion.button>
           </div>
         </div>
       </motion.header>
@@ -238,6 +261,19 @@ export default function AccountIndex() {
         title="Annuler l'abonnement"
         description="Êtes-vous sûr de vouloir annuler votre abonnement ? Vous perdrez l'accès aux fonctionnalités premium à la fin de la période de facturation."
         confirmLabel="Annuler l'abonnement"
+        isDanger={true}
+      />
+
+      <ConfirmModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          handleLogout()
+          setShowLogoutModal(false)
+        }}
+        title="Se déconnecter"
+        description="Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous reconnecter pour accéder à vos thèmes et flashcards."
+        confirmLabel="Se déconnecter"
         isDanger={true}
       />
 

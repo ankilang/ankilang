@@ -1,23 +1,37 @@
 import { useState } from 'react'
-import { Outlet, Link, NavLink } from 'react-router-dom'
-import { Settings, User, Menu, X } from 'lucide-react'
+import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom'
+import { Settings, User, Menu, X, LogOut } from 'lucide-react'
 import { motion } from 'framer-motion'
 import AnkilangLogo from '../ui/AnkilangLogo'
 import SafeArea from '../ui/SafeArea'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useSubscription } from '../../contexts/SubscriptionContext'
+import { useAuth } from '../../hooks/useAuth'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import TabBar from '../navigation/TabBar'
+import ConfirmModal from '../ui/ConfirmModal'
 
 export default function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { isInstalled } = usePWAContext()
   const { plan, toggleTestMode } = useSubscription()
+  const { logout } = useAuth()
+  const navigate = useNavigate()
   const isPro = plan !== 'free'
   const { isVisible: isTabBarVisible } = useTabBarVisibility()
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error)
+    }
   }
 
   const closeMobileMenu = () => {
@@ -187,6 +201,18 @@ export default function AppLayout() {
                     </NavLink>
                   </>
                 )}
+                
+                {/* Bouton de déconnexion */}
+                <button
+                  onClick={() => {
+                    closeMobileMenu()
+                    setShowLogoutModal(true)
+                  }}
+                  className="flex items-center gap-2 text-red-600 hover:text-red-800 py-2 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Se déconnecter
+                </button>
               </nav>
             </div>
           </div>
@@ -210,6 +236,20 @@ export default function AppLayout() {
 
       {/* TabBar - affichée uniquement en PWA installée et sur les routes appropriées */}
       {isInstalled && <TabBar />}
+
+      {/* Modal de confirmation de déconnexion */}
+      <ConfirmModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          handleLogout()
+          setShowLogoutModal(false)
+        }}
+        title="Se déconnecter"
+        description="Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous reconnecter pour accéder à vos thèmes et flashcards."
+        confirmLabel="Se déconnecter"
+        isDanger={true}
+      />
     </div>
   )
 }
