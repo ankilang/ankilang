@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import SectionTitle from "./SectionTitle";
 import OccitanParticles from "../effects/OccitanParticles";
+import OcFlag from "../../assets/flags/oc.webp";
 
 const VibrantMissionSection = () => {
   // Variants pour l'animation du texte de premier plan
@@ -26,7 +27,7 @@ const VibrantMissionSection = () => {
         <SectionTitle className="final-cta">Òc ben !</SectionTitle>
         <div className="occitan-flag-wrapper">
           <img 
-            src="/flags/oc.webp" 
+            src={OcFlag} 
             alt="Drapeau occitan" 
             className="occitan-flag"
             loading="lazy"

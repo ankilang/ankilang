@@ -1,10 +1,12 @@
+import OcFlag from '../../assets/flags/oc.webp'
+
 export default function OccitanCallout() {
   return (
     <div className="text-center">
       <div className="mb-6">
         <div className="inline-flex items-center gap-3 mb-4">
           <img 
-            src="/flags/oc.webp" 
+            src={OcFlag} 
             alt="Drapeau occitan" 
             className="w-8 h-6 rounded shadow-sm"
           />

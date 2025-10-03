@@ -14,11 +14,30 @@ interface FlagIconProps {
  * Composant d'icône de drapeau utilisant les SVG Twemoji
  * Résout les problèmes d'affichage des émojis sur Windows
  */
-export default function FlagIcon({ 
-  languageCode, 
-  size = 24, 
-  className = '', 
-  alt 
+const flagModules = import.meta.glob('../assets/flags/*.svg', {
+  eager: true,
+  import: 'default'
+}) as Record<string, string>
+
+const SVG_FLAGS: Record<string, string> = Object.fromEntries(
+  Object.entries(flagModules)
+    .map(([path, url]) => {
+      const match = path.match(/\/([^/]+)\.svg$/)
+      if (!match) return null
+      const name = match[1]
+      if (!name) return null
+      return [name.toLowerCase(), url] as [string, string]
+    })
+    .filter((entry): entry is [string, string] => Array.isArray(entry))
+)
+
+const DEFAULT_FLAG = SVG_FLAGS.world ?? ''
+
+export default function FlagIcon({
+  languageCode,
+  size = 24,
+  className = '',
+  alt
 }: FlagIconProps) {
   // Mapping des codes de langue vers les codes de pays pour les drapeaux
   const getCountryCode = (langCode: string): string => {
@@ -96,10 +115,10 @@ export default function FlagIcon({
     )
   }
   
-  const countryCode = getCountryCode(languageCode)
-  const flagPath = `/flags/${countryCode}.svg`
+  const countryCode = getCountryCode(languageCode).toLowerCase()
+  const flagPath = SVG_FLAGS[countryCode] || DEFAULT_FLAG
   const altText = alt || `Drapeau ${languageCode.toUpperCase()}`
-  
+
   return (
     <img
       src={flagPath}
@@ -112,10 +131,8 @@ export default function FlagIcon({
         minHeight: size 
       }}
       onError={(e) => {
-        // Fallback en cas d'erreur de chargement
         const target = e.target as HTMLImageElement
         target.style.display = 'none'
-        // Créer un élément de fallback avec emoji
         const fallback = document.createElement('span')
         fallback.textContent = '🌍'
         fallback.style.fontSize = `${size * 0.8}px`
