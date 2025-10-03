@@ -5,12 +5,14 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter=@ankilang/web dev",
-    "build": "pnpm -r build",
+    "build": "pnpm --filter=@ankilang/web build",
+    "build:all": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "lint": "echo 'Lint configuration à venir'",
     "clean": "pnpm -r clean",
-    "install:all": "pnpm install"
+    "install:all": "pnpm install",
+    "prebuild": "corepack enable && pnpm install --frozen-lockfile"
   },
   "keywords": [
     "flashcards",
