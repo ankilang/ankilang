@@ -1,79 +1,78 @@
 import { memo } from 'react'
-import ankilangIcon from '/icon-512.png'
 
 interface FlagIconProps {
-  /** Code de la langue (ex: 'fr', 'en-GB', 'es') */
   languageCode: string
-  /** Taille en pixels */
   size?: number
-  /** Classe CSS additionnelle */
   className?: string
-  /** Alt text pour l'accessibilité */
   alt?: string
 }
 
-/**
- * Composant d'icône de drapeau utilisant Twemoji
- * Résout les problèmes d'affichage des émojis sur Windows
- */
+const flagModules = import.meta.glob('../../assets/flags/*.svg', {
+  eager: true,
+  import: 'default'
+}) as Record<string, string>
 
-// Mapping des codes de langue vers les émojis de drapeaux
-const getFlagEmoji = (languageCode: string): string => {
-  const mapping: Record<string, string> = {
-    // Anglais
-    'en-gb': '🇬🇧',
-    'en-us': '🇺🇸', 
-    'en': '🇬🇧', // Fallback vers UK
-    
-    // Espagnol  
-    'es': '🇪🇸',
-    'es-419': '🇲🇽', // Amérique latine → Mexique
-    
-    // Portugais
-    'pt-pt': '🇵🇹',
-    'pt-br': '🇧🇷',
-    'pt': '🇵🇹', // Fallback vers Portugal
-    
-    // Chinois
-    'zh-hans': '🇨🇳',
-    'zh-hant': '🇹🇼', // Chinois traditionnel → Taiwan
-    'zh': '🇨🇳', // Fallback vers Chine
-    
-    // Norvégien
-    'nb': '🇳🇴', // Bokmål → Norvège
-    
-    // Langues avec correspondance directe
-    'fr': '🇫🇷',
-    'de': '🇩🇪', 
-    'it': '🇮🇹',
-    'nl': '🇳🇱',
-    'pl': '🇵🇱',
-    'sv': '🇸🇪', // Suédois → Suède
-    'da': '🇩🇰', // Danois → Danemark
-    'fi': '🇫🇮',
-    'ru': '🇷🇺',
-    'ja': '🇯🇵', // Japonais → Japon
-    'ko': '🇰🇷', // Coréen → Corée du Sud
-    'ar': '🇸🇦', // Arabe → Arabie Saoudite
-    'tr': '🇹🇷',
-    'bg': '🇧🇬',
-    'cs': '🇨🇿', // Tchèque → République Tchèque
-    'el': '🇬🇷', // Grec → Grèce
-    'et': '🇪🇪', // Estonien → Estonie
-    'he': '🇮🇱', // Hébreu → Israël
-    'hu': '🇭🇺',
-    'id': '🇮🇩',
-    'lt': '🇱🇹',
-    'lv': '🇱🇻',
-    'ro': '🇷🇴',
-    'sk': '🇸🇰',
-    'sl': '🇸🇮', // Slovène → Slovénie
-    'th': '🇹🇭',
-    'uk': '🇺🇦', // Ukrainien → Ukraine
-    'vi': '🇻🇳', // Vietnamien → Vietnam
-  }
-  
-  return mapping[languageCode.toLowerCase()] || '🌍' // Fallback vers monde
+const SVG_FLAGS: Record<string, string> = Object.fromEntries(
+  Object.entries(flagModules)
+    .map(([path, url]) => {
+      const match = /\/([\w-]+)\.svg$/.exec(path)
+      const name = match?.[1]
+      if (!name) return null
+      return [name.toLowerCase(), url] as [string, string]
+    })
+    .filter((entry): entry is [string, string] => Array.isArray(entry))
+)
+
+const DEFAULT_FLAG = SVG_FLAGS.world
+
+const COUNTRY_MAP: Record<string, string> = {
+  'en-gb': 'gb',
+  'en-us': 'us',
+  en: 'gb',
+  es: 'es',
+  'es-419': 'mx',
+  'pt-pt': 'pt',
+  'pt-br': 'br',
+  pt: 'pt',
+  'zh-hans': 'cn',
+  'zh-hant': 'tw',
+  zh: 'cn',
+  nb: 'no',
+  fr: 'fr',
+  de: 'de',
+  it: 'it',
+  nl: 'nl',
+  pl: 'pl',
+  sv: 'se',
+  da: 'dk',
+  fi: 'fi',
+  ru: 'ru',
+  ja: 'jp',
+  ko: 'kr',
+  ar: 'sa',
+  tr: 'tr',
+  bg: 'bg',
+  cs: 'cz',
+  el: 'gr',
+  et: 'ee',
+  he: 'il',
+  hu: 'hu',
+  id: 'id',
+  lt: 'lt',
+  lv: 'lv',
+  ro: 'ro',
+  sk: 'sk',
+  sl: 'si',
+  th: 'th',
+  uk: 'ua',
+  vi: 'vn'
+}
+
+function getFlagPath(code: string) {
+  const normalized = code.toLowerCase()
+  if (normalized === 'oc' || normalized === 'oc-gascon') return null
+  const mapped = COUNTRY_MAP[normalized] || normalized
+  return SVG_FLAGS[mapped] || DEFAULT_FLAG
 }
 
 export default memo(function FlagIcon({
@@ -82,41 +81,48 @@ export default memo(function FlagIcon({
   className = '',
   alt
 }: FlagIconProps) {
-  
-  // Cas spécial pour l'Occitan - utiliser l'icône Ankilang
-  if (languageCode === 'oc' || languageCode === 'oc-gascon') {
+  const occ = languageCode === 'oc' || languageCode === 'oc-gascon'
+
+  if (occ) {
     return (
-      <img
-        src={ankilangIcon}
-        alt={alt || 'Occitan'}
-        width={size}
-        height={size}
-        className={`inline-block object-contain ${className}`}
-        style={{ 
-          minWidth: size, 
-          minHeight: size 
-        }}
+      <span
+        className={`inline-flex items-center justify-center font-bold text-transparent bg-gradient-to-r from-yellow-600 to-red-600 bg-clip-text ${className}`}
+        style={{ width: size, height: size, fontSize: Math.max(8, size * 0.45) }}
         title={alt || 'Occitan'}
-      />
+        aria-label={alt || 'Occitan'}
+        role="img"
+      >
+        ÒC
+      </span>
     )
   }
-  
-  const flagEmoji = getFlagEmoji(languageCode)
+
+  const flagPath = getFlagPath(languageCode)
   const altText = alt || `Drapeau ${languageCode.toUpperCase()}`
 
+  if (!flagPath) {
+    return (
+      <span
+        className={`inline-block ${className}`}
+        style={{ fontSize: size * 0.8, lineHeight: 1 }}
+        title={altText}
+        role="img"
+        aria-label={altText}
+      >
+        🌍
+      </span>
+    )
+  }
+
   return (
-    <span
-      className={`inline-block ${className}`}
-      style={{ 
-        fontSize: `${size}px`,
-        lineHeight: 1,
-        display: 'inline-block'
-      }}
-      title={altText}
-      role="img"
-      aria-label={altText}
-    >
-      {flagEmoji}
-    </span>
+    <img
+      src={flagPath}
+      alt={altText}
+      width={size}
+      height={size}
+      className={`inline-block object-contain ${className}`}
+      style={{ minWidth: size, minHeight: size }}
+      loading="lazy"
+    />
   )
 })
