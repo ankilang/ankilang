@@ -76,7 +76,7 @@ export default function NewCardModal({
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     reset,
     watch,
     setValue,
@@ -106,20 +106,6 @@ export default function NewCardModal({
     return false
   })()
 
-  // Debug détaillé pour voir les erreurs exactes
-  console.log('🔍 Validation détaillée:', {
-    isValid,
-    isFormValid, // Notre validation manuelle
-    errors: JSON.stringify(errors, null, 2),
-    formValues: watchedValues,
-    recto: watchedValues.recto,
-    verso: watchedValues.verso,
-    type: watchedValues.type,
-    hasRecto: !!watchedValues.recto,
-    hasVerso: !!watchedValues.verso,
-    rectoLength: watchedValues.recto?.length || 0,
-    versoLength: watchedValues.verso?.length || 0
-  })
   const clozeRef = useRef<HTMLTextAreaElement>(null)
   const [clozeHint, setClozeHint] = useState('')
   const [showClozeAnswers, setShowClozeAnswers] = useState(false)
@@ -252,16 +238,7 @@ export default function NewCardModal({
         }
       }
     } catch (err) {
-      console.error('❌ Erreur de traduction détaillée:', err)
-      console.error('URL utilisée:', import.meta.env.VITE_REVI_URL || 'https://ankilangrevirada.netlify.app/.netlify/functions/revirada')
-      console.error('Requête:', { 
-        text: rectoText, 
-        sourceLang: toReviCode('fr'), 
-        targetLang: toReviCode(themeLanguage),
-        isOccitan,
-        themeLanguage
-      })
-      
+      console.error('Erreur de traduction:', err)
       // Fallback plus informatif
       setValue('verso', `[ERREUR API] ${rectoText}`)
     } finally {
