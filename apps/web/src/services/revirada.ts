@@ -14,11 +14,31 @@ const PROD = 'https://ankilangrevirada.netlify.app/.netlify/functions/revirada'
 const BASE_URL = import.meta.env.VITE_REVI_URL || PROD
 
 export async function reviradaTranslate(req: ReviradaRequest) {
+  // Récupérer le JWT Appwrite pour authentifier la requête
+  const { getSessionJWT } = await import('./appwrite')
+  const jwt = await getSessionJWT()
+  
+  if (!jwt) {
+    throw new Error('User not authenticated. Please log in to use translation.')
+  }
+  
   const res = await fetch(BASE_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${jwt}`
+    },
     body: JSON.stringify({ ...req, contentType: req.contentType ?? 'txt' })
   })
+  
+  if (!res.ok) {
+    const errorText = await res.text()
+    if (res.status === 401) {
+      throw new Error('Authentication failed. Please log in again.')
+    }
+    throw new Error(`Translation failed: ${res.status} - ${errorText}`)
+  }
+  
   return (await res.json()) as ReviradaResponse
 }
 

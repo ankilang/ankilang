@@ -47,12 +47,32 @@ function normalizeDeepLLang(code?: string | null): string | undefined {
 }
 
 export async function translate(text: string | string[], targetLang: string, sourceLang?: string) {
+  // Récupérer le JWT Appwrite pour authentifier la requête
+  const { getSessionJWT } = await import('./appwrite')
+  const jwt = await getSessionJWT()
+  
+  if (!jwt) {
+    throw new Error('User not authenticated. Please log in to use translation.')
+  }
+  
   const normalizedTarget = normalizeDeepLLang(targetLang)!
   const normalizedSource = normalizeDeepLLang(sourceLang ?? undefined)
   const res = await fetch(BASE_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${jwt}`
+    },
     body: JSON.stringify({ text, targetLang: normalizedTarget, sourceLang: normalizedSource ?? null }),
   })
+  
+  if (!res.ok) {
+    const errorText = await res.text()
+    if (res.status === 401) {
+      throw new Error('Authentication failed. Please log in again.')
+    }
+    throw new Error(`Translation failed: ${res.status} - ${errorText}`)
+  }
+  
   return (await res.json()) as TranslateResponse
 }

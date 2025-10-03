@@ -41,6 +41,14 @@ export async function ttsToBlob(text: string, language: VotzLanguage = 'languedo
     throw new Error('Le texte ne peut pas être vide')
   }
 
+  // Récupérer le JWT Appwrite pour authentifier la requête
+  const { getSessionJWT } = await import('./appwrite')
+  const jwt = await getSessionJWT()
+  
+  if (!jwt) {
+    throw new Error('User not authenticated. Please log in to use TTS.')
+  }
+
   // Essayer d'abord l'URL configurée, puis fallback sur PROD
   const urlsToTry = [
     BASE,
@@ -56,6 +64,7 @@ export async function ttsToBlob(text: string, language: VotzLanguage = 'languedo
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`
         },
         body: JSON.stringify({
           text: text.trim(),
@@ -113,6 +122,14 @@ export async function ttsToTempURL(text: string, language: VotzLanguage = 'langu
     throw new Error('Le texte ne peut pas être vide')
   }
 
+  // Récupérer le JWT Appwrite pour authentifier la requête
+  const { getSessionJWT } = await import('./appwrite')
+  const jwt = await getSessionJWT()
+  
+  if (!jwt) {
+    throw new Error('User not authenticated. Please log in to use TTS.')
+  }
+
   // Essayer d'abord l'URL configurée, puis fallback sur PROD
   const urlsToTry = [
     BASE,
@@ -128,6 +145,7 @@ export async function ttsToTempURL(text: string, language: VotzLanguage = 'langu
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`
         },
         body: JSON.stringify({
           text: text.trim(),

@@ -97,13 +97,14 @@ function corsHeaders() {
   const allowedOrigins = [
     'http://localhost:5173',  // Dev local
     'http://localhost:3000',   // Dev alternatif
-    'https://ankilang.netlify.app',  // Production
+    'https://ankilang.netlify.app',  // Production Netlify
     'https://ankilang.com',    // Domaine de production
+    'https://ankilang.pages.dev',  // Production Cloudflare Pages
   ];
   
   // En production, utiliser l'origine spécifique au lieu de *
   const origin = process.env.NODE_ENV === 'production' 
-    ? 'https://ankilang.netlify.app' 
+    ? 'https://ankilang.pages.dev'  // Cloudflare Pages par défaut
     : '*';
   
   return {
@@ -162,8 +163,9 @@ function isAllowedOrigin(origin: string): boolean {
   const allowedOrigins = [
     'http://localhost:5173',  // Dev local
     'http://localhost:3000',   // Dev alternatif
-    'https://ankilang.netlify.app',  // Production
+    'https://ankilang.netlify.app',  // Production Netlify
     'https://ankilang.com',    // Domaine de production
+    'https://ankilang.pages.dev',  // Production Cloudflare Pages
   ];
   
   return allowedOrigins.includes(origin);
