@@ -1,297 +1,92 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  User, Settings, Shield, Database, 
-  CheckCircle, AlertTriangle,
-  ArrowLeft, LogOut
-} from 'lucide-react'
-import { getAccount, updateSubscription } from '../../../data/mockAccount'
-import ProfileCard from '../../../components/account/ProfileCard'
-import ProfileForm from '../../../components/account/ProfileForm'
-import SubscriptionBadge from '../../../components/account/SubscriptionBadge'
-import SecurityForm from '../../../components/account/SecurityForm'
-import SessionsList from '../../../components/account/SessionsList'
-import DataControls from '../../../components/account/DataControls'
-import { useAuth } from '../../../hooks/useAuth'
-
-import ConfirmModal from '../../../components/ui/ConfirmModal'
-import PageMeta from '../../../components/seo/PageMeta'
+import { motion } from 'framer-motion'
+import { LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import PageMeta from '../../../components/seo/PageMeta'
+import { useAuth } from '../../../hooks/useAuth'
+import { useSubscription } from '../../../contexts/SubscriptionContext'
+
+function getInitials(name?: string | null) {
+  if (!name || !name.trim()) return 'A'
+  const parts = name.trim().split(/\s+/)
+  const initials = [parts[0]?.[0], parts[1]?.[0]].filter(Boolean).join('')
+  return initials.toUpperCase() || name.slice(0, 2).toUpperCase()
+}
 
 export default function AccountIndex() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
-  const [account, setAccount] = useState(getAccount())
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'data'>('profile')
-  const [showEmailModal, setShowEmailModal] = useState(false)
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
-  const isOffline = !navigator.onLine
-
-  const handleProfileUpdate = (updatedUser: any) => {
-    setAccount(prev => ({ ...prev, user: updatedUser }))
-    setIsEditingProfile(false)
-    setMessage({ type: 'success', text: 'Profil mis à jour avec succès' })
-  }
-
-  const handleSessionsUpdate = (sessions: any[]) => {
-    setAccount(prev => ({ ...prev, sessions }))
-  }
-
-  const handleCancelSubscription = () => {
-    const updatedAccount = updateSubscription({ status: 'canceled', plan: 'free' })
-    setAccount(updatedAccount)
-    setMessage({ type: 'success', text: 'Abonnement annulé avec succès' })
-  }
-
-  const handleEmailChange = () => {
-    console.log('request email change')
-    setMessage({ type: 'success', text: 'Demande de changement d\'email envoyée' })
-  }
+  const { user, logout } = useAuth()
+  const { plan, upgradeToPremium } = useSubscription()
 
   const handleLogout = async () => {
-    try {
-      await logout()
-      navigate('/')
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error)
-      setMessage({ type: 'error', text: 'Erreur lors de la déconnexion' })
-    }
+    await logout()
+    navigate('/')
   }
 
-  const tabs = [
-    { id: 'profile', label: 'Profil', icon: User },
-    { id: 'security', label: 'Sécurité', icon: Shield },
-    { id: 'preferences', label: 'Préférences', icon: Settings },
-    { id: 'data', label: 'Données', icon: Database }
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pastel-purple via-pastel-green/30 to-pastel-rose/20">
-      <PageMeta 
-        title="Mon compte — Ankilang" 
-        description="Profil, abonnement et préférences de votre compte."
-      />
-      
-      {/* Éléments décoratifs */}
-      <div className="fixed top-0 right-0 w-96 h-96 bg-pastel-rose/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-80 h-80 bg-pastel-purple/30 rounded-full blur-2xl pointer-events-none" />
-      
-      {/* Header */}
-      <motion.header 
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative bg-white/60 backdrop-blur-md border-b border-white/40"
-        style={{ paddingTop: 'var(--safe-top, 0px)' }}
-      >
-        <div className="container mx-auto px-4 sm:px-6 py-6">
-          <div className="flex items-center gap-4 mb-6">
-            <motion.button
-              onClick={() => navigate('/app')}
-              whileHover={{ scale: 1.1, x: -2 }}
-              whileTap={{ scale: 0.9 }}
-              className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
-            >
-              <ArrowLeft size={18} />
-            </motion.button>
-            
-            <div>
-              <h1 className="font-display text-3xl sm:text-4xl font-bold text-dark-charcoal">
-                Mon Compte
-              </h1>
-              <p className="font-sans text-dark-charcoal/70 mt-1">
-                Gérez votre profil et vos préférences
-              </p>
-            </div>
-          </div>
-
-          {/* Navigation tabs */}
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <motion.button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-sans font-medium transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? 'bg-white text-dark-charcoal shadow-lg border border-white/40'
-                      : 'bg-white/40 text-dark-charcoal/70 hover:bg-white/60 border border-white/20'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </motion.button>
-              )
-            })}
-            
-            {/* Bouton de déconnexion */}
-            <motion.button
-              onClick={() => setShowLogoutModal(true)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-sans font-medium transition-all duration-200 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
-            >
-              <LogOut className="w-4 h-4" />
-              Se déconnecter
-            </motion.button>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Message de notification */}
-      <AnimatePresence>
-        {message && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-20 right-4 z-50"
-          >
-            <div className={`px-4 py-3 rounded-xl shadow-lg backdrop-blur-md border ${
-              message.type === 'success' 
-                ? 'bg-green-50/90 border-green-200 text-green-800' 
-                : 'bg-red-50/90 border-red-200 text-red-800'
-            }`}>
-              <div className="flex items-center gap-2">
-                {message.type === 'success' ? (
-                  <CheckCircle className="w-4 h-4" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4" />
-                )}
-                <span className="font-sans text-sm font-medium">{message.text}</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Contenu principal */}
-      <main className="container mx-auto px-4 sm:px-6 py-8">
-        <div className="max-w-4xl mx-auto">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
-            >
-              {activeTab === 'profile' && (
-                <div className="space-y-6">
-                  {/* Carte de profil */}
-                  <ProfileCard 
-                    user={account.user} 
-                    subscription={account.subscription}
-                    onEdit={() => setIsEditingProfile(true)}
-                  />
-                  
-                  {/* Formulaire d'édition */}
-                  {isEditingProfile && (
-                    <ProfileForm
-                      user={account.user}
-                      onSubmit={handleProfileUpdate}
-                      onCancel={() => setIsEditingProfile(false)}
-                    />
-                  )}
-
-                  {/* Badge d'abonnement */}
-                  <SubscriptionBadge
-                    plan={account.subscription.plan}
-                    status={account.subscription.status}
-                  />
-                </div>
-              )}
-
-              {activeTab === 'security' && (
-                <div className="space-y-6">
-                  <SecurityForm onEmailChange={() => {
-                    // TODO: Implémenter la logique de changement d'email
-                    alert('Fonctionnalité de changement d\'email à implémenter')
-                  }} />
-                  <SessionsList
-                    sessions={account.sessions}
-                    onSessionsUpdate={handleSessionsUpdate}
-                  />
-                </div>
-              )}
-
-              {activeTab === 'preferences' && (
-                <div className="bg-white/80 backdrop-blur-md rounded-xl p-6 border border-white/40">
-                  <h3 className="text-lg font-semibold text-dark-charcoal mb-4">Préférences</h3>
-                  <p className="text-dark-charcoal/70">Les préférences seront bientôt disponibles.</p>
-                </div>
-              )}
-
-              {activeTab === 'data' && (
-                <DataControls accountId={account.user.id} />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
-
-      {/* Modales */}
-      <ConfirmModal
-        open={showEmailModal}
-        onClose={() => setShowEmailModal(false)}
-        onConfirm={() => {
-          handleEmailChange()
-          setShowEmailModal(false)
-        }}
-        title="Changer d'adresse email"
-        description="Êtes-vous sûr de vouloir changer votre adresse email ? Un lien de confirmation sera envoyé à votre nouvelle adresse."
-        confirmLabel="Confirmer"
+    <div className="min-h-screen bg-gradient-to-br from-pastel-purple/60 via-white to-pastel-rose/40">
+      <PageMeta
+        title="Profil — Ankilang"
+        description="Gérez les informations essentielles de votre compte et accédez à la version Pro."
       />
 
-      <ConfirmModal
-        open={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        onConfirm={() => {
-          handleCancelSubscription()
-          setShowCancelModal(false)
-        }}
-        title="Annuler l'abonnement"
-        description="Êtes-vous sûr de vouloir annuler votre abonnement ? Vous perdrez l'accès aux fonctionnalités premium à la fin de la période de facturation."
-        confirmLabel="Annuler l'abonnement"
-        isDanger={true}
-      />
-
-      <ConfirmModal
-        open={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={() => {
-          handleLogout()
-          setShowLogoutModal(false)
-        }}
-        title="Se déconnecter"
-        description="Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous reconnecter pour accéder à vos thèmes et flashcards."
-        confirmLabel="Se déconnecter"
-        isDanger={true}
-      />
-
-      {/* Indicateur hors ligne */}
-      {isOffline && (
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-4 left-4 right-4 bg-orange-100/90 backdrop-blur-md border border-orange-200 rounded-xl p-4 shadow-lg"
+      <header className="container mx-auto px-4 sm:px-6 pt-10 pb-6 text-center">
+        <button
+          onClick={() => navigate('/app')}
+          className="inline-flex items-center gap-2 text-sm text-dark-charcoal/70 transition-colors hover:text-dark-charcoal"
         >
-          <div className="flex items-center gap-2 text-orange-800">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="font-sans text-sm font-medium">
-              Mode hors ligne - Certaines fonctionnalités peuvent être limitées
-            </span>
+          <span aria-hidden>←</span>
+          Retour à l'application
+        </button>
+        <h1 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-dark-charcoal">
+          Mon profil
+        </h1>
+        <p className="mt-2 text-dark-charcoal/70">
+          Informations essentielles de votre compte et accès rapide à Ankilang Pro.
+        </p>
+      </header>
+
+      <main className="container mx-auto px-4 sm:px-6 pb-12">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="mx-auto max-w-xl rounded-3xl bg-white/95 p-8 shadow-xl backdrop-blur border border-white/60"
+        >
+          <div className="flex flex-col items-center gap-6 text-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-pastel-purple to-pastel-rose text-2xl font-bold text-white">
+              {getInitials(user?.name || user?.email)}
+            </div>
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-dark-charcoal">
+                {user?.name || 'Utilisateur Ankilang'}
+              </h2>
+              <p className="mt-1 text-sm text-dark-charcoal/70">{user?.email}</p>
+            </div>
+
+            <div className="w-full rounded-xl border border-pastel-purple/40 bg-pastel-purple/10 px-4 py-3 text-sm text-dark-charcoal">
+              <span className="font-semibold">Plan actuel :</span>{' '}
+              {plan === 'premium' ? 'Premium' : 'Free'}
+            </div>
+
+            <div className="flex w-full flex-col gap-3">
+              <button
+                onClick={upgradeToPremium}
+                className="w-full rounded-xl bg-gradient-to-r from-pastel-purple to-pastel-rose px-4 py-3 font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-pastel-purple"
+              >
+                Passer en version Pro
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-300"
+              >
+                <LogOut className="h-4 w-4" />
+                Se déconnecter
+              </button>
+            </div>
           </div>
-        </motion.div>
-      )}
+        </motion.section>
+      </main>
     </div>
   )
 }
