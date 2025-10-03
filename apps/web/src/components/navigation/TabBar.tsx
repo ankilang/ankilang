@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { Home, GraduationCap, User, Layers3 } from 'lucide-react'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useTabNavigation } from '../../hooks/useTabNavigation'
@@ -130,11 +130,21 @@ function TabBar() {
   const isOnline = useOnlineStatus()
   const { isVisible, isCompact, isKeyboardOpen } = useTabBarVisibility()
   const navRef = useRef<HTMLElement>(null)
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  )
 
-  // Ne pas afficher la TabBar si pas en mode PWA installée
-  if (!isInstalled) {
-    return null
-  }
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handler = () => {
+      setIsMobileViewport(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
+  const shouldRender = isInstalled || isMobileViewport
+  if (!shouldRender) return null
 
   // Ne pas afficher la TabBar si elle doit être masquée
   if (!isVisible) {

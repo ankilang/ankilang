@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom'
 import { User, Menu, X, LogOut } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -20,6 +20,9 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const isPro = plan !== 'free'
   const { isVisible: isTabBarVisible } = useTabBarVisibility()
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  )
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -38,8 +41,17 @@ export default function AppLayout() {
     setIsMobileMenuOpen(false)
   }
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handler = () => setIsMobileViewport(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
+  const hasBottomNav = (isInstalled || isMobileViewport) && isTabBarVisible
+
   // Déterminer si le header doit être masqué/compacté
-  const shouldHideHeader = isInstalled && isTabBarVisible
+  const shouldHideHeader = hasBottomNav
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -215,10 +227,10 @@ export default function AppLayout() {
 
       {/* Contenu principal avec padding conditionnel pour TabBar */}
       <main 
-        className={`app-content ${isInstalled ? 'pt-0' : ''}`}
+        className="app-content"
         style={{
-          paddingBottom: isTabBarVisible 
-            ? 'calc(64px + var(--safe-bottom))' 
+          paddingBottom: hasBottomNav
+            ? 'calc(64px + env(safe-area-inset-bottom, 0px))' 
             : '0',
           paddingTop: isInstalled ? 'var(--safe-top)' : '0' // Ajout pour la safe area du haut
         }}
