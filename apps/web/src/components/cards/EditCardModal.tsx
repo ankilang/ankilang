@@ -3,20 +3,23 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { 
-  X, Brain, Type, Sparkles, AlertCircle, Check
+  X, Brain, Type, Sparkles, AlertCircle, Check, Trash2, Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '../../types/shared'
 import type { Card } from '../../types/shared'
+import { pexelsSearchPhotos, optimizeAndUploadImage } from '../../services/pexels'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
   // RECTO
   recto: z.string().min(1, 'Le contenu du recto est requis'),
   rectoImage: z.string().optional(),
+  rectoImageType: z.enum(['appwrite', 'external']).optional(),
   // VERSO
   verso: z.string().min(1, 'Le contenu du verso est requis'),
   versoImage: z.string().optional(),
+  versoImageType: z.enum(['appwrite', 'external']).optional(),
   versoAudio: z.string().optional(),
   // EXTRA
   extra: z.string().optional(),
@@ -30,6 +33,7 @@ const clozeCardSchema = z.object({
     'Le texte doit contenir au moins un trou au format {{cN::...}}'
   ),
   clozeImage: z.string().optional(),
+  clozeImageType: z.enum(['appwrite', 'external']).optional(),
   extra: z.string().optional(),
   tags: z.string().optional()
 })
@@ -64,12 +68,21 @@ export default function EditCardModal({
 }: EditCardModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   const [selectedType, setSelectedType] = useState<'basic' | 'cloze'>(card.type)
+  
+  // États pour la gestion des images
+  const [showImageSelector, setShowImageSelector] = useState(false)
+  const [imageQuery, setImageQuery] = useState('')
+  const [imageResults, setImageResults] = useState<any[]>([])
+  const [isLoadingImages, setIsLoadingImages] = useState(false)
+  const [isOptimizingImage, setIsOptimizingImage] = useState(false)
+  const [currentImageField, setCurrentImageField] = useState<'versoImage' | 'clozeImage' | null>(null)
 
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
-    setValue
+    setValue,
+    watch
   } = useForm<CardFormData>({
     resolver: zodResolver(cardSchema),
     defaultValues: {
@@ -78,7 +91,12 @@ export default function EditCardModal({
       verso: card.type === 'basic' ? card.backText || '' : '',
       clozeTextTarget: card.type === 'cloze' ? card.clozeTextTarget || '' : '',
       extra: card.extra || '',
-      tags: card.tags ? card.tags.join(', ') : ''
+      tags: card.tags ? card.tags.join(', ') : '',
+      // Images avec leurs types
+      versoImage: card.imageUrl || '',
+      versoImageType: card.imageUrlType || 'external',
+      clozeImage: card.imageUrl || '',
+      clozeImageType: card.imageUrlType || 'external'
     },
     mode: 'onChange'
   })
@@ -128,6 +146,57 @@ export default function EditCardModal({
     }
   }, [isOpen, onClose])
 
+  // Fonctions de gestion des images
+  const handleSearchImages = async () => {
+    if (!imageQuery.trim()) return
+    
+    setIsLoadingImages(true)
+    try {
+      const results = await pexelsSearchPhotos(imageQuery, { per_page: 12 })
+      setImageResults(results.photos || [])
+    } catch (error) {
+      console.error('Erreur lors de la recherche d\'images:', error)
+      setImageResults([])
+    } finally {
+      setIsLoadingImages(false)
+    }
+  }
+
+  const handleSelectImage = async (image: any) => {
+    if (!currentImageField) return
+    
+    setIsOptimizingImage(true)
+    try {
+      const result = await optimizeAndUploadImage(image.src.medium)
+      if (result.success) {
+        setValue(currentImageField, result.fileId)
+        setValue(`${currentImageField}Type` as any, 'appwrite')
+        console.log(`✅ Image optimisée: ${result.savings}% de réduction`)
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'optimisation:', error)
+      // Fallback: utiliser l'URL Pexels directe
+      setValue(currentImageField, image.src.medium)
+      setValue(`${currentImageField}Type` as any, 'external')
+    } finally {
+      setIsOptimizingImage(false)
+      setShowImageSelector(false)
+      setCurrentImageField(null)
+    }
+  }
+
+  const handleRemoveImage = (field: 'versoImage' | 'clozeImage') => {
+    setValue(field, '')
+    setValue(`${field}Type` as any, 'external')
+  }
+
+  const handleOpenImageSelector = (field: 'versoImage' | 'clozeImage') => {
+    setCurrentImageField(field)
+    setShowImageSelector(true)
+    setImageQuery('')
+    setImageResults([])
+  }
+
   const handleTypeChange = (type: 'basic' | 'cloze') => {
     setSelectedType(type)
     setValue('type', type)
@@ -147,7 +216,10 @@ export default function EditCardModal({
     const submitData = {
       ...data,
       themeId: card.themeId,
-      tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+      tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+      // Gestion des images avec leurs types
+      imageUrl: selectedType === 'basic' ? (data as any).versoImage : (data as any).clozeImage,
+      imageUrlType: selectedType === 'basic' ? (data as any).versoImageType : (data as any).clozeImageType
     }
     onSubmit(submitData as z.infer<typeof CreateCardSchema>)
   }
@@ -323,6 +395,59 @@ export default function EditCardModal({
                             </motion.p>
                           )}
                         </div>
+
+                        {/* Section Image pour le verso */}
+                        <div>
+                          <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                            Image (optionnel)
+                          </label>
+                          
+                          {/* Affichage de l'image actuelle */}
+                          {watch('versoImage') && (
+                            <div className="mb-3">
+                              <div className="relative inline-block">
+                                <img 
+                                  src={watch('versoImageType') === 'appwrite' 
+                                    ? `https://cloud.appwrite.io/v1/storage/buckets/flashcard-images/files/${watch('versoImage')}/view?project=ankilang&mode=admin`
+                                    : watch('versoImage')
+                                  }
+                                  alt="Image actuelle"
+                                  className="w-32 h-24 object-cover rounded-lg border-2 border-gray-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveImage('versoImage')}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Boutons de gestion d'image */}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenImageSelector('versoImage')}
+                              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              <Search size={16} />
+                              {watch('versoImage') ? 'Modifier l\'image' : 'Ajouter une image'}
+                            </button>
+                            
+                            {watch('versoImage') && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage('versoImage')}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                                Supprimer
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </motion.div>
                     ) : (
                       <motion.div
@@ -356,6 +481,59 @@ export default function EditCardModal({
                               {(errors as any).clozeTextTarget.message}
                             </motion.p>
                           )}
+                        </div>
+
+                        {/* Section Image pour cloze */}
+                        <div>
+                          <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                            Image (optionnel)
+                          </label>
+                          
+                          {/* Affichage de l'image actuelle */}
+                          {watch('clozeImage') && (
+                            <div className="mb-3">
+                              <div className="relative inline-block">
+                                <img 
+                                  src={watch('clozeImageType') === 'appwrite' 
+                                    ? `https://cloud.appwrite.io/v1/storage/buckets/flashcard-images/files/${watch('clozeImage')}/view?project=ankilang&mode=admin`
+                                    : watch('clozeImage')
+                                  }
+                                  alt="Image actuelle"
+                                  className="w-32 h-24 object-cover rounded-lg border-2 border-gray-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveImage('clozeImage')}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Boutons de gestion d'image */}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenImageSelector('clozeImage')}
+                              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              <Search size={16} />
+                              {watch('clozeImage') ? 'Modifier l\'image' : 'Ajouter une image'}
+                            </button>
+                            
+                            {watch('clozeImage') && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage('clozeImage')}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                                Supprimer
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -405,6 +583,82 @@ export default function EditCardModal({
                     </motion.div>
                   )}
 
+                  {/* Sélecteur d'images Pexels */}
+                  {showImageSelector && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="p-4 bg-gray-50 rounded-xl border-2 border-gray-200"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-sans font-semibold text-dark-charcoal">
+                          Rechercher une image
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setShowImageSelector(false)}
+                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+
+                      {/* Barre de recherche */}
+                      <div className="flex gap-2 mb-4">
+                        <input
+                          type="text"
+                          value={imageQuery}
+                          onChange={(e) => setImageQuery(e.target.value)}
+                          placeholder="Rechercher une image..."
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                          onKeyPress={(e) => e.key === 'Enter' && handleSearchImages()}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSearchImages}
+                          disabled={!imageQuery.trim() || isLoadingImages}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isLoadingImages ? 'Recherche...' : 'Rechercher'}
+                        </button>
+                      </div>
+
+                      {/* Résultats d'images */}
+                      {imageResults.length > 0 && (
+                        <div className="grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                          {imageResults.map((image, index) => (
+                            <motion.button
+                              key={index}
+                              type="button"
+                              onClick={() => handleSelectImage(image)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="relative group"
+                            >
+                              <img
+                                src={image.src.small}
+                                alt={image.alt || 'Image Pexels'}
+                                className="w-full h-24 object-cover rounded-lg border-2 border-transparent group-hover:border-blue-500 transition-colors"
+                              />
+                              {isOptimizingImage && (
+                                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
+
+                      {imageResults.length === 0 && imageQuery && !isLoadingImages && (
+                        <p className="text-center text-gray-500 py-4">
+                          Aucune image trouvée pour "{imageQuery}"
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+
                   {/* Actions */}
                   <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
                     <motion.button
@@ -446,6 +700,10 @@ export default function EditCardModal({
                       )}
                     </motion.button>
                   </div>
+
+                  {/* Champs cachés pour les types d'images */}
+                  <input type="hidden" {...register('versoImageType')} />
+                  <input type="hidden" {...register('clozeImageType')} />
                 </form>
               </div>
             </div>
