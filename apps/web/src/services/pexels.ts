@@ -14,24 +14,45 @@ function toURL(path: string, opts?: Opts) {
   return u.toString()
 }
 
+async function fetchPexels(path: string, opts?: Opts) {
+  const url = toURL(path, opts)
+
+  const { getSessionJWT } = await import('./appwrite')
+  const jwt = await getSessionJWT()
+
+  if (!jwt) {
+    throw new Error('User not authenticated. Please log in to use Pexels.')
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${jwt}`
+    }
+  })
+
+  if (!res.ok) {
+    const errorText = await safeText(res)
+    if (res.status === 401) {
+      throw new Error('Pexels authentication failed. Please log in again.')
+    }
+    throw new Error(`Pexels request failed: ${res.status} - ${errorText}`)
+  }
+
+  return res
+}
+
 export async function pexelsSearchPhotos(query: string, opts: Opts = {}) {
-  const url = toURL('/photos/search', { query, ...opts })
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Pexels search failed: ${res.status}`)
+  const res = await fetchPexels('/photos/search', { query, ...opts })
   return res.json() as Promise<{ page: number; per_page: number; total_results: number; next_page?: string; prev_page?: string; photos: any[] }>
 }
 
 export async function pexelsCurated(opts: Opts = {}) {
-  const url = toURL('/photos/curated', opts)
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Pexels curated failed: ${res.status}`)
+  const res = await fetchPexels('/photos/curated', opts)
   return res.json() as Promise<{ page: number; per_page: number; total_results: number; next_page?: string; prev_page?: string; photos: any[] }>
 }
 
 export async function pexelsPhoto(id: number | string) {
-  const url = toURL(`/photos/${id}`)
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Pexels photo failed: ${res.status}`)
+  const res = await fetchPexels(`/photos/${id}`)
   return res.json()
 }
 
@@ -76,4 +97,6 @@ export async function optimizeAndUploadImage(pexelsUrl: string) {
     savings: number
   }>
 }
-
+async function safeText(res: Response) {
+  try { return await res.text() } catch { return '' }
+}
