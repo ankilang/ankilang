@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      disable: true,
       registerType: 'autoUpdate',
       manifest: false, // Utilise le manifest externe
       workbox: {
@@ -37,7 +38,8 @@ export default defineConfig({
             }
           }
         ]
-      }
+      },
+      minify: false
     })
   ],
   resolve: {
