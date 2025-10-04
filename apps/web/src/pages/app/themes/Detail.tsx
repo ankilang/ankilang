@@ -154,22 +154,14 @@ export default function ThemeDetail() {
       // Supprimer la carte d'Appwrite
       await cardsService.deleteCard(card.id, user.$id)
       
+      // Décrémenter le compteur de cartes dans Appwrite et récupérer le thème mis à jour
+      const updatedTheme = await themesService.decrementCardCount(id, user.$id)
+      
       // Mettre à jour l'état local
       setCards(prevCards => prevCards.filter(c => c.id !== card.id))
       
-      // Mettre à jour le compteur du thème
-      if (theme) {
-        setTheme({
-          ...theme,
-          cardCount: Math.max(0, theme.cardCount - 1)
-        })
-      }
-
-      try {
-        await themesService.decrementCardCount(id, user.$id)
-      } catch (countError) {
-        console.warn('⚠️ Impossible de décrémenter le compteur sur Appwrite:', countError instanceof Error ? countError.message : countError)
-      }
+      // Mettre à jour le thème avec la valeur retournée par Appwrite
+      setTheme(updatedTheme)
       
       console.log('✅ Carte supprimée avec succès')
     } catch (error) {
@@ -201,8 +193,8 @@ export default function ThemeDetail() {
         tags: data.tags || []
       })
       
-      // Incrémenter le compteur de cartes dans Appwrite
-      await themesService.incrementCardCount(id, user.$id)
+      // Incrémenter le compteur de cartes dans Appwrite et récupérer le thème mis à jour
+      const updatedTheme = await themesService.incrementCardCount(id, user.$id)
       
       // Mettre à jour l'état local avec la nouvelle carte
       setCards(prevCards => [
@@ -225,19 +217,8 @@ export default function ThemeDetail() {
         ...prevCards
       ])
       
-      // Mettre à jour le compteur du thème
-      if (theme) {
-        setTheme({
-          ...theme,
-          cardCount: theme.cardCount + 1
-        })
-      }
-
-      try {
-        await themesService.incrementCardCount(id, user.$id)
-      } catch (countError) {
-        console.warn('⚠️ Impossible de mettre à jour le compteur sur Appwrite:', countError instanceof Error ? countError.message : countError)
-      }
+      // Mettre à jour le thème avec la valeur retournée par Appwrite
+      setTheme(updatedTheme)
 
       setIsModalOpen(false)
       console.log('✅ Carte créée avec succès dans Appwrite')
