@@ -148,7 +148,7 @@ export default function ThemeDetail() {
   }
 
   const handleDeleteCard = async (card: Card) => {
-    if (!user) return
+    if (!user || !id) return
 
     try {
       // Supprimer la carte d'Appwrite
@@ -163,6 +163,12 @@ export default function ThemeDetail() {
           ...theme,
           cardCount: Math.max(0, theme.cardCount - 1)
         })
+      }
+
+      try {
+        await themesService.decrementCardCount(id, user.$id)
+      } catch (countError) {
+        console.warn('⚠️ Impossible de décrémenter le compteur sur Appwrite:', countError instanceof Error ? countError.message : countError)
       }
       
       console.log('✅ Carte supprimée avec succès')
@@ -195,6 +201,9 @@ export default function ThemeDetail() {
         tags: data.tags || []
       })
       
+      // Incrémenter le compteur de cartes dans Appwrite
+      await themesService.incrementCardCount(id, user.$id)
+      
       // Mettre à jour l'état local avec la nouvelle carte
       setCards(prevCards => [
         {
@@ -223,7 +232,13 @@ export default function ThemeDetail() {
           cardCount: theme.cardCount + 1
         })
       }
-      
+
+      try {
+        await themesService.incrementCardCount(id, user.$id)
+      } catch (countError) {
+        console.warn('⚠️ Impossible de mettre à jour le compteur sur Appwrite:', countError instanceof Error ? countError.message : countError)
+      }
+
       setIsModalOpen(false)
       console.log('✅ Carte créée avec succès dans Appwrite')
     } catch (err) {
