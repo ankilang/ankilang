@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import AnkilangLogo from '../ui/AnkilangLogo'
 import SafeArea from '../ui/SafeArea'
 import { usePWAContext } from '../../contexts/PWAContext'
-import { useSubscription } from '../../contexts/SubscriptionContext'
+import { useSubscription, TESTER_ID } from '../../contexts/SubscriptionContext'
 import { useAuth } from '../../hooks/useAuth'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import TabBar from '../navigation/TabBar'
@@ -16,7 +16,7 @@ export default function AppLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { isInstalled } = usePWAContext()
   const { plan, toggleTestMode } = useSubscription()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const isPro = plan !== 'free'
   const { isVisible: isTabBarVisible } = useTabBarVisibility()
@@ -117,19 +117,19 @@ export default function AppLayout() {
             {/* Actions utilisateur */}
             <div className="flex items-center gap-4">
               {/* Bouton de test pour basculer entre modes gratuit/premium */}
-              {process.env.NODE_ENV === 'development' && (
+              {(process.env.NODE_ENV === 'development' || user?.$id === TESTER_ID) && (
                 <motion.button
                   onClick={toggleTestMode}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    plan === 'test' 
+                    plan !== 'free'
                       ? 'bg-green-100 text-green-700 border border-green-200' 
                       : 'bg-red-100 text-red-700 border border-red-200'
                   }`}
-                  title={`Actuellement en mode ${plan === 'test' ? 'Premium' : 'Gratuit'} - Cliquer pour basculer`}
+                  title={`Actuellement en mode ${plan !== 'free' ? 'Premium' : 'Gratuit'} - Cliquer pour basculer`}
                 >
-                  {plan === 'test' ? '👑 Premium' : '🔒 Gratuit'}
+                  {plan !== 'free' ? '👑 Premium' : '🔒 Gratuit'}
                 </motion.button>
               )}
 

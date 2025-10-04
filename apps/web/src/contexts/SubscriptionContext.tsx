@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 
 interface SubscriptionFeatures {
   canAddImages: boolean
@@ -36,12 +37,37 @@ const PREMIUM_FEATURES: SubscriptionFeatures = {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
-export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [plan, setPlan] = useState<'free' | 'premium' | 'test'>(
-    process.env.NODE_ENV === 'development' ? 'test' : 'free'
-  )
+const DEFAULT_PLAN: 'free' | 'premium' | 'test' = process.env.NODE_ENV === 'development' ? 'test' : 'free'
+export const TESTER_ID = '68df8ef900381fdfe12e'
+const STORAGE_KEY = 'ankilang:planOverride'
 
-  const features = plan === 'free' ? FREE_FEATURES : PREMIUM_FEATURES
+export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  const [plan, setPlan] = useState<'free' | 'premium' | 'test'>(DEFAULT_PLAN)
+
+  const isTester = user?.$id === TESTER_ID
+
+  useEffect(() => {
+    if (!isTester) {
+      setPlan(DEFAULT_PLAN)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+      return
+    }
+
+    const storedPlan = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+    if (storedPlan === 'premium' || storedPlan === 'free') {
+      setPlan(storedPlan as 'free' | 'premium')
+    } else {
+      setPlan('premium')
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, 'premium')
+      }
+    }
+  }, [isTester])
+
+  const features = useMemo(() => (plan === 'free' ? FREE_FEATURES : PREMIUM_FEATURES), [plan])
 
   const upgradeToPremium = () => {
     console.log('🚀 Redirection vers page de paiement...')
@@ -50,9 +76,24 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const toggleTestMode = () => {
+    if (isTester) {
+      setPlan(current => {
+        const next = current === 'premium' ? 'free' : 'premium'
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, next)
+        }
+        console.log('🔄 Plan testeur basculé vers:', next)
+        return next
+      })
+      return
+    }
+
     if (process.env.NODE_ENV === 'development') {
-      setPlan(current => current === 'test' ? 'free' : 'test')
-      console.log('🔄 Mode basculé vers:', plan === 'test' ? 'free' : 'test')
+      setPlan(current => {
+        const next = current === 'test' ? 'free' : 'test'
+        console.log('🔄 Mode basculé vers:', next)
+        return next
+      })
     }
   }
 

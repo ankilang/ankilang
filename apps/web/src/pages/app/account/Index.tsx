@@ -4,7 +4,7 @@ import { LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import PageMeta from '../../../components/seo/PageMeta'
 import { useAuth } from '../../../hooks/useAuth'
-import { useSubscription } from '../../../contexts/SubscriptionContext'
+import { TESTER_ID, useSubscription } from '../../../contexts/SubscriptionContext'
 import { AppwriteException } from 'appwrite'
 
 function getInitials(name?: string | null) {
@@ -17,7 +17,7 @@ function getInitials(name?: string | null) {
 export default function AccountIndex() {
   const navigate = useNavigate()
   const { user, logout, updateEmail } = useAuth()
-  const { plan, upgradeToPremium } = useSubscription()
+  const { plan, upgradeToPremium, toggleTestMode } = useSubscription()
 
   const [email, setEmail] = useState(user?.email ?? '')
   const [password, setPassword] = useState('')
@@ -116,6 +116,16 @@ export default function AccountIndex() {
                 Se déconnecter
               </button>
             </div>
+
+            {user?.$id === TESTER_ID && (
+              <button
+                type="button"
+                onClick={toggleTestMode}
+                className="w-full rounded-xl border border-pastel-purple/40 bg-white px-4 py-2 text-sm font-medium text-pastel-purple transition-colors hover:bg-pastel-purple/10"
+              >
+                Basculer vers le mode {plan !== 'free' ? 'gratuit' : 'premium'} (test)
+              </button>
+            )}
 
             <form
               onSubmit={handleEmailSubmit}
