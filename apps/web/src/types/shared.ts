@@ -17,6 +17,7 @@ export const CardSchema = z.object({
   clozeTextTarget: z.string().optional(), // Texte avec {{cN::...}} (pour Cloze)
   extra: z.string().optional(), // Informations supplémentaires
   imageUrl: z.string().url().optional(), // URL de l'image
+  imageUrlType: z.enum(['appwrite', 'external']).optional().default('external'), // Type de source d'image
   audioUrl: z.string().url().optional(), // URL de l'audio
   tags: z.array(z.string()).optional().default([]),
   createdAt: z.string().datetime().optional(),

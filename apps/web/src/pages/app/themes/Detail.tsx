@@ -61,6 +61,7 @@ export default function ThemeDetail() {
         clozeTextTarget: card.clozeTextTarget,
         extra: card.extra,
         imageUrl: card.imageUrl,
+        imageUrlType: card.imageUrlType || 'external', // Valeur par défaut pour les cartes existantes
         audioUrl: card.audioUrl,
         tags: card.tags,
         createdAt: card.$createdAt,
@@ -189,6 +190,7 @@ export default function ThemeDetail() {
         clozeTextTarget: data.clozeTextTarget,
         extra: data.extra,
         imageUrl: data.imageUrl || '',
+        imageUrlType: data.imageUrlType || 'external',
         audioUrl: data.audioUrl || '',
         tags: data.tags || []
       })
@@ -205,6 +207,7 @@ export default function ThemeDetail() {
           clozeTextTarget: newCard.clozeTextTarget,
           extra: newCard.extra,
           imageUrl: newCard.imageUrl,
+          imageUrlType: newCard.imageUrlType || 'external',
           audioUrl: newCard.audioUrl,
           tags: newCard.tags,
           createdAt: newCard.$createdAt,
@@ -266,6 +269,7 @@ export default function ThemeDetail() {
               clozeTextTarget: updatedCard.clozeTextTarget,
               extra: updatedCard.extra,
               imageUrl: updatedCard.imageUrl,
+              imageUrlType: updatedCard.imageUrlType || 'external',
               audioUrl: updatedCard.audioUrl,
               tags: updatedCard.tags,
               createdAt: updatedCard.$createdAt,

@@ -22,9 +22,11 @@ type CardFormData = {
   recto?: string
   verso?: string
   versoImage?: string
+  versoImageType?: 'appwrite' | 'external'
   versoAudio?: string
   clozeTextTarget?: string
   clozeImage?: string
+  clozeImageType?: 'appwrite' | 'external'
   extra?: string
   tags?: string
 }
@@ -162,11 +164,13 @@ export default function NewCardModal({
       if (result.success) {
         console.log(`✅ Image optimisée: ${result.savings}% de réduction (${result.originalSize} → ${result.optimizedSize} bytes)`)
         
-        // Stocker l'URL Appwrite (optimisée)
+        // Stocker l'ID Appwrite (pour un lien fort) et marquer comme 'appwrite'
         if (selectedType === 'basic') {
-          setValue('versoImage', result.fileUrl)
+          setValue('versoImage', result.fileId) // Utiliser l'ID au lieu de l'URL
+          setValue('versoImageType', 'appwrite')
         } else {
-          setValue('clozeImage', result.fileUrl)
+          setValue('clozeImage', result.fileId) // Utiliser l'ID au lieu de l'URL
+          setValue('clozeImageType', 'appwrite')
         }
       }
     } catch (error) {
@@ -176,8 +180,10 @@ export default function NewCardModal({
       console.log('⚠️ Fallback: utilisation de l\'URL Pexels directe')
       if (selectedType === 'basic') {
         setValue('versoImage', src)
+        setValue('versoImageType', 'external')
       } else {
         setValue('clozeImage', src)
+        setValue('clozeImageType', 'external')
       }
     } finally {
       setIsOptimizingImage(false)
@@ -519,6 +525,7 @@ export default function NewCardModal({
       extra: (data as any).extra || undefined,
       // Images uniquement pour les abonnés (pas pour le plan gratuit)
       imageUrl: features.canAddImages ? (w.versoImage || w.clozeImage || undefined) : undefined,
+      imageUrlType: features.canAddImages ? (w.versoImageType || w.clozeImageType || 'external') : 'external',
       audioUrl: w.versoAudio || undefined,
       tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
     }
@@ -1261,6 +1268,10 @@ export default function NewCardModal({
                       )}
                     </motion.button>
                   </div>
+                  
+                  {/* Champs cachés pour les types d'image */}
+                  <input type="hidden" {...register('versoImageType')} />
+                  <input type="hidden" {...register('clozeImageType')} />
                 </form>
               </div>
             </div>

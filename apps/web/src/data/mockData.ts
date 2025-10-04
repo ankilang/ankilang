@@ -70,6 +70,7 @@ export const mockCards: Record<string, Card[]> = {
       frontFR: 'Comment dit-on "bonjour" en anglais ?',
       backText: 'Hello',
       extra: 'Formel : Hello, Hi (familier)',
+      imageUrlType: 'external',
       tags: ['salutations', 'basique'],
       createdAt: '2024-01-15T10:00:00Z',
       updatedAt: '2024-01-15T10:00:00Z'
@@ -82,6 +83,7 @@ export const mockCards: Record<string, Card[]> = {
       frontFR: 'Comment dit-on "au revoir" en anglais ?',
       backText: 'Goodbye',
       extra: 'Aussi : Bye, See you later',
+      imageUrlType: 'external',
       tags: ['salutations', 'basique'],
       createdAt: '2024-01-15T10:05:00Z',
       updatedAt: '2024-01-15T10:05:00Z'
@@ -93,6 +95,7 @@ export const mockCards: Record<string, Card[]> = {
       type: 'cloze',
       clozeTextTarget: 'The {{c1::cat}} {{c2::eats}} the {{c3::mouse}}',
       extra: 'Le chat mange la souris',
+      imageUrlType: 'external',
       tags: ['animaux', 'verbes'],
       createdAt: '2024-01-15T10:10:00Z',
       updatedAt: '2024-01-15T10:10:00Z'
@@ -107,6 +110,7 @@ export const mockCards: Record<string, Card[]> = {
       frontFR: 'Comment dit-on "je suis" en espagnol ?',
       backText: 'Yo soy',
       extra: 'Verbe ser (être) - présent indicatif',
+      imageUrlType: 'external',
       tags: ['verbe être', 'présent'],
       createdAt: '2024-01-10T09:00:00Z',
       updatedAt: '2024-01-10T09:00:00Z'
@@ -118,6 +122,7 @@ export const mockCards: Record<string, Card[]> = {
       type: 'cloze',
       clozeTextTarget: '{{c1::Yo}} {{c2::soy}} {{c3::estudiante}}',
       extra: 'Je suis étudiant(e)',
+      imageUrlType: 'external',
       tags: ['verbe être', 'profession'],
       createdAt: '2024-01-10T09:05:00Z',
       updatedAt: '2024-01-10T09:05:00Z'
@@ -132,6 +137,7 @@ export const mockCards: Record<string, Card[]> = {
       frontFR: 'Comment dit-on "bonjour" en occitan ?',
       backText: 'Bonjorn',
       extra: 'Formel : Bonjorn, familier : Adieu',
+      imageUrlType: 'external',
       tags: ['salutations', 'basique'],
       createdAt: '2024-01-05T11:00:00Z',
       updatedAt: '2024-01-05T11:00:00Z'
@@ -146,6 +152,7 @@ export const mockCards: Record<string, Card[]> = {
       frontFR: 'Comment dit-on "je mange" en allemand ?',
       backText: 'Ich esse',
       extra: 'Verbe essen (manger) - présent indicatif',
+      imageUrlType: 'external',
       tags: ['verbe manger', 'présent'],
       createdAt: '2024-01-12T15:00:00Z',
       updatedAt: '2024-01-12T15:00:00Z'

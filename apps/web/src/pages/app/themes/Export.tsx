@@ -92,6 +92,7 @@ export default function ThemeExport() {
         clozeTextTarget: card.clozeTextTarget,
         extra: card.extra,
         imageUrl: card.imageUrl,
+        imageUrlType: card.imageUrlType || 'external', // Valeur par défaut pour les cartes existantes
         audioUrl: card.audioUrl,
         tags: card.tags,
         createdAt: card.$createdAt,

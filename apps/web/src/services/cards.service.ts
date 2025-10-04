@@ -115,6 +115,7 @@ export class CardsService {
         clozeTextTarget: cardData.clozeTextTarget || '',
         extra: cardData.extra || '',
         imageUrl: cardData.imageUrl || '',
+        imageUrlType: cardData.imageUrlType || 'external',
         audioUrl: audioUrl,
         tags: cardData.tags || []
       };
@@ -142,8 +143,11 @@ export class CardsService {
   // Supprimer une carte
   async deleteCard(cardId: string, userId: string): Promise<void> {
     try {
-      // Vérifier les droits d'accès
-      await this.getCardById(cardId, userId);
+      // Récupérer la carte pour nettoyer les fichiers associés
+      const card = await this.getCardById(cardId, userId);
+      
+      // Nettoyer les fichiers Appwrite associés
+      await this.cleanupCardFiles(card);
       
       await databaseService.delete(this.collectionId, cardId);
       console.log(`✅ Carte ${cardId} supprimée d'Appwrite`);
@@ -193,6 +197,36 @@ export class CardsService {
     } catch (error) {
       console.error('[CardsService] Error counting cards:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Nettoie les fichiers Appwrite associés à une carte
+   */
+  private async cleanupCardFiles(card: AppwriteCard): Promise<void> {
+    try {
+      // Nettoyer l'image si elle est stockée dans Appwrite
+      if (card.imageUrl && card.imageUrlType === 'appwrite') {
+        try {
+          await storageService.deleteFile('flashcard-images', card.imageUrl);
+          console.log(`🗑️ Image ${card.imageUrl} supprimée d'Appwrite Storage`);
+        } catch (error) {
+          console.warn(`⚠️ Impossible de supprimer l'image ${card.imageUrl}:`, error);
+        }
+      }
+
+      // Nettoyer l'audio si il est stocké dans Appwrite (ID au lieu d'URL)
+      if (card.audioUrl && !card.audioUrl.startsWith('data:') && !card.audioUrl.startsWith('http')) {
+        try {
+          await storageService.deleteFile('flashcard-audio', card.audioUrl);
+          console.log(`🗑️ Audio ${card.audioUrl} supprimé d'Appwrite Storage`);
+        } catch (error) {
+          console.warn(`⚠️ Impossible de supprimer l'audio ${card.audioUrl}:`, error);
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Erreur lors du nettoyage des fichiers:', error);
+      // Ne pas faire échouer la suppression de la carte si le nettoyage échoue
     }
   }
 }
