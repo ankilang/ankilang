@@ -1,6 +1,11 @@
+import { ttsToBlob as votzTtsToBlob } from './votz'
+import { ttsToBlob as elevenLabsTtsToBlob, type ElevenLabsLanguage } from './elevenlabs'
+
 export type TTSRequest = {
   lang: string
   text: string
+  provider?: 'votz' | 'elevenlabs' // Nouveau paramètre
+  voice?: string // Pour ElevenLabs
 }
 
 export type TTSResponse = {
@@ -8,7 +13,6 @@ export type TTSResponse = {
 }
 
 export async function generateTTS(req: TTSRequest, opts?: { signal?: AbortSignal }): Promise<TTSResponse> {
-  // Récupérer le JWT Appwrite pour authentifier la requête
   const { getSessionJWT } = await import('./appwrite')
   const jwt = await getSessionJWT()
   
@@ -16,27 +20,43 @@ export async function generateTTS(req: TTSRequest, opts?: { signal?: AbortSignal
     throw new Error('User not authenticated. Please log in to use TTS.')
   }
   
-  const res = await fetch('https://ankilangtts.netlify.app/.netlify/functions/tts', {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${jwt}`
-    },
-    body: JSON.stringify(req),
-    signal: opts?.signal,
-  })
+  // Détecter automatiquement le provider si non spécifié
+  const isOccitan = req.lang === 'oc' || req.lang === 'oc-gascon'
+  const provider = req.provider || (isOccitan ? 'votz' : 'elevenlabs')
   
-  if (!res.ok) {
-    const msg = await safeText(res)
-    if (res.status === 401) {
-      throw new Error('Authentication failed. Please log in again.')
+  try {
+    let audioUrl: string
+    
+    if (provider === 'votz') {
+      // Utiliser Votz pour l'occitan
+      const blob = await votzTtsToBlob(req.text, 'languedoc')
+      audioUrl = await blobToBase64(blob)
+    } else {
+      // Utiliser ElevenLabs pour les autres langues
+      const blob = await elevenLabsTtsToBlob(req.text, req.lang as ElevenLabsLanguage, req.voice)
+      audioUrl = await blobToBase64(blob)
     }
-    throw new Error(`TTS failed: ${res.status} ${msg}`)
+    
+    // Vérifier si la requête a été annulée
+    if (opts?.signal?.aborted) {
+      throw new Error('TTS request was aborted')
+    }
+    
+    return { audioUrl }
+    
+  } catch (error) {
+    console.error('TTS Error:', error)
+    throw new Error(`TTS failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
-  return res.json()
 }
 
-async function safeText(res: Response) {
-  try { return await res.text() } catch { return '' }
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
+
 

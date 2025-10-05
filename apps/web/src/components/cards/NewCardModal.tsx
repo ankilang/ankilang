@@ -63,6 +63,7 @@ export default function NewCardModal({
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
+  const [selectedVoice, setSelectedVoice] = useState<string>('')
 
   const online = useOnlineStatus()
   
@@ -265,12 +266,21 @@ export default function NewCardModal({
     }
   })
   
-  // TTS générique (fallback pour autres langues)
+  // TTS générique (ElevenLabs pour autres langues, Votz pour occitan)
   const ttsMutation = useMutation({
     mutationFn: async (text: string) => {
       ttsAbort.current = new AbortController()
       try {
-        return await generateTTS({ lang: 'oc', text }, { signal: ttsAbort.current.signal })
+        // Détecter automatiquement le provider selon la langue du thème
+        const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
+        const provider = isOccitan ? 'votz' : 'elevenlabs'
+        
+        return await generateTTS({ 
+          lang: themeLanguage, 
+          text, 
+          provider,
+          voice: selectedVoice || undefined
+        }, { signal: ttsAbort.current.signal })
       } finally {
         ttsAbort.current = null
       }
@@ -287,7 +297,9 @@ export default function NewCardModal({
     if (!text.trim()) return
     
     try {
-      if (isOccitan && (themeLanguage === 'oc' || themeLanguage === 'oc-gascon')) {
+      const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
+      
+      if (isOccitan) {
         // Utiliser Votz pour l'occitan (languedocien ou gascon)
         console.log(`🔊 Génération TTS Votz (${occitanDialect}):`, text)
         const res = await votzTtsMutation.mutateAsync(text)
@@ -297,9 +309,11 @@ export default function NewCardModal({
         setValue('versoAudio', res.audioUrl)
         console.log('✅ Audio Votz stocké pour export:', { url: res.audioUrl })
       } else {
-        // Utiliser le TTS générique pour les autres langues
+        // Utiliser ElevenLabs pour les autres langues
+        console.log(`🔊 Génération TTS ElevenLabs (${themeLanguage}):`, text)
         const res = await ttsMutation.mutateAsync(text)
         setValue('versoAudio', res?.audioUrl || '')
+        console.log('✅ Audio ElevenLabs généré:', { url: res?.audioUrl })
       }
     } catch (err) {
       console.error('Erreur TTS:', err)
@@ -778,20 +792,42 @@ export default function NewCardModal({
                               )}
                             </div>
 
-                            {/* Audio Verso (spécial occitan) */}
-                            {isOccitan && (
+                            {/* Audio Verso */}
+                            {canAddAudio ? (
                               <div>
                                 <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                  Audio occitan ({occitanDialect}) (optionnel)
+                                  {isOccitan 
+                                    ? `Audio occitan (${occitanDialect}) (optionnel)`
+                                    : `Audio ${themeLanguage} (optionnel)`
+                                  }
                                 </label>
+                                
+                                {/* Sélection de voix pour les langues non-occitanes */}
+                                {!isOccitan && (
+                                  <div className="mb-3">
+                                    <label className="block font-sans text-xs font-medium text-dark-charcoal/70 mb-1">
+                                      Voix (optionnel)
+                                    </label>
+                                    <select 
+                                      value={selectedVoice}
+                                      onChange={(e) => setSelectedVoice(e.target.value)}
+                                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                                    >
+                                      <option value="">Voix par défaut</option>
+                                      <option value="voice1">Voix masculine</option>
+                                      <option value="voice2">Voix féminine</option>
+                                      <option value="voice3">Voix neutre</option>
+                                    </select>
+                                  </div>
+                                )}
                                 {/* Debug: afficher la valeur de versoAudio */}
                                 {process.env.NODE_ENV === 'development' && (
                                   <div className="text-xs text-gray-500 mb-2">
                                     Debug: versoAudio = {JSON.stringify((watchedValues as any).versoAudio)}
                                   </div>
                                 )}
-                                                                 {canAddAudio ? (
-                                   (watchedValues as any).versoAudio ? (
+                                
+                                {(watchedValues as any).versoAudio ? (
                                     <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-gray-200">
                                       <motion.button
                                         type="button"
@@ -844,15 +880,15 @@ export default function NewCardModal({
                                       )}
                                     </motion.button>
                                   )
-                                ) : (
-                                  <PremiumTeaser feature="L'enregistrement audio" onUpgrade={upgradeToPremium}>
-                                    <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
-                                      <Volume2 className="w-6 h-6 text-gray-400" />
-                                      <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
-                                    </div>
-                                  </PremiumTeaser>
-                                )}
+                                }
                               </div>
+                            ) : (
+                              <PremiumTeaser feature="L'enregistrement audio" onUpgrade={upgradeToPremium}>
+                                <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
+                                  <Volume2 className="w-6 h-6 text-gray-400" />
+                                  <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
+                                </div>
+                              </PremiumTeaser>
                             )}
 
                             {/* Image Verso */}
