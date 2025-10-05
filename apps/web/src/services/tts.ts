@@ -20,9 +20,9 @@ export async function generateTTS(req: TTSRequest, opts?: { signal?: AbortSignal
     throw new Error('User not authenticated. Please log in to use TTS.')
   }
   
-  // TEMPORAIRE: Forcer Votz pour éviter les erreurs CORS ElevenLabs
-  // const isOccitan = req.lang === 'oc' || req.lang === 'oc-gascon'
-  const provider = req.provider || 'votz' // (isOccitan ? 'votz' : 'elevenlabs')
+  // Détecter automatiquement le provider si non spécifié
+  const isOccitan = req.lang === 'oc' || req.lang === 'oc-gascon'
+  const provider = req.provider || (isOccitan ? 'votz' : 'elevenlabs')
   
   try {
     let audioUrl: string
