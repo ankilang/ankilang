@@ -30,11 +30,10 @@ const ThemesIndex = lazy(() => import('./pages/app/themes/Index'))
 const NewTheme = lazy(() => import('./pages/app/themes/New'))
 const ThemeDetail = lazy(() => import('./pages/app/themes/Detail'))
 const ThemeExport = lazy(() => import('./pages/app/themes/Export'))
-const LearningIndex = lazy(() => import('./pages/app/learning/Index'))
-const LearningDeck = lazy(() => import('./pages/app/learning/Deck'))
-const LessonsIndex = lazy(() => import('./pages/app/lessons/Index'))
-const LessonDetail = lazy(() => import('./pages/app/lessons/Lesson'))
 const AccountIndex = lazy(() => import('./pages/app/account/Index'))
+const BaseTips = lazy(() => import('./pages/app/resources/BaseTips'))
+const FlashcardWorkshop = lazy(() => import('./pages/app/resources/FlashcardWorkshop'))
+const ProLibrary = lazy(() => import('./pages/app/resources/ProLibrary'))
 
 // Fallback pour Suspense
 const LoadingFallback = () => (
@@ -156,34 +155,23 @@ function App() {
             </Suspense>
           } />
           
-          {/* Communauté */}
-          <Route path="learning" element={
+          {/* Ressources */}
+          <Route path="tips" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <BaseTips />
+            </Suspense>
+          } />
+          <Route path="workshop" element={
             <Suspense fallback={<LoadingFallback />}>
               <ProOnly>
-                <LearningIndex />
+                <FlashcardWorkshop />
               </ProOnly>
             </Suspense>
           } />
-          <Route path="learning/:deckId" element={
+          <Route path="library" element={
             <Suspense fallback={<LoadingFallback />}>
               <ProOnly>
-                <LearningDeck />
-              </ProOnly>
-            </Suspense>
-          } />
-          
-          {/* Leçons */}
-          <Route path="lessons" element={
-            <Suspense fallback={<LoadingFallback />}>
-              <ProOnly>
-                <LessonsIndex />
-              </ProOnly>
-            </Suspense>
-          } />
-          <Route path="lessons/:lessonId" element={
-            <Suspense fallback={<LoadingFallback />}>
-              <ProOnly>
-                <LessonDetail />
+                <ProLibrary />
               </ProOnly>
             </Suspense>
           } />

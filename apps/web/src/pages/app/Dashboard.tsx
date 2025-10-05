@@ -6,6 +6,7 @@ import PageMeta from '../../components/seo/PageMeta'
 import ActionCard from '../../components/dashboard/ActionCard'
 import { useAuth } from '../../hooks/useAuth'
 import { themesService } from '../../services/themes.service'
+import TranslatorIllustration from '../../assets/svg/Translator-bro.svg'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -39,49 +40,60 @@ export default function Dashboard() {
       />
 
       <section className="bg-gradient-to-br from-pastel-green/90 to-pastel-purple/60">
-        <div className="w-full px-6 lg:px-12 py-16">
+        <div className="w-full px-6 lg:px-12 py-14">
           <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="rounded-3xl bg-white/85 backdrop-blur-sm shadow-xl border border-white/60 px-6 sm:px-10 py-10"
+              className="rounded-3xl bg-white/85 backdrop-blur-sm shadow-xl border border-white/60 px-6 sm:px-10 py-8"
             >
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h1 className="font-playfair text-4xl sm:text-5xl font-bold text-dark-charcoal">
-                    Bonjour, <span className="bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">{username}</span> 👋
-                  </h1>
-                  <p className="mt-3 text-dark-charcoal/70 text-base sm:text-lg">
-                    Retrouvez vos créations et poursuivez l'ajout de nouvelles cartes.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  <Link to="/app/themes/new" className="btn-primary">Créer un thème</Link>
-                  <Link to="/app/themes" className="btn-secondary">Voir mes thèmes</Link>
-                </div>
-
-                <div className="space-y-4">
-                  <h2 className="text-sm uppercase tracking-wide text-purple-600 font-semibold">
-                    À continuer
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <DashboardThemeCard
-                      title="Dernier thème créé"
-                      theme={lastTheme}
-                      isLoading={isLoading}
-                      isError={isError}
-                      emptyLabel="Aucun thème pour le moment"
-                    />
-                    <DashboardThemeCard
-                      title="Plus grand nombre de cartes"
-                      theme={mostCardsTheme}
-                      isLoading={isLoading}
-                      isError={isError}
-                      emptyLabel="Ajoutez des cartes pour voir ce thème ici"
-                    />
+              <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
+                <div className="flex flex-col gap-6">
+                  <div>
+                    <h1 className="font-playfair text-4xl sm:text-5xl font-bold text-dark-charcoal">
+                      Bonjour, <span className="bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">{username}</span> 👋
+                    </h1>
+                    <p className="mt-3 text-dark-charcoal/70 text-base sm:text-lg">
+                      Retrouvez vos créations et poursuivez l&apos;ajout de nouvelles cartes.
+                    </p>
                   </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Link to="/app/themes/new" className="btn-primary">Créer un thème</Link>
+                    <Link to="/app/themes" className="btn-secondary">Voir mes thèmes</Link>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h2 className="text-sm uppercase tracking-wide text-purple-600 font-semibold">
+                      À continuer
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <DashboardThemeCard
+                        title="Dernier thème créé"
+                        theme={lastTheme}
+                        isLoading={isLoading}
+                        isError={isError}
+                        emptyLabel="Aucun thème pour le moment"
+                      />
+                      <DashboardThemeCard
+                        title="Plus grand nombre de cartes"
+                        theme={mostCardsTheme}
+                        isLoading={isLoading}
+                        isError={isError}
+                        emptyLabel="Ajoutez des cartes pour voir ce thème ici"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full max-w-sm mx-auto md:mx-0">
+                  <img
+                    src={TranslatorIllustration}
+                    alt="Illustration d'apprentissage des langues"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                  />
                 </div>
               </div>
             </motion.div>

@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { Home, GraduationCap, User, Layers3 } from 'lucide-react'
+import { Home, User, Layers3, Lightbulb, Sparkles, Library } from 'lucide-react'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useTabNavigation } from '../../hooks/useTabNavigation'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
@@ -12,6 +12,7 @@ interface TabItem {
   label: string
   icon: React.ComponentType<{ className?: string }>
   ariaLabel: string
+  proOnly?: boolean
 }
 
 const TAB_ITEMS: TabItem[] = [
@@ -28,16 +29,24 @@ const TAB_ITEMS: TabItem[] = [
     ariaLabel: 'Accéder aux thèmes'
   },
   {
-    id: 'learning',
-    label: 'Apprentissage',
-    icon: GraduationCap,
-    ariaLabel: "Accéder à l'apprentissage"
+    id: 'tips',
+    label: 'Conseils',
+    icon: Lightbulb,
+    ariaLabel: 'Consulter les conseils de base'
   },
   {
-    id: 'lessons',
-    label: 'Leçons',
-    icon: GraduationCap,
-    ariaLabel: 'Accéder aux leçons'
+    id: 'workshop',
+    label: 'Atelier',
+    icon: Sparkles,
+    ariaLabel: 'Accéder à l’atelier flashcards',
+    proOnly: true
+  },
+  {
+    id: 'library',
+    label: 'Bibliothèque',
+    icon: Library,
+    ariaLabel: 'Accéder à la bibliothèque Pro',
+    proOnly: true
   },
   {
     id: 'account',
@@ -201,9 +210,7 @@ function TabBar() {
         )}
         
         <div className="flex items-center justify-around h-full px-2">
-          {TAB_ITEMS.filter(item =>
-            isPro ? true : (item.id !== 'learning' && item.id !== 'lessons')
-          ).map((item) => (
+          {TAB_ITEMS.filter(item => (item.proOnly ? isPro : true)).map((item) => (
             <TabButton
               key={item.id}
               item={item}

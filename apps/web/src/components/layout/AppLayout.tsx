@@ -76,38 +76,50 @@ export default function AppLayout() {
                   className={({ isActive }) =>
                     `text-sm font-medium transition-colors ${
                       isActive
-                        ? "text-blue-600"
-                        : "text-gray-600 hover:text-gray-900"
+                        ? 'text-blue-600'
+                        : 'text-gray-600 hover:text-gray-900'
                     }`
                   }
                 >
                   Mes thèmes
                 </NavLink>
+                <NavLink
+                  to="/app/tips"
+                  className={({ isActive }) =>
+                    `text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'text-blue-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  Conseils de base
+                </NavLink>
                 {isPro && (
                   <>
                     <NavLink
-                      to="/app/learning"
+                      to="/app/workshop"
                       className={({ isActive }) =>
                         `text-sm font-medium transition-colors ${
                           isActive
-                            ? "text-blue-600"
-                            : "text-gray-600 hover:text-gray-900"
+                            ? 'text-blue-600'
+                            : 'text-gray-600 hover:text-gray-900'
                         }`
                       }
                     >
-                      Apprentissage
+                      Atelier flashcards
                     </NavLink>
                     <NavLink
-                      to="/app/lessons"
+                      to="/app/library"
                       className={({ isActive }) =>
                         `text-sm font-medium transition-colors ${
                           isActive
-                            ? "text-blue-600"
-                            : "text-gray-600 hover:text-gray-900"
+                            ? 'text-blue-600'
+                            : 'text-gray-600 hover:text-gray-900'
                         }`
                       }
                     >
-                      Leçons
+                      Bibliothèque Pro
                     </NavLink>
                   </>
                 )}
@@ -174,35 +186,46 @@ export default function AppLayout() {
                   onClick={closeMobileMenu}
                   className={({ isActive }) =>
                     isActive
-                      ? "text-blue-600 font-medium py-2"
-                      : "text-gray-600 hover:text-gray-900 py-2"
+                      ? 'text-blue-600 font-medium py-2'
+                      : 'text-gray-600 hover:text-gray-900 py-2'
                   }
                 >
                   Mes thèmes
                 </NavLink>
+                <NavLink
+                  to="/app/tips"
+                  onClick={closeMobileMenu}
+                  className={({ isActive }) =>
+                    isActive
+                      ? 'text-blue-600 font-medium py-2'
+                      : 'text-gray-600 hover:text-gray-900 py-2'
+                  }
+                >
+                  Conseils de base
+                </NavLink>
                 {isPro && (
                   <>
                     <NavLink
-                      to="/app/learning"
+                      to="/app/workshop"
                       onClick={closeMobileMenu}
                       className={({ isActive }) =>
                         isActive
-                          ? "text-blue-600 font-medium py-2"
-                          : "text-gray-600 hover:text-gray-900 py-2"
+                          ? 'text-blue-600 font-medium py-2'
+                          : 'text-gray-600 hover:text-gray-900 py-2'
                       }
                     >
-                      Apprentissage
+                      Atelier flashcards
                     </NavLink>
                     <NavLink
-                      to="/app/lessons"
+                      to="/app/library"
                       onClick={closeMobileMenu}
                       className={({ isActive }) =>
                         isActive
-                          ? "text-blue-600 font-medium py-2"
-                          : "text-gray-600 hover:text-gray-900 py-2"
+                          ? 'text-blue-600 font-medium py-2'
+                          : 'text-gray-600 hover:text-gray-900 py-2'
                       }
                     >
-                      Leçons
+                      Bibliothèque Pro
                     </NavLink>
                   </>
                 )}
