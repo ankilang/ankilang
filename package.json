@@ -28,7 +28,7 @@
   "author": "Ankilang Team",
   "license": "MIT",
   "engines": {
-    "node": ">=20 <21",
+    "node": ">=20",
     "pnpm": ">=10.0.0"
   },
   "packageManager": "pnpm@10.13.1",
