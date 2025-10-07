@@ -40,27 +40,26 @@ function b64ToBlob(b64: string, type = 'audio/mpeg'): Blob {
 }
 
 /**
- * Appelle la fonction Appwrite ElevenLabs avec support des deux modes :
- * - Pré-écoute : retourne un Blob (base64)
- * - Sauvegarde : retourne une URL de fichier (Storage)
+ * NOUVELLE INTERFACE UNIFIÉE - Fonction principale ElevenLabs
+ * Retour unifié avec url, mimeType, provider
  */
 export async function ttsViaAppwrite(params: {
   text: string;
-  language: string;            // ex: 'de' ou 'de-DE'
-  voiceId?: string;            // par défaut Rachel
-  saveToStorage?: boolean;     // true => upload Storage
-  outputFormat?: string;       // ex: 'mp3_22050_64' (léger) ou 'mp3_44100_128'
-}): Promise<{ blob?: Blob; fileUrl?: string; fileId?: string }> {
+  language_code: string;       // ex: 'de' ou 'de-DE'
+  voice_id?: string;           // par défaut Rachel
+  save_to_storage?: boolean;   // true => upload Storage
+  output_format?: string;     // ex: 'mp3_22050_64' (léger) ou 'mp3_44100_128'
+}): Promise<{ url: string; mimeType: string; provider: 'elevenlabs' }> {
   if (!params.text?.trim()) throw new Error('Le texte est vide');
 
-  const language_code = toISO639_1(params.language);
+  const language_code = toISO639_1(params.language_code);
   
   const payload = {
     text: params.text.trim(),
-    voice_id: params.voiceId ?? '21m00Tcm4TlvDq8ikWAM', // Rachel par défaut
+    voice_id: params.voice_id ?? '21m00Tcm4TlvDq8ikWAM', // Rachel par défaut
     language_code,                             // ISO 639-1
-    save_to_storage: params.saveToStorage === true,
-    output_format: params.outputFormat || 'mp3_22050_64'
+    save_to_storage: params.save_to_storage === true,
+    output_format: params.output_format || 'mp3_22050_64'
     // NB: on laisse la fonction choisir le modèle (turbo vs multilingual) selon la langue
   };
 
@@ -124,57 +123,67 @@ export async function ttsViaAppwrite(params: {
       fileId: data.fileId,
       executionId: final.$id
     });
-    return { fileUrl: data.fileUrl, fileId: data.fileId };
+    return { 
+      url: data.fileUrl, 
+      mimeType: data.contentType || 'audio/mpeg', 
+      provider: 'elevenlabs' as const 
+    };
   }
 
   if (!data.audio) throw new Error('Audio manquant');
-  const blob = b64ToBlob(data.audio, data.contentType || 'audio/mpeg');
+  
+  // Retour unifié avec data URL pour lecture immédiate
+  const dataUrl = `data:audio/mpeg;base64,${data.audio}`;
   
   console.log('✅ [ElevenLabs] Audio généré:', {
-    size: blob.size,
-    type: blob.type,
     audioLength: data.audio.length,
     executionId: final.$id
   });
 
-  return { blob };
+  return { 
+    url: dataUrl, 
+    mimeType: data.contentType || 'audio/mpeg', 
+    provider: 'elevenlabs' as const 
+  };
 }
 
 // Fonction de compatibilité avec l'ancien système (pré-écoute)
 export async function ttsToBlob(text: string, language: string, voice?: string): Promise<Blob> {
   const result = await ttsViaAppwrite({
     text,
-    language,
-    voiceId: voice,
-    saveToStorage: false,
-    outputFormat: 'mp3_22050_64' // Léger pour pré-écoute
+    language_code: language,
+    voice_id: voice,
+    save_to_storage: false,
+    output_format: 'mp3_22050_64' // Léger pour pré-écoute
   });
   
-  if (!result.blob) {
-    throw new Error('Aucun blob audio retourné');
+  // Convertir data URL en Blob pour compatibilité
+  if (result.url.startsWith('data:')) {
+    const response = await fetch(result.url);
+    return await response.blob();
   }
   
-  return result.blob;
+  throw new Error('Format de retour inattendu');
 }
 
 // Fonction pour la sauvegarde (export Anki)
 export async function ttsToStorage(text: string, language: string, voice?: string): Promise<{ fileUrl: string; fileId: string }> {
   const result = await ttsViaAppwrite({
     text,
-    language,
-    voiceId: voice,
-    saveToStorage: true,
-    outputFormat: 'mp3_44100_128' // Qualité pour export
+    language_code: language,
+    voice_id: voice,
+    save_to_storage: true,
+    output_format: 'mp3_44100_128' // Qualité pour export
   });
   
-  if (!result.fileUrl || !result.fileId) {
-    throw new Error('Aucune URL de fichier retournée');
-  }
+  // Extraire fileId de l'URL si nécessaire
+  const fileId = result.url.split('/').pop()?.split('?')[0] || 'unknown';
   
-  return { fileUrl: result.fileUrl, fileId: result.fileId };
+  return { fileUrl: result.url, fileId };
 }
 
 /**
+ * @deprecated Utiliser ttsViaAppwrite() à la place
  * 1) PREVIEW : pas d'upload, retour Blob + URL locale
  * Utilisé pour la pré-écoute avant sauvegarde
  */
@@ -194,11 +203,11 @@ export async function ttsPreview({
   const language_code = toISO639_1(language);
   
   const payload = {
-    text: text.trim(),
+        text: text.trim(),
     language_code,
-    voice_id: voiceId,
+        voice_id: voiceId,
     output_format: outputFormat,
-    save_to_storage: false
+        save_to_storage: false
   };
 
   console.log('🎵 [TTS Preview] Génération audio pour pré-écoute:', {
@@ -250,8 +259,8 @@ export async function ttsPreview({
   const url = URL.createObjectURL(blob);
   
   console.log('✅ [TTS Preview] Audio généré:', {
-    size: blob.size,
-    type: blob.type,
+      size: blob.size, 
+      type: blob.type,
     mime: data.contentType || 'audio/mpeg'
   });
 
@@ -263,6 +272,7 @@ export async function ttsPreview({
 }
 
 /**
+ * @deprecated Utiliser ttsViaAppwrite() à la place
  * 2) SAVE : upload côté fonction + lien carte (maj document)
  * Utilisé pour sauvegarder l'audio et lier à la carte
  */
@@ -363,6 +373,7 @@ export async function ttsSaveAndLink({
 }
 
 /**
+ * @deprecated Utiliser la suppression directe via Appwrite SDK
  * Suppression en cascade : carte + audio
  * Option A : Côté front (simple)
  */
@@ -377,7 +388,7 @@ export async function deleteCardAndAudio(card: { $id: string; audioFileId?: stri
     try {
       await storage.deleteFile(BUCKET_ID, card.audioFileId);
       console.log('✅ [Delete] Audio supprimé:', card.audioFileId);
-    } catch (error) {
+  } catch (error) {
       console.warn('⚠️ [Delete] Impossible de supprimer l\'audio:', error);
     }
   }
@@ -387,6 +398,9 @@ export async function deleteCardAndAudio(card: { $id: string; audioFileId?: stri
   console.log('✅ [Delete] Carte supprimée:', card.$id);
 }
 
+/**
+ * @deprecated Utiliser la nouvelle interface via tts.ts
+ */
 export async function playTTS(text: string, language: string, voice?: string): Promise<HTMLAudioElement> {
   const { url } = await ttsPreview({
     text,

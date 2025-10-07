@@ -274,16 +274,13 @@ export default function NewCardModal({
     mutationFn: async (text: string) => {
       ttsAbort.current = new AbortController()
       try {
-        // Détecter automatiquement le provider selon la langue du thème
-        const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
-        const provider = isOccitan ? 'votz' : 'elevenlabs'
+        // Détection automatique du provider selon la langue (géré par generateTTS)
         
         return await generateTTS({ 
-          lang: themeLanguage, 
           text, 
-          provider,
-          voice: selectedVoice || undefined
-        }, { signal: ttsAbort.current.signal })
+          language_code: themeLanguage, 
+          voice_id: selectedVoice || undefined
+        })
       } finally {
         ttsAbort.current = null
       }
@@ -315,8 +312,8 @@ export default function NewCardModal({
         // Utiliser ElevenLabs pour les autres langues
         console.log(`🔊 Génération TTS ElevenLabs (${themeLanguage}):`, text)
         const res = await ttsMutation.mutateAsync(text)
-        setValue('versoAudio', res?.audioUrl || '')
-        console.log('✅ Audio ElevenLabs généré:', { url: res?.audioUrl })
+        setValue('versoAudio', res?.url || '')
+        console.log('✅ Audio ElevenLabs généré:', { url: res?.url })
       }
     } catch (err) {
       console.error('Erreur TTS:', err)

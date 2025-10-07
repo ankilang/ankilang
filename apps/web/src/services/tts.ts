@@ -1,55 +1,75 @@
 import { ttsToBlob as votzTtsToBlob } from './votz'
-import { ttsToBlob as elevenLabsTtsToBlob, type ElevenLabsLanguage } from './elevenlabs-appwrite'
+import { ttsViaAppwrite } from './elevenlabs-appwrite'
 
+// Types pour la nouvelle interface unifiée
 export type TTSRequest = {
-  lang: string
   text: string
-  provider?: 'votz' | 'elevenlabs' // Nouveau paramètre
-  voice?: string // Pour ElevenLabs
+  language_code: string
+  voice_id?: string
+  save?: boolean
 }
 
 export type TTSResponse = {
-  audioUrl: string
+  url: string
+  mimeType: string
+  provider: 'votz' | 'elevenlabs'
 }
+
+// Détection de l'occitan
+const isOccitan = (lang: string) => lang === 'oc' || lang === 'oc-gascon'
+
+// Validation des URLs audio
+const isPlayableUrl = (u?: string) =>
+  !!u && (u.startsWith('data:') || u.startsWith('blob:') || /^https?:\/\//.test(u))
+
+// Fonction supprimée car plus utilisée dans la nouvelle architecture
 
 /**
- * Convertit un blob en base64
+ * NOUVELLE INTERFACE UNIFIÉE - Routeur TTS principal
+ * Force Appwrite pour ElevenLabs, garde Votz pour l'occitan
  */
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
-}
+export async function generateTTS({
+  text,
+  language_code,
+  voice_id,
+  save = false,
+}: TTSRequest): Promise<TTSResponse> {
+  if (!text?.trim()) {
+    throw new Error('Le texte ne peut pas être vide')
+  }
 
-export async function generateTTS(req: TTSRequest, opts?: { signal?: AbortSignal }): Promise<TTSResponse> {
-  // Détecter automatiquement le provider si non spécifié
-  const isOccitan = req.lang === 'oc' || req.lang === 'oc-gascon'
-  const provider = req.provider || (isOccitan ? 'votz' : 'elevenlabs')
-  
   try {
-    let audioUrl: string
-    
-    if (provider === 'votz') {
-      // Utiliser Votz pour l'occitan
+    if (isOccitan(language_code)) {
+      // Votz uniquement pour l'occitan
       console.log('🔊 [TTS] Utilisation de Votz pour l\'occitan')
-      const blob = await votzTtsToBlob(req.text, 'languedoc')
-      audioUrl = await blobToBase64(blob)
-    } else {
-      // Utiliser ElevenLabs via Appwrite Functions
-      console.log('🔊 [TTS] Utilisation d\'ElevenLabs via Appwrite Functions')
-      const blob = await elevenLabsTtsToBlob(req.text, req.lang as ElevenLabsLanguage, req.voice)
-      audioUrl = await blobToBase64(blob)
+      const blob = await votzTtsToBlob(text, 'languedoc')
+      const url = URL.createObjectURL(blob)
+      
+      if (!isPlayableUrl(url)) {
+        throw new Error('URL audio invalide générée par Votz')
+      }
+      
+      return { 
+        url, 
+        mimeType: 'audio/mpeg', 
+        provider: 'votz' as const 
+      }
+    }
+
+    // ElevenLabs → Appwrite uniquement (verrouillé)
+    console.log('🔊 [TTS] Utilisation d\'ElevenLabs via Appwrite Functions')
+    const result = await ttsViaAppwrite({
+      text,
+      language_code,
+      voice_id: voice_id ?? '21m00Tcm4TlvDq8ikWAM',
+      save_to_storage: save,
+    })
+    
+    if (!isPlayableUrl(result.url)) {
+      throw new Error('URL audio invalide générée par ElevenLabs')
     }
     
-    // Vérifier si la requête a été annulée
-    if (opts?.signal?.aborted) {
-      throw new Error('TTS request was aborted')
-    }
-    
-    return { audioUrl }
+    return result
     
   } catch (error) {
     console.error('TTS Error:', error)
@@ -57,22 +77,43 @@ export async function generateTTS(req: TTSRequest, opts?: { signal?: AbortSignal
   }
 }
 
-export async function playTTS(req: TTSRequest): Promise<HTMLAudioElement> {
-  const isOccitan = req.lang === 'oc' || req.lang === 'oc-gascon'
-  const provider = req.provider || (isOccitan ? 'votz' : 'elevenlabs')
-  
+/**
+ * NOUVELLE INTERFACE UNIFIÉE - Lecture audio directe
+ */
+export async function playTTS({
+  text,
+  language_code,
+  voice_id,
+}: {
+  text: string
+  language_code: string
+  voice_id?: string
+}): Promise<HTMLAudioElement> {
   try {
-    if (provider === 'votz') {
-      // Utiliser Votz pour l'occitan
-      console.log('🔊 [TTS] Utilisation de Votz pour l\'occitan')
-      const { playTTS: playVotzTTS } = await import('./votz')
-      return await playVotzTTS(req.text, 'languedoc')
-    } else {
-      // Utiliser ElevenLabs via Appwrite Functions
-      console.log('🔊 [TTS] Utilisation d\'ElevenLabs via Appwrite Functions')
-      const { playTTS: playElevenLabsTTS } = await import('./elevenlabs-appwrite')
-      return await playElevenLabsTTS(req.text, req.lang as ElevenLabsLanguage, req.voice)
-    }
+    const result = await generateTTS({
+      text,
+      language_code,
+      voice_id,
+      save: false
+    })
+    
+    const audio = new Audio(result.url)
+    
+    // Nettoyer l'URL après lecture
+    audio.addEventListener('ended', () => {
+      if (result.url.startsWith('blob:')) {
+        URL.revokeObjectURL(result.url)
+      }
+    })
+    
+    audio.addEventListener('error', () => {
+      if (result.url.startsWith('blob:')) {
+        URL.revokeObjectURL(result.url)
+      }
+    })
+    
+    return audio
+    
   } catch (error) {
     console.error('TTS Play Error:', error)
     throw new Error(`TTS play failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

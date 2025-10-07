@@ -34,15 +34,12 @@ export function AudioPreviewButton({
       return
     }
     
-    // Détecter automatiquement le provider selon la langue
-    const isOccitan = language === 'oc' || language === 'oc-gascon'
-    const provider = isOccitan ? 'votz' : 'elevenlabs'
+    // Détection automatique du provider selon la langue (géré par generateTTS)
     
     const req: TTSRequest = {
       text: text.trim(),
-      lang: language,
-      voice,
-      provider
+      language_code: language,
+      voice_id: voice
     }
     
     await playPreview(req)
