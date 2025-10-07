@@ -13,7 +13,8 @@
     "clean": "pnpm -r clean",
     "install:all": "pnpm install",
     "prebuild": "corepack enable && pnpm install --frozen-lockfile",
-    "build:cloudflare": "cd apps/web && npm run build"
+    "build:cloudflare": "cd apps/web && npm run build",
+    "build:appwrite": "pnpm --filter ./apps/web... run build"
   },
   "keywords": [
     "flashcards",
@@ -27,10 +28,10 @@
   "author": "Ankilang Team",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+    "node": ">=20 <21",
+    "pnpm": ">=9.0.0"
   },
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "pnpm@9",
   "dependencies": {
     "appwrite": "^20.1.0",
     "node-appwrite": "^12.0.1"
