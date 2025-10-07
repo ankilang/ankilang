@@ -14,7 +14,7 @@
     "install:all": "pnpm install",
     "prebuild": "corepack enable && pnpm install --frozen-lockfile",
     "build:cloudflare": "cd apps/web && npm run build",
-    "build:appwrite": "pnpm --filter ./apps/web... run build"
+    "build:appwrite": "pnpm -C apps/web build"
   },
   "keywords": [
     "flashcards",
@@ -31,7 +31,7 @@
     "node": ">=20",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad",
   "dependencies": {
     "appwrite": "^20.1.0",
     "node-appwrite": "^12.0.1"
