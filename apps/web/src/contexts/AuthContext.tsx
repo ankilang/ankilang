@@ -22,11 +22,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUserSession = async () => {
     try {
+      console.log('🔍 [AuthContext] Vérification de la session utilisateur...');
       const currentUser = await account.get();
+      console.log('✅ [AuthContext] Utilisateur connecté:', {
+        id: currentUser.$id,
+        email: currentUser.email,
+        name: currentUser.name,
+        emailVerification: currentUser.emailVerification,
+        phoneVerification: currentUser.phoneVerification
+      });
       setUser(currentUser);
     } catch (error) {
       if ((error as AppwriteException).code !== 401) {
-        console.error('Failed to fetch user session:', error);
+        console.error('❌ [AuthContext] Échec de récupération de la session:', error);
+      } else {
+        console.log('🔒 [AuthContext] Utilisateur non authentifié (401)');
       }
       setUser(null);
     } finally {
@@ -39,10 +49,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (data: LoginData) => {
+    console.log('🔐 [AuthContext] Tentative de connexion pour:', data.email);
     const session = await account.createEmailPasswordSession(
       data.email,
       data.password
     );
+    console.log('✅ [AuthContext] Connexion réussie, session créée:', {
+      sessionId: session.$id,
+      userId: session.userId,
+      provider: session.provider
+    });
     await checkUserSession();
     return session;
   };

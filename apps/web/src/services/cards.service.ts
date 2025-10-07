@@ -53,13 +53,17 @@ export class CardsService {
   }
 
   // Uploader un fichier audio base64 vers Appwrite Storage
-  private async uploadAudioToStorage(audioDataUrl: string, userId: string): Promise<string> {
+  private async uploadAudioToStorage(audioDataUrl: string, userId: string): Promise<{ fileId: string; mimeType: string }> {
     try {
-      // Extraire les données base64
-      const base64Data = audioDataUrl.split(',')[1];
+      // Extraire les données base64 et le type MIME
+      const [header, base64Data] = audioDataUrl.split(',');
       if (!base64Data) {
         throw new Error('Données base64 invalides');
       }
+      
+      // Extraire le type MIME du header (ex: "data:audio/mpeg;base64")
+      const mimeType = header?.match(/data:([^;]+)/)?.[1] || 'audio/mpeg';
+      
       const binaryData = atob(base64Data);
       const arrayBuffer = new ArrayBuffer(binaryData.length);
       const uint8Array = new Uint8Array(arrayBuffer);
@@ -68,19 +72,26 @@ export class CardsService {
         uint8Array[i] = binaryData.charCodeAt(i);
       }
       
-      // Créer un blob
-      const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+      // Créer un blob avec le bon type MIME
+      const blob = new Blob([arrayBuffer], { type: mimeType });
       
-      // Générer un nom de fichier unique (max 36 chars, alphanumeric + underscore/hyphen)
-      const timestamp = Date.now().toString(36); // Base36 pour raccourcir
-      const userIdShort = userId.substring(0, 8); // Premiers 8 caractères
-      const filename = `audio-${userIdShort}-${timestamp}.wav`;
+      // Générer un nom de fichier unique avec la bonne extension
+      const timestamp = Date.now().toString(36);
+      const userIdShort = userId.substring(0, 8);
+      const extension = mimeType.includes('wav') ? 'wav' : 'mp3';
+      const filename = `audio-${userIdShort}-${timestamp}.${extension}`;
       
-      // Uploader vers Appwrite Storage (utiliser le bucket flashcard-images existant)
+      // Uploader vers Appwrite Storage
       const file = await storageService.uploadFile('flashcard-images', filename, blob, userId);
       
-      console.log(`✅ Audio uploadé vers Appwrite Storage: ${file.$id}`);
-      return file.$id;
+      console.log(`✅ Audio uploadé vers Appwrite Storage:`, {
+        fileId: file.$id,
+        filename: file.name,
+        mimeType: mimeType,
+        size: file.sizeOriginal
+      });
+      
+      return { fileId: file.$id, mimeType };
     } catch (error) {
       console.error('[CardsService] Error uploading audio:', error);
       throw error;
@@ -92,17 +103,45 @@ export class CardsService {
     try {
       let audioUrl = cardData.audioUrl || '';
       
+      let audioFileId: string | null = null;
+      let audioMime: string | null = null;
+      
       // Si l'audio est un blob base64, essayer de l'uploader vers Appwrite Storage
       if (audioUrl.startsWith('data:audio/')) {
         console.log('📤 Tentative d\'upload de l\'audio vers Appwrite Storage...');
         try {
-          const fileId = await this.uploadAudioToStorage(audioUrl, userId);
-          audioUrl = fileId; // Stocker l'ID du fichier au lieu de l'URL base64
-          console.log('✅ Audio uploadé avec succès vers Appwrite Storage');
+          const uploadResult = await this.uploadAudioToStorage(audioUrl, userId);
+          audioFileId = uploadResult.fileId;
+          audioMime = uploadResult.mimeType;
+          
+          // 🔧 PATCH EXPRESS : Remplacer la data URL par une URL courte Appwrite
+          if (audioFileId) {
+            try {
+              const audioUrlShort = await storageService.getFileView('flashcard-images', audioFileId);
+              // Vérifier que l'URL est courte (< 2048 caractères)
+              if (audioUrlShort && audioUrlShort.length <= 2048) {
+                audioUrl = audioUrlShort;
+                console.log('✅ URL audio courte générée:', audioUrlShort.length, 'caractères');
+              } else {
+                // Si l'URL est trop longue, ne pas la stocker
+                audioUrl = '';
+                console.warn('⚠️ URL audio trop longue, non stockée');
+              }
+            } catch (urlError) {
+              console.warn('⚠️ Impossible de générer l\'URL courte, audio sans URL:', urlError);
+              audioUrl = '';
+            }
+          }
+          
+          console.log('✅ Audio uploadé avec succès vers Appwrite Storage:', {
+            fileId: audioFileId,
+            mimeType: audioMime,
+            audioUrlLength: audioUrl.length
+          });
         } catch (uploadError) {
-          console.warn('⚠️ Échec de l\'upload vers Appwrite Storage, utilisation du base64:', uploadError instanceof Error ? uploadError.message : String(uploadError));
-          // Garder l'URL base64 si l'upload échoue
-          // L'export gérera les deux cas (base64 et Appwrite)
+          console.warn('⚠️ Échec de l\'upload vers Appwrite Storage:', uploadError instanceof Error ? uploadError.message : String(uploadError));
+          // En cas d'échec d'upload, ne pas stocker la data URL
+          audioUrl = '';
         }
       }
       
@@ -117,6 +156,8 @@ export class CardsService {
         imageUrl: cardData.imageUrl || '',
         imageUrlType: cardData.imageUrlType || 'external',
         audioUrl: audioUrl,
+        audioFileId: audioFileId,
+        audioMime: audioMime,
         tags: cardData.tags || []
       };
 
@@ -215,18 +256,29 @@ export class CardsService {
         }
       }
 
-      // Nettoyer l'audio si il est stocké dans Appwrite (ID au lieu d'URL)
-      if (card.audioUrl && !card.audioUrl.startsWith('data:') && !card.audioUrl.startsWith('http')) {
+      // Nettoyer l'audio si il est stocké dans Appwrite
+      if (card.audioFileId) {
         try {
-          await storageService.deleteFile('flashcard-audio', card.audioUrl);
-          console.log(`🗑️ Audio ${card.audioUrl} supprimé d'Appwrite Storage`);
+          await storageService.deleteFile('flashcard-images', card.audioFileId);
+          console.log(`🗑️ Audio ${card.audioFileId} supprimé d'Appwrite Storage`);
         } catch (error) {
-          console.warn(`⚠️ Impossible de supprimer l'audio ${card.audioUrl}:`, error);
+          console.warn(`⚠️ Impossible de supprimer l'audio ${card.audioFileId}:`, error);
         }
       }
     } catch (error) {
       console.warn('⚠️ Erreur lors du nettoyage des fichiers:', error);
       // Ne pas faire échouer la suppression de la carte si le nettoyage échoue
+    }
+  }
+
+  // Récupérer l'URL de visualisation d'un fichier audio
+  async getAudioViewUrl(fileId: string): Promise<string> {
+    try {
+      const url = await storageService.getFileView('flashcard-images', fileId);
+      return url;
+    } catch (error) {
+      console.error('[CardsService] Error getting audio view URL:', error);
+      throw error;
     }
   }
 }

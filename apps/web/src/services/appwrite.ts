@@ -19,10 +19,35 @@ export const account = new Account(client);
  */
 export async function getSessionJWT(): Promise<string | null> {
   try {
+    console.log('🔐 [Appwrite] Tentative de génération du JWT...');
+    
+    // Vérifier d'abord si l'utilisateur est connecté
+    const currentUser = await account.get();
+    console.log('👤 [Appwrite] Utilisateur connecté:', {
+      id: currentUser.$id,
+      email: currentUser.email,
+      name: currentUser.name
+    });
+    
     const session = await account.createJWT();
+    console.log('🎫 [Appwrite] JWT généré avec succès:', {
+      jwtLength: session.jwt.length,
+      jwtPreview: session.jwt.substring(0, 50) + '...'
+    });
+    
     return session.jwt;
   } catch (error) {
-    console.error('Failed to get JWT:', error);
+    console.error('❌ [Appwrite] Échec de génération du JWT:', error);
+    
+    // Logs détaillés pour le debug
+    if (error instanceof Error) {
+      console.error('❌ [Appwrite] Détails de l\'erreur:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
     return null;
   }
 }

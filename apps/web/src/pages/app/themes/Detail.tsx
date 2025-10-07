@@ -7,6 +7,7 @@ import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
 import { themesService, type AppwriteTheme } from '../../../services/themes.service'
 import { cardsService } from '../../../services/cards.service'
+import { ttsSaveAndLink, deleteCardAndAudio } from '../../../services/elevenlabs-appwrite'
 import { useAuth } from '../../../hooks/useAuth'
 import { LANGUAGES } from '../../../constants/languages'
 import { getLanguageColor } from '../../../utils/languageColors'
@@ -151,8 +152,8 @@ export default function ThemeDetail() {
     if (!user || !id) return
 
     try {
-      // Supprimer la carte d'Appwrite
-      await cardsService.deleteCard(card.id, user.$id)
+      // Supprimer la carte et l'audio en cascade
+      await deleteCardAndAudio({ $id: card.id, audioFileId: card.audioFileId || undefined })
       
       // Décrémenter le compteur de cartes dans Appwrite et récupérer le thème mis à jour
       const updatedTheme = await themesService.decrementCardCount(id, user.$id)
@@ -196,6 +197,32 @@ export default function ThemeDetail() {
       // Incrémenter le compteur de cartes dans Appwrite et récupérer le thème mis à jour
       const updatedTheme = await themesService.incrementCardCount(id, user.$id)
       
+      // Sauvegarder l'audio TTS si du texte est présent
+      let audioFileId = null
+      let audioMime = null
+      let audioUrl = newCard.audioUrl
+      
+      const textToTts = data.type === 'basic' ? data.backText : data.clozeTextTarget
+      if (textToTts?.trim() && !data.audioUrl) {
+        try {
+          console.log('🎵 Génération audio TTS pour la nouvelle carte...')
+          const { fileId, fileUrl, mime } = await ttsSaveAndLink({
+            cardId: newCard.$id,
+            text: textToTts,
+            language: theme?.targetLang || 'en',
+            voiceId: '21m00Tcm4TlvDq8ikWAM',
+            outputFormat: 'mp3_44100_128'
+          })
+          audioFileId = fileId
+          audioMime = mime
+          audioUrl = fileUrl
+          console.log('✅ Audio TTS sauvegardé:', { fileId, fileUrl, mime })
+        } catch (error) {
+          console.error('❌ Erreur lors de la génération audio TTS:', error)
+          // Continue sans audio si erreur
+        }
+      }
+      
       // Mettre à jour l'état local avec la nouvelle carte
       setCards(prevCards => [
         {
@@ -209,7 +236,9 @@ export default function ThemeDetail() {
           extra: newCard.extra,
           imageUrl: newCard.imageUrl,
           imageUrlType: newCard.imageUrlType || 'external',
-          audioUrl: newCard.audioUrl,
+          audioUrl: audioUrl,
+          audioFileId: audioFileId,
+          audioMime: audioMime,
           tags: newCard.tags,
           createdAt: newCard.$createdAt,
           updatedAt: newCard.$updatedAt

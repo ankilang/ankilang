@@ -1,0 +1,17 @@
+{
+  "name": "ankilangelevenlabs",
+  "version": "1.0.0",
+  "description": "ElevenLabs TTS service for Ankilang",
+  "main": "netlify/functions/elevenlabs.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "netlify functions:serve"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

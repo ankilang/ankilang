@@ -18,7 +18,9 @@ export const CardSchema = z.object({
   extra: z.string().optional(), // Informations supplémentaires
   imageUrl: z.string().url().optional(), // URL de l'image
   imageUrlType: z.enum(['appwrite', 'external']).optional().default('external'), // Type de source d'image
-  audioUrl: z.string().url().optional(), // URL de l'audio
+  audioUrl: z.string().url().optional(), // URL de l'audio (pour lecture rapide/export)
+  audioFileId: z.string().nullable().optional(), // ID du fichier dans le bucket Appwrite
+  audioMime: z.string().nullable().optional(), // Type MIME de l'audio (ex: audio/mpeg)
   tags: z.array(z.string()).optional().default([]),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional()
@@ -152,6 +154,8 @@ export interface AppwriteCard {
   extra?: string;
   imageUrl?: string;
   audioUrl?: string;
+  audioFileId?: string | null;
+  audioMime?: string | null;
   tags?: string[];
 }
 

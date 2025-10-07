@@ -32,6 +32,9 @@ const ThemeDetail = lazy(() => import('./pages/app/themes/Detail'))
 const ThemeExport = lazy(() => import('./pages/app/themes/Export'))
 const AccountIndex = lazy(() => import('./pages/app/account/Index'))
 const BaseTips = lazy(() => import('./pages/app/resources/BaseTips'))
+
+// Test components (dev only)
+const AudioTest = lazy(() => import('./pages/test/AudioTest'))
 const FlashcardWorkshop = lazy(() => import('./pages/app/resources/FlashcardWorkshop'))
 const ProLibrary = lazy(() => import('./pages/app/resources/ProLibrary'))
 
@@ -182,6 +185,15 @@ function App() {
               <AccountIndex />
             </Suspense>
           } />
+          
+          {/* Route de test audio (dev only) */}
+          {process.env.NODE_ENV === 'development' && (
+            <Route path="test/audio" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <AudioTest />
+              </Suspense>
+            } />
+          )}
         </Route>
       </Routes>
         </PWAProvider>
