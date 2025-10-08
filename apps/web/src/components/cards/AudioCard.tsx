@@ -12,6 +12,7 @@ export function AudioCard({ onPlay, onDelete, isPlaying }: AudioCardProps) {
     <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
       {/* Bouton de lecture/pause */}
       <button 
+        type="button"
         onClick={onPlay}
         className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
         title={isPlaying ? 'Pause' : 'Lecture'}
@@ -34,6 +35,7 @@ export function AudioCard({ onPlay, onDelete, isPlaying }: AudioCardProps) {
 
       {/* Bouton de suppression */}
       <button 
+        type="button"
         onClick={onDelete}
         className="text-red-500 hover:text-red-700 transition-colors p-1"
         title="Supprimer l'audio"

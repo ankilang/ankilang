@@ -169,12 +169,12 @@ export default function NewCardModal({
       if (result.success) {
         console.log(`✅ Image optimisée: ${result.savings}% de réduction (${result.originalSize} → ${result.optimizedSize} bytes)`)
         
-        // Stocker l'ID Appwrite (pour un lien fort) et marquer comme 'appwrite'
+        // Stocker l'URL Appwrite pour l'affichage et marquer comme 'appwrite'
         if (selectedType === 'basic') {
-          setValue('versoImage', result.fileId) // Utiliser l'ID au lieu de l'URL
+          setValue('versoImage', result.fileUrl) // Utiliser l'URL pour l'affichage
           setValue('versoImageType', 'appwrite')
         } else {
-          setValue('clozeImage', result.fileId) // Utiliser l'ID au lieu de l'URL
+          setValue('clozeImage', result.fileUrl) // Utiliser l'URL pour l'affichage
           setValue('clozeImageType', 'appwrite')
         }
       }
@@ -341,7 +341,13 @@ export default function NewCardModal({
   }
 
   // Fonction pour jouer/arrêter l'audio
-  const toggleAudioPlayback = async () => {
+  const toggleAudioPlayback = async (e?: React.MouseEvent) => {
+    if (e) { 
+      e.preventDefault() 
+      e.stopPropagation() 
+    }
+    console.log('▶️ PLAY MANUEL (ne doit JAMAIS appeler handleFormSubmit)')
+    
     const audioUrl = getValues('versoAudio')
     console.log('🎵 toggleAudioPlayback - URL audio:', audioUrl)
     
@@ -561,6 +567,8 @@ export default function NewCardModal({
 
 
   const handleFormSubmit = (data: CardFormData) => {
+    console.log('💾 SUBMIT MANUEL: clic Enregistrer')
+    
     // Empêcher la soumission pendant la génération audio
     if (isGeneratingAudio) {
       console.log('🚫 Soumission bloquée pendant la génération audio')
