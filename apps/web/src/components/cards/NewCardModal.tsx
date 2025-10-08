@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { 
   X, Brain, Type, Sparkles, AlertCircle, Check, 
-  Languages, Play, Image as ImageIcon,
+  Languages, Image as ImageIcon,
   Volume2, Trash2, Search
 } from 'lucide-react'
 import { AudioCard } from './AudioCard'
@@ -13,7 +13,6 @@ import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
-import { ttsPreview } from '../../services/elevenlabs-appwrite'
 import { pexelsSearchPhotos, pexelsCurated, optimizeAndUploadImage } from '../../services/pexels'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
@@ -65,8 +64,6 @@ export default function NewCardModal({
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [isTtsLoading, setIsTtsLoading] = useState(false)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
 
   const online = useOnlineStatus()
@@ -544,26 +541,6 @@ export default function NewCardModal({
     return out
   }
 
-  // Fonctions TTS ElevenLabs
-  const handlePreview = async (text: string, lang: string, voiceId = '21m00Tcm4TlvDq8ikWAM') => {
-    setIsTtsLoading(true)
-    try {
-      const { url } = await ttsPreview({
-        text,
-        language: lang,
-        voiceId,
-        outputFormat: 'mp3_22050_64' // léger pour la preview
-      })
-      // Nettoyer l'ancien URL si il existe
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
-      setPreviewUrl(url)
-      new Audio(url).play()
-    } catch (e) {
-      console.error('Preview TTS error:', e)
-    } finally {
-      setIsTtsLoading(false)
-    }
-  }
 
 
   const handleFormSubmit = (data: CardFormData) => {
@@ -1082,31 +1059,6 @@ export default function NewCardModal({
                                 Utilisez le format {'{{c1::réponse[:indice]}}'} et le bouton pour créer des trous rapidement.
                               </p>
                               
-                              {/* Bouton de pré-écoute TTS pour cloze */}
-                              {getValues('clozeTextTarget')?.trim() && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => handlePreview(getValues('clozeTextTarget') || '', themeLanguage)}
-                                    disabled={isTtsLoading}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
-                                    {isTtsLoading ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        Génération...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Play className="w-4 h-4" />
-                                        Pré-écouter
-                                      </>
-                                    )}
-                                  </motion.button>
-                                </div>
-                              )}
 
                               {/* Aperçu cloze */}
                               <div className="mt-3 p-3 border rounded-lg bg-white/60">
