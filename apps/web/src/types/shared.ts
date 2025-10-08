@@ -21,6 +21,7 @@ export const CardSchema = z.object({
   audioUrl: z.string().url().optional(), // URL de l'audio (pour lecture rapide/export)
   audioFileId: z.string().nullable().optional(), // ID du fichier dans le bucket Appwrite
   audioMime: z.string().nullable().optional(), // Type MIME de l'audio (ex: audio/mpeg)
+  targetLanguage: z.string().optional(), // Langue cible pour l'audio (ex: 'fr', 'de', 'oc')
   tags: z.array(z.string()).optional().default([]),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional()

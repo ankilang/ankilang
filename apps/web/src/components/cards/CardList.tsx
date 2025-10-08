@@ -3,6 +3,11 @@ import { Plus, FileText, Tag, Sparkles, Brain, Type, Grid3X3, List, ChevronLeft,
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Card } from '../../types/shared'
 import CardActions from './CardActions'
+import MediaIndicator from './MediaIndicator'
+import LanguageBadge from './LanguageBadge'
+import StatusBadge from './StatusBadge'
+import QuickActions from './QuickActions'
+import { getCardStatus, getStatusMessage } from '../../utils/cardStatus'
 
 interface CardListProps {
   cards: Card[]
@@ -207,9 +212,10 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                 className="group"
               >
                 <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/80 h-full flex flex-col">
-                  {/* Header compact */}
+                  {/* Header enrichi */}
                   <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      {/* Type de carte */}
                       <div 
                         className="w-6 h-6 rounded-lg flex items-center justify-center"
                         style={{ backgroundColor: themeColors.secondary }}
@@ -228,9 +234,40 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                         }}
                       >
                         {card.type === 'basic' ? 'Q/R' : 'Cloze'}
-                </span>
+                      </span>
+                      
+                      {/* Indicateurs médias */}
+                      <MediaIndicator 
+                        card={card}
+                        onAudioClick={() => {
+                          if (card.audioUrl) {
+                            const audio = new Audio(card.audioUrl)
+                            audio.play()
+                          }
+                        }}
+                        onImageClick={() => {
+                          if (card.imageUrl) {
+                            window.open(card.imageUrl, '_blank')
+                          }
+                        }}
+                        size="sm"
+                      />
+                      
+                      {/* Badge de langue */}
+                      <LanguageBadge 
+                        language={card.targetLanguage || 'fr'} 
+                        size="sm" 
+                      />
                     </div>
+                    
                     <div className="flex items-center gap-2">
+                      {/* Statut de la carte */}
+                      <StatusBadge 
+                        status={getCardStatus(card)}
+                        message={getStatusMessage(card, getCardStatus(card))}
+                        size="sm"
+                      />
+                      
                       <span className="text-xs text-dark-charcoal/50 font-sans">#{startIndex + index + 1}</span>
                       <CardActions
                         card={card}
@@ -238,8 +275,8 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                         onDelete={onDeleteCard}
                         themeColors={themeColors}
                       />
-              </div>
-            </div>
+                    </div>
+                  </div>
 
                   {/* Contenu compact */}
                   <div className="space-y-2 flex-1">
@@ -267,25 +304,41 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                 </div>
               )}
 
-                    {/* Tags compacts */}
-              {card.tags && card.tags.length > 0 && (
-                      <div className="flex items-center gap-1 flex-wrap pt-2 border-t border-white/40 mt-auto">
-                        <Tag className="w-3 h-3 text-dark-charcoal/50" />
-                        {card.tags.slice(0, 2).map((tag, tagIndex) => (
-                    <span 
-                      key={tagIndex}
-                            className="text-xs px-1.5 py-0.5 bg-white/60 text-dark-charcoal/70 rounded-md"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                        {card.tags.length > 2 && (
-                          <span className="text-xs text-dark-charcoal/50">+{card.tags.length - 2}</span>
-                        )}
+                    {/* Footer enrichi */}
+                    <div className="pt-2 border-t border-white/40 mt-auto">
+                      {/* Tags */}
+                      {card.tags && card.tags.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap mb-2">
+                          <Tag className="w-3 h-3 text-dark-charcoal/50" />
+                          {card.tags.slice(0, 2).map((tag, tagIndex) => (
+                            <span 
+                              key={tagIndex}
+                              className="text-xs px-1.5 py-0.5 bg-white/60 text-dark-charcoal/70 rounded-md"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {card.tags.length > 2 && (
+                            <span className="text-xs text-dark-charcoal/50">+{card.tags.length - 2}</span>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Actions rapides au hover */}
+                      <QuickActions 
+                        card={card}
+                        onPlay={(card) => {
+                          if (card.audioUrl) {
+                            const audio = new Audio(card.audioUrl)
+                            audio.play()
+                          }
+                        }}
+                        onEdit={onEditCard}
+                        onDelete={onDeleteCard}
+                      />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
               </motion.div>
             ))}
           </motion.div>
@@ -332,6 +385,37 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                           >
                             {card.type === 'basic' ? 'Question/Réponse' : 'Texte à trous'}
                           </span>
+                          
+                          {/* Indicateurs médias */}
+                          <MediaIndicator 
+                            card={card}
+                            onAudioClick={() => {
+                              if (card.audioUrl) {
+                                const audio = new Audio(card.audioUrl)
+                                audio.play()
+                              }
+                            }}
+                            onImageClick={() => {
+                              if (card.imageUrl) {
+                                window.open(card.imageUrl, '_blank')
+                              }
+                            }}
+                            size="sm"
+                          />
+                          
+                          {/* Badge de langue */}
+                          <LanguageBadge 
+                            language={card.targetLanguage || 'fr'} 
+                            size="sm" 
+                          />
+                          
+                          {/* Statut de la carte */}
+                          <StatusBadge 
+                            status={getCardStatus(card)}
+                            message={getStatusMessage(card, getCardStatus(card))}
+                            size="sm"
+                          />
+                          
                           {card.tags && card.tags.length > 0 && (
                             <div className="flex items-center gap-1">
                               <Tag className="w-3 h-3 text-dark-charcoal/50" />
@@ -352,6 +436,20 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
                       <div className="text-xs text-dark-charcoal/50 font-sans">
                         #{startIndex + index + 1}
                       </div>
+                      
+                      {/* Actions rapides */}
+                      <QuickActions 
+                        card={card}
+                        onPlay={(card) => {
+                          if (card.audioUrl) {
+                            const audio = new Audio(card.audioUrl)
+                            audio.play()
+                          }
+                        }}
+                        onEdit={onEditCard}
+                        onDelete={onDeleteCard}
+                      />
+                      
                       <CardActions
                         card={card}
                         onEdit={onEditCard}
