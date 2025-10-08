@@ -67,6 +67,7 @@ export default function NewCardModal({
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isTtsLoading, setIsTtsLoading] = useState(false)
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
 
   const online = useOnlineStatus()
   
@@ -295,6 +296,8 @@ export default function NewCardModal({
     const text = getValues('verso') || getValues('recto') || ''
     if (!text.trim()) return
     
+    setIsGeneratingAudio(true)
+    
     try {
       const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
       
@@ -319,6 +322,8 @@ export default function NewCardModal({
       // Fallback mock pour éviter de bloquer l'utilisateur
       const mockAudioUrl = `audio_${Date.now()}.mp3`
       setValue('versoAudio', mockAudioUrl)
+    } finally {
+      setIsGeneratingAudio(false)
     }
   }
 
@@ -441,6 +446,8 @@ export default function NewCardModal({
         setCurrentAudio(null)
         setAudioPlaying(false)
       }
+      // Nettoyer l'état de génération audio
+      setIsGeneratingAudio(false)
       // Note: Pas de nettoyage nécessaire pour les URLs temporaires Votz
     }
     // Important: ne pas mettre currentAudio/getValues en dépendances pour éviter
@@ -554,6 +561,12 @@ export default function NewCardModal({
 
 
   const handleFormSubmit = (data: CardFormData) => {
+    // Empêcher la soumission pendant la génération audio
+    if (isGeneratingAudio) {
+      console.log('🚫 Soumission bloquée pendant la génération audio')
+      return
+    }
+    
     const w: any = watchedValues
     const common = {
       themeId,
