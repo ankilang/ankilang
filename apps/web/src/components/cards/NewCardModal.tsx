@@ -3,9 +3,10 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { 
   X, Brain, Type, Sparkles, AlertCircle, Check, 
-  Languages, Play, Pause, Image as ImageIcon,
+  Languages, Play, Image as ImageIcon,
   Volume2, Trash2, Search
 } from 'lucide-react'
+import { AudioCard } from './AudioCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
@@ -64,7 +65,6 @@ export default function NewCardModal({
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
-  const [selectedVoice, setSelectedVoice] = useState<string>('')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isTtsLoading, setIsTtsLoading] = useState(false)
 
@@ -278,8 +278,7 @@ export default function NewCardModal({
         
         return await generateTTS({ 
           text, 
-          language_code: themeLanguage, 
-          voice_id: selectedVoice || undefined
+          language_code: themeLanguage
         })
       } finally {
         ttsAbort.current = null
@@ -813,57 +812,6 @@ export default function NewCardModal({
                                 </motion.p>
                               )}
                               
-                              {/* Bouton de pré-écoute TTS */}
-                              {getValues('verso')?.trim() && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => handlePreview(getValues('verso') || '', themeLanguage)}
-                                    disabled={isTtsLoading}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
-                                    {isTtsLoading ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        Génération...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Play className="w-4 h-4" />
-                                        Pré-écouter
-                                      </>
-                                    )}
-                                  </motion.button>
-                                  
-                                  {/* Player audio si pré-écoute disponible */}
-                                  {previewUrl && (
-                                    <div className="flex items-center gap-2">
-                                      <audio 
-                                        src={previewUrl} 
-                                        controls 
-                                        autoPlay 
-                                        onEnded={() => {
-                                          URL.revokeObjectURL(previewUrl)
-                                          setPreviewUrl(null)
-                                        }}
-                                        className="h-8"
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          URL.revokeObjectURL(previewUrl)
-                                          setPreviewUrl(null)
-                                        }}
-                                        className="text-gray-500 hover:text-gray-700"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
                             </div>
 
                             {/* Audio Verso */}
@@ -876,24 +824,6 @@ export default function NewCardModal({
                                   }
                                 </label>
                                 
-                                {/* Sélection de voix pour les langues non-occitanes */}
-                                {!isOccitan && (
-                                  <div className="mb-3">
-                                    <label className="block font-sans text-xs font-medium text-dark-charcoal/70 mb-1">
-                                      Voix (optionnel)
-                                    </label>
-                                    <select 
-                                      value={selectedVoice}
-                                      onChange={(e) => setSelectedVoice(e.target.value)}
-                                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
-                                    >
-                                      <option value="">Voix par défaut</option>
-                                      <option value="voice1">Voix masculine</option>
-                                      <option value="voice2">Voix féminine</option>
-                                      <option value="voice3">Voix neutre</option>
-                                    </select>
-                                  </div>
-                                )}
                                 {/* Debug: afficher la valeur de versoAudio */}
                                 {process.env.NODE_ENV === 'development' && (
                                   <div className="text-xs text-gray-500 mb-2">
@@ -902,30 +832,12 @@ export default function NewCardModal({
                                 )}
                                 
                                 {(watchedValues as any).versoAudio ? (
-                                    <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-gray-200">
-                                      <motion.button
-                                        type="button"
-                                        onClick={toggleAudioPlayback}
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg"
-                                      >
-                                        {audioPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                                      </motion.button>
-                                      <div className="flex-1">
-                                        <div className="font-sans text-sm text-dark-charcoal">Audio enregistré</div>
-                                        <div className="text-xs text-dark-charcoal/60">{(watchedValues as any).versoAudio}</div>
-                                      </div>
-                                      <motion.button
-                                        type="button"
-                                        onClick={() => removeMedia('versoAudio')}
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </motion.button>
-                                    </div>
+                                    <AudioCard
+                                      audioUrl={(watchedValues as any).versoAudio}
+                                      onPlay={toggleAudioPlayback}
+                                      onDelete={() => removeMedia('versoAudio')}
+                                      isPlaying={audioPlaying}
+                                    />
                                   ) : (
                                     <motion.button
                                       type="button"
@@ -948,7 +860,7 @@ export default function NewCardModal({
                                         <>
                                           <Volume2 className="w-6 h-6 text-gray-400" />
                                           <span className="font-sans text-sm text-gray-500">
-                                            Générer la prononciation ({occitanDialect})
+                                            Générer la prononciation
                                           </span>
                                         </>
                                       )}
