@@ -3,12 +3,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { 
-  X, Brain, Type, Sparkles, AlertCircle, Check, Trash2, Search
+  X, Brain, Type, Sparkles, AlertCircle, Check, Trash2, Search, Volume2, Eye
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '../../types/shared'
 import type { Card } from '../../types/shared'
 import { pexelsSearchPhotos, optimizeAndUploadImage } from '../../services/pexels'
+import AudioPlayer from './AudioPlayer'
+import { generateTTS } from '../../services/tts'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
@@ -76,6 +78,9 @@ export default function EditCardModal({
   const [isLoadingImages, setIsLoadingImages] = useState(false)
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
   const [currentImageField, setCurrentImageField] = useState<'versoImage' | 'clozeImage' | null>(null)
+  
+  // États pour la gestion de l'audio
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
 
   const {
     register,
@@ -96,7 +101,9 @@ export default function EditCardModal({
       versoImage: card.imageUrl || '',
       versoImageType: card.imageUrlType || 'external',
       clozeImage: card.imageUrl || '',
-      clozeImageType: card.imageUrlType || 'external'
+      clozeImageType: card.imageUrlType || 'external',
+      // Audio
+      versoAudio: card.audioUrl || ''
     },
     mode: 'onChange'
   })
@@ -190,6 +197,45 @@ export default function EditCardModal({
     setValue(`${field}Type` as any, 'external')
   }
 
+  // Fonctions de gestion de l'audio
+  const handleGenerateAudio = async () => {
+    if (!watch('verso')) {
+      alert('Veuillez d\'abord saisir la réponse')
+      return
+    }
+    
+    setIsGeneratingAudio(true)
+    try {
+      // Utiliser le système TTS existant
+      const result = await generateTTS({
+        text: watch('verso'),
+        language_code: card.targetLanguage || 'fr',
+        voice_id: '21m00Tcm4TlvDq8ikWAM',
+        save: false
+      })
+      
+      setValue('versoAudio', result.url)
+    } catch (error) {
+      console.error('Erreur lors de la génération audio:', error)
+      alert('Erreur lors de la génération de l\'audio')
+    } finally {
+      setIsGeneratingAudio(false)
+    }
+  }
+
+  const handleRemoveAudio = () => {
+    setValue('versoAudio', '')
+  }
+
+  // Fonction utilitaire pour obtenir l'URL d'image
+  const getImageUrl = (imageUrl: string, imageType: string) => {
+    if (!imageUrl) return ''
+    if (imageType === 'appwrite') {
+      return imageUrl
+    }
+    return imageUrl
+  }
+
   const handleOpenImageSelector = (field: 'versoImage' | 'clozeImage') => {
     setCurrentImageField(field)
     setShowImageSelector(true)
@@ -219,7 +265,9 @@ export default function EditCardModal({
       tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
       // Gestion des images avec leurs types
       imageUrl: selectedType === 'basic' ? (data as any).versoImage : (data as any).clozeImage,
-      imageUrlType: selectedType === 'basic' ? (data as any).versoImageType : (data as any).clozeImageType
+      imageUrlType: selectedType === 'basic' ? (data as any).versoImageType : (data as any).clozeImageType,
+      // Gestion de l'audio (uniquement pour les cartes Basic)
+      audioUrl: selectedType === 'basic' ? (data as any).versoAudio : undefined
     }
     onSubmit(submitData as z.infer<typeof CreateCardSchema>)
   }
@@ -405,15 +453,26 @@ export default function EditCardModal({
                           {/* Affichage de l'image actuelle */}
                           {watch('versoImage') && (
                             <div className="mb-3">
-                              <div className="relative inline-block">
+                              <div className="relative inline-block group">
                                 <img 
-                                  src={watch('versoImageType') === 'appwrite' 
-                                    ? `https://cloud.appwrite.io/v1/storage/buckets/flashcard-images/files/${watch('versoImage')}/view?project=ankilang&mode=admin`
-                                    : watch('versoImage')
-                                  }
+                                  src={getImageUrl(watch('versoImage') || '', watch('versoImageType') || 'external')}
                                   alt="Image actuelle"
-                                  className="w-32 h-24 object-cover rounded-lg border-2 border-gray-200"
+                                  className="w-32 h-24 object-cover rounded-lg border-2 border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => window.open(getImageUrl(watch('versoImage') || '', watch('versoImageType') || 'external'), '_blank')}
                                 />
+                                
+                                {/* Overlay "Voir en grand" */}
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => window.open(getImageUrl(watch('versoImage') || '', watch('versoImageType') || 'external'), '_blank')}
+                                    className="flex items-center gap-1 px-2 py-1 bg-white/90 text-gray-800 rounded-md text-xs font-medium hover:bg-white transition-colors"
+                                  >
+                                    <Eye size={12} />
+                                    Voir en grand
+                                  </button>
+                                </div>
+                                
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveImage('versoImage')}
@@ -440,6 +499,48 @@ export default function EditCardModal({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveImage('versoImage')}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                                Supprimer
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Section Audio pour les cartes Basic */}
+                        <div>
+                          <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                            Audio de prononciation
+                          </label>
+                          
+                          {/* Affichage de l'audio actuel */}
+                          {watch('versoAudio') && (
+                            <div className="mb-3">
+                              <AudioPlayer
+                                src={watch('versoAudio') || ''}
+                                onDelete={handleRemoveAudio}
+                                size="md"
+                              />
+                            </div>
+                          )}
+
+                          {/* Boutons de gestion d'audio */}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={handleGenerateAudio}
+                              disabled={isGeneratingAudio || !watch('verso')}
+                              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Volume2 size={16} />
+                              {isGeneratingAudio ? 'Génération...' : (watch('versoAudio') ? 'Régénérer l\'audio' : 'Générer l\'audio')}
+                            </button>
+                            
+                            {watch('versoAudio') && (
+                              <button
+                                type="button"
+                                onClick={handleRemoveAudio}
                                 className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                               >
                                 <Trash2 size={16} />
