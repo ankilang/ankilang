@@ -210,12 +210,17 @@ export class CardsService {
 
       console.log(`🗑️ Suppression de ${cards.length} carte(s) du thème ${themeId}...`);
       
-      // Supprimer toutes les cartes en parallèle pour plus de rapidité
+      // Supprimer toutes les cartes avec leurs médias en parallèle
       await Promise.all(
-        cards.map(card => databaseService.delete(this.collectionId, card.$id))
+        cards.map(async (card) => {
+          // Nettoyer les fichiers Storage (audio + image) avant de supprimer le document
+          await this.cleanupCardFiles(card);
+          // Supprimer le document de la base de données
+          await databaseService.delete(this.collectionId, card.$id);
+        })
       );
 
-      console.log(`✅ ${cards.length} carte(s) supprimée(s) d'Appwrite`);
+      console.log(`✅ ${cards.length} carte(s) supprimée(s) avec leurs médias d'Appwrite`);
       return cards.length;
     } catch (error) {
       console.error('[CardsService] Error deleting cards by theme:', error);
@@ -249,8 +254,12 @@ export class CardsService {
       // Nettoyer l'image si elle est stockée dans Appwrite
       if (card.imageUrl && card.imageUrlType === 'appwrite') {
         try {
-          await storageService.deleteFile('flashcard-images', card.imageUrl);
-          console.log(`🗑️ Image ${card.imageUrl} supprimée d'Appwrite Storage`);
+          // Extraire l'ID du fichier depuis l'URL Appwrite
+          const imageFileId = this.extractFileIdFromUrl(card.imageUrl);
+          if (imageFileId) {
+            await storageService.deleteFile('flashcard-images', imageFileId);
+            console.log(`🗑️ Image ${imageFileId} supprimée d'Appwrite Storage`);
+          }
         } catch (error) {
           console.warn(`⚠️ Impossible de supprimer l'image ${card.imageUrl}:`, error);
         }
@@ -268,6 +277,22 @@ export class CardsService {
     } catch (error) {
       console.warn('⚠️ Erreur lors du nettoyage des fichiers:', error);
       // Ne pas faire échouer la suppression de la carte si le nettoyage échoue
+    }
+  }
+
+  /**
+   * Extrait l'ID du fichier depuis une URL Appwrite Storage
+   * Format: https://cloud.appwrite.io/v1/storage/buckets/{bucketId}/files/{fileId}/view?project={projectId}
+   */
+  private extractFileIdFromUrl(url: string): string | null {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/');
+      const fileIdIndex = pathParts.indexOf('files') + 1;
+      return fileIdIndex > 0 && fileIdIndex < pathParts.length ? pathParts[fileIdIndex] || null : null;
+    } catch (error) {
+      console.warn('⚠️ Impossible d\'extraire l\'ID du fichier depuis l\'URL:', url);
+      return null;
     }
   }
 

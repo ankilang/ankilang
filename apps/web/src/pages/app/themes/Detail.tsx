@@ -7,7 +7,7 @@ import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
 import { themesService, type AppwriteTheme } from '../../../services/themes.service'
 import { cardsService } from '../../../services/cards.service'
-import { ttsSaveAndLink, deleteCardAndAudio } from '../../../services/elevenlabs-appwrite'
+import { ttsSaveAndLink } from '../../../services/elevenlabs-appwrite'
 import { useAuth } from '../../../hooks/useAuth'
 import { LANGUAGES } from '../../../constants/languages'
 import { getLanguageColor } from '../../../utils/languageColors'
@@ -152,8 +152,8 @@ export default function ThemeDetail() {
     if (!user || !id) return
 
     try {
-      // Supprimer la carte et l'audio en cascade
-      await deleteCardAndAudio({ $id: card.id, audioFileId: card.audioFileId || undefined })
+      // Supprimer la carte avec tous ses médias (audio + image) en cascade
+      await cardsService.deleteCard(card.id, user.$id)
       
       // Décrémenter le compteur de cartes dans Appwrite et récupérer le thème mis à jour
       const updatedTheme = await themesService.decrementCardCount(id, user.$id)
@@ -164,7 +164,7 @@ export default function ThemeDetail() {
       // Mettre à jour le thème avec la valeur retournée par Appwrite
       setTheme(updatedTheme)
       
-      console.log('✅ Carte supprimée avec succès')
+      console.log('✅ Carte supprimée avec succès (médias inclus)')
     } catch (error) {
       console.error('❌ Erreur lors de la suppression de la carte:', error)
       setError('Impossible de supprimer la carte. Veuillez réessayer.')
