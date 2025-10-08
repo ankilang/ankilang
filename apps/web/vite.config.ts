@@ -17,6 +17,8 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//], // ✅ Évite les fallbacks sur API
         navigationPreload: true,
         cleanupOutdatedCaches: true, // ✅ Nettoie les anciens caches
+        skipWaiting: true, // ✅ Prend effet immédiatement
+        clientsClaim: true, // ✅ Contrôle toutes les pages ouvertes
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
