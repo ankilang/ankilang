@@ -13,6 +13,15 @@ import '@fontsource/playfair-display/700.css'
 import '@fontsource/playfair-display/900.css'
 import './index.css'
 
+// ✅ Bootstrap anti-cache PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // Rechargement dur pour évacuer l'ancien bundle
+    console.log('🔄 Service Worker updated, reloading...')
+    window.location.reload()
+  })
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

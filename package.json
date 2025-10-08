@@ -14,7 +14,8 @@
     "install:all": "pnpm install",
     "prebuild": "corepack enable && pnpm install --frozen-lockfile",
     "build:cloudflare": "cd apps/web && npm run build",
-    "build:appwrite": "pnpm -C apps/web build"
+    "build:appwrite": "pnpm -C apps/web build",
+    "security:check": "rg -n 'netlify\\.app' apps/web/src && { echo 'Legacy Netlify URL found'; exit 1; } || true"
   },
   "keywords": [
     "flashcards",

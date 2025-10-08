@@ -7,13 +7,16 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: true,
-      registerType: 'autoUpdate',
+      disable: false, // ✅ PWA activée en production
+      registerType: 'autoUpdate', // ✅ SW se met à jour automatiquement
+      injectRegister: 'auto',
       manifest: false, // Utilise le manifest externe
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//], // ✅ Évite les fallbacks sur API
         navigationPreload: true,
+        cleanupOutdatedCaches: true, // ✅ Nettoie les anciens caches
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -39,6 +42,7 @@ export default defineConfig({
           }
         ]
       },
+      devOptions: { enabled: false }, // ✅ Pas de SW en dev
       minify: false
     })
   ],
