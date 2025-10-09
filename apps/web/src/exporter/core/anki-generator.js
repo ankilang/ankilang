@@ -1,5 +1,6 @@
 import { Model, Deck, Package, generateId } from '../utils/genanki.js';
 import { Flashcard, ClozeFlashcard } from './flashcard.js';
+import initSqlJs from 'sql.js/dist/sql-wasm.js';
 
 /**
  * Générateur de decks Anki - API principale du microservice
@@ -17,45 +18,17 @@ export class AnkiGenerator {
     if (this.initialized) return;
 
     try {
-      // Vérifier si SQL.js est déjà disponible
-      if (typeof initSqlJs === 'undefined') {
-        console.log('SQL.js non détecté, chargement en cours...');
-        
-        // Charger dynamiquement le script SQL.js depuis /public
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = '/sqljs/sql-wasm.js';
-          script.async = true;
-          script.onload = () => {
-            console.log('SQL.js chargé avec succès');
-            resolve();
-          };
-          script.onerror = () => {
-            const error = new Error('Impossible de charger SQL.js depuis /sqljs/sql-wasm.js');
-            console.error('Erreur de chargement SQL.js:', error);
-            reject(error);
-          };
-          document.head.appendChild(script);
-        });
-        
-        // Attendre un peu pour s'assurer que initSqlJs est disponible
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      // Vérifier que initSqlJs est maintenant disponible
-      if (typeof initSqlJs === 'undefined') {
-        throw new Error('SQL.js n\'est pas disponible après chargement');
-      }
-
-      console.log('Initialisation de SQL.js...');
-      const config = {
-        // Les fichiers sont servis depuis /public
-        locateFile: filename => `/sqljs/${filename}`
-      };
-
-      this.SQL = await initSqlJs(config);
-      console.log('SQL.js initialisé avec succès');
+      console.log('Initialisation de SQL.js via import ESM...');
+      
+      // Utiliser l'import ESM avec locateFile pour résoudre les URLs
+      const SQL = await initSqlJs({
+        locateFile: (filename) => 
+          new URL(filename, import.meta.url).toString(),
+      });
+      
+      this.SQL = SQL;
       this.initialized = true;
+      console.log('SQL.js initialisé avec succès');
     } catch (error) {
       console.error('Erreur d\'initialisation SQL.js:', error);
       throw new Error(`Erreur d'initialisation SQL.js : ${error.message}`);
