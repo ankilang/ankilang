@@ -31,7 +31,7 @@ export class AnkiGenerator {
             resolve();
           };
           script.onerror = () => {
-            const error = new Error('Impossible de charger SQL.js depuis /sql-wasm.js');
+            const error = new Error('Impossible de charger SQL.js depuis /sqljs/sql-wasm.js');
             console.error('Erreur de chargement SQL.js:', error);
             reject(error);
           };

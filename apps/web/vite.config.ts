@@ -16,8 +16,7 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api\//,                    // ✅ Évite les fallbacks sur API
-          /^\/sql-wasm\.(js|wasm)$/,     // ✅ Protection SQL.js
-          /^\/sqljs\/.*/,                // ✅ Protection dossier sqljs
+          /^\/sqljs\/.*$/,              // ✅ Protection complète du dossier sqljs
           /^\/manifest\.webmanifest$/,   // ✅ Protection manifest
         ],
         navigationPreload: true,
