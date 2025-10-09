@@ -1,6 +1,7 @@
 import { Model, Deck, Package, generateId } from '../utils/genanki.js';
 import { Flashcard, ClozeFlashcard } from './flashcard.js';
 import initSqlJs from 'sql.js/dist/sql-wasm.js';
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'; // ← URL fingerprintée gérée par Vite
 
 /**
  * Générateur de decks Anki - API principale du microservice
@@ -18,12 +19,11 @@ export class AnkiGenerator {
     if (this.initialized) return;
 
     try {
-      console.log('Initialisation de SQL.js via import ESM...');
+      console.log('Initialisation SQL.js via import ESM...');
+      console.log('WASM URL (vite):', wasmUrl); // debug utile en prod
       
-      // Utiliser l'import ESM avec locateFile pour résoudre les URLs
       const SQL = await initSqlJs({
-        locateFile: (filename) => 
-          new URL(filename, import.meta.url).toString(),
+        locateFile: () => wasmUrl, // ← URL absolue fingerprintée
       });
       
       this.SQL = SQL;

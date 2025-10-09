@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  base: '/', // IMPORTANT pour les routes profondes
   plugins: [
     react(),
     VitePWA({
@@ -66,6 +67,10 @@ export default defineConfig({
       minify: false
     })
   ],
+  optimizeDeps: {
+    include: ['sql.js']
+  },
+  assetsInclude: ['**/*.wasm'],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
