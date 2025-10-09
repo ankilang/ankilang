@@ -12,7 +12,7 @@ export default defineConfig({
       injectRegister: 'auto',
       manifest: false, // Utilise le manifest externe
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm}'], // ✅ Inclure les fichiers WASM
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api\//,                    // ✅ Évite les fallbacks sur API
