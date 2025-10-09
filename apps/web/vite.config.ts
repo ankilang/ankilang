@@ -19,11 +19,25 @@ export default defineConfig({
           /^\/sqljs\/.*$/,              // ✅ Protection complète du dossier sqljs
           /^\/manifest\.webmanifest$/,   // ✅ Protection manifest
         ],
-        navigationPreload: true,
+        // ✅ FORCER la mise à jour du Service Worker
+        cacheId: 'ankilang-v2-sqljs-fix', // Version unique pour forcer la mise à jour
+        navigationPreload: false, // ✅ Désactiver temporairement pour éviter les conflits
         cleanupOutdatedCaches: true, // ✅ Nettoie les anciens caches
         skipWaiting: true, // ✅ Prend effet immédiatement
         clientsClaim: true, // ✅ Contrôle toutes les pages ouvertes
         runtimeCaching: [
+          {
+            // ✅ Configuration spécifique pour les fichiers SQL.js
+            urlPattern: /^\/sqljs\/.*$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'sqljs-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 jours
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',

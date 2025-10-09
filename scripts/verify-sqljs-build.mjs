@@ -65,10 +65,14 @@ if (allPresent) {
   console.log('🎯 Le problème devrait être résolu après déploiement');
   console.log('\n📋 Prochaines étapes:');
   console.log('1. Déployer le nouveau build');
-  console.log('2. Tester les URLs en production:');
+  console.log('2. Réinitialiser le Service Worker dans le navigateur :');
+  console.log('   - DevTools → Application → Service Workers → Unregister');
+  console.log('   - DevTools → Application → Storage → Clear storage');
+  console.log('   - Hard refresh (Cmd+Shift+R)');
+  console.log('3. Tester les URLs en production:');
   console.log('   - https://ankilang.appwrite.network/sqljs/sql-wasm.js');
   console.log('   - https://ankilang.appwrite.network/sqljs/sql-wasm.wasm');
-  console.log('3. Réinitialiser le Service Worker dans le navigateur');
+  console.log('4. Tester l\'export ANKI');
 } else {
   console.log('❌ Des fichiers SQL.js sont manquants');
   console.log('🔧 Vérifiez que les fichiers sont dans apps/web/public/sqljs/');
