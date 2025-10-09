@@ -65,6 +65,7 @@ export default function NewCardModal({
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const online = useOnlineStatus()
   
@@ -451,6 +452,8 @@ export default function NewCardModal({
       }
       // Nettoyer l'état de génération audio
       setIsGeneratingAudio(false)
+      // Nettoyer l'état de soumission
+      setIsSubmitting(false)
       // Note: Pas de nettoyage nécessaire pour les URLs temporaires Votz
     }
     // Important: ne pas mettre currentAudio/getValues en dépendances pour éviter
@@ -543,14 +546,21 @@ export default function NewCardModal({
 
 
 
-  const handleFormSubmit = (data: CardFormData) => {
-    console.log('💾 SUBMIT MANUEL: clic Enregistrer')
+  const handleFormSubmit = async (data: CardFormData) => {
+    if (isSubmitting) {
+      console.log('🚫 Soumission déjà en cours, ignorée')
+      return
+    }
     
-    // Empêcher la soumission pendant la génération audio
     if (isGeneratingAudio) {
       console.log('🚫 Soumission bloquée pendant la génération audio')
       return
     }
+    
+    setIsSubmitting(true)
+    console.log('💾 SUBMIT MANUEL: clic Enregistrer')
+    
+    try {
     
     const w: any = watchedValues
     const common = {
@@ -567,7 +577,10 @@ export default function NewCardModal({
       ? { type: 'basic', frontFR: (data as any).recto, backText: (data as any).verso, ...common }
       : { type: 'cloze', clozeTextTarget: (data as any).clozeTextTarget, ...common }
 
-    onSubmit(submitData)
+      onSubmit(submitData)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -1262,17 +1275,17 @@ export default function NewCardModal({
                     
                     <motion.button
                       type="submit"
-                      disabled={!isFormValid || isLoading}
-                      whileHover={{ scale: isFormValid && !isLoading ? 1.02 : 1 }}
-                      whileTap={{ scale: isFormValid && !isLoading ? 0.98 : 1 }}
+                      disabled={!isFormValid || isLoading || isSubmitting}
+                      whileHover={{ scale: isFormValid && !isLoading && !isSubmitting ? 1.02 : 1 }}
+                      whileTap={{ scale: isFormValid && !isLoading && !isSubmitting ? 0.98 : 1 }}
                       className="px-6 py-3 font-sans font-semibold text-white rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                       style={{ 
-                        background: isFormValid && !isLoading 
+                        background: isFormValid && !isLoading && !isSubmitting
                           ? `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.accent})`
                           : '#9CA3AF'
                       }}
                     >
-                      {isLoading ? (
+                      {isLoading || isSubmitting ? (
                         <div className="flex items-center gap-2">
                           <motion.div
                             animate={{ rotate: 360 }}

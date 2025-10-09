@@ -24,7 +24,7 @@ export class AnkiGenerator {
         // Charger dynamiquement le script SQL.js depuis /public
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
-          script.src = '/sql-wasm.js';
+          script.src = '/sqljs/sql-wasm.js';
           script.async = true;
           script.onload = () => {
             console.log('SQL.js chargé avec succès');
@@ -50,7 +50,7 @@ export class AnkiGenerator {
       console.log('Initialisation de SQL.js...');
       const config = {
         // Les fichiers sont servis depuis /public
-        locateFile: filename => `/sql-wasm.wasm`
+        locateFile: filename => `/sqljs/${filename}`
       };
 
       this.SQL = await initSqlJs(config);

@@ -14,7 +14,12 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//], // ✅ Évite les fallbacks sur API
+        navigateFallbackDenylist: [
+          /^\/api\//,                    // ✅ Évite les fallbacks sur API
+          /^\/sql-wasm\.(js|wasm)$/,     // ✅ Protection SQL.js
+          /^\/sqljs\/.*/,                // ✅ Protection dossier sqljs
+          /^\/manifest\.webmanifest$/,   // ✅ Protection manifest
+        ],
         navigationPreload: true,
         cleanupOutdatedCaches: true, // ✅ Nettoie les anciens caches
         skipWaiting: true, // ✅ Prend effet immédiatement
