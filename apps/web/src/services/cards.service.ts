@@ -101,6 +101,7 @@ export class CardsService {
   // Créer une nouvelle carte
   async createCard(userId: string, themeId: string, cardData: Omit<Card, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<AppwriteCard> {
     try {
+      
       let audioUrl = cardData.audioUrl || '';
       
       let audioFileId: string | null = null;
@@ -158,7 +159,8 @@ export class CardsService {
         audioUrl: audioUrl,
         audioFileId: audioFileId,
         audioMime: audioMime,
-        tags: cardData.tags || []
+        tags: cardData.tags || [],
+        
       };
 
       return await databaseService.create<AppwriteCard>(this.collectionId, data, userId);

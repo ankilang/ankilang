@@ -20,16 +20,22 @@
   },
   "dependencies": {
     "@ankilang/shared": "workspace:*",
+    "@ankilang/shared-cache": "workspace:*",
     "@fontsource/inter": "^5.2.6",
     "@fontsource/playfair-display": "^5.2.6",
     "@hookform/resolvers": "^3.3.2",
     "@tanstack/react-query": "^5.8.4",
+    "appwrite": "latest",
     "axios": "^1.6.2",
     "class-variance-authority": "^0.7.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^10.16.5",
+    "hash-wasm": "^4.12.0",
     "jszip": "^3.10.1",
+    "localforage": "^1.10.0",
     "lucide-react": "^0.294.0",
+    "nanoid": "^5.1.6",
+    "quick-lru": "^7.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
@@ -37,8 +43,7 @@
     "sql.js": "^1.13.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8",
-    "appwrite": "latest"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -46,6 +51,7 @@
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.16",
+    "jszip": "^3.10.1",
     "lighthouse": "^12.0.0",
     "pixelmatch": "^5.3.0",
     "playwright": "^1.45.0",
@@ -55,7 +61,8 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.7",
     "vite-plugin-pwa": "^0.17.4",
-    "jszip": "^3.10.1"
+    "workbox-build": "^7.3.0",
+    "workbox-window": "^7.3.0"
   },
   "keywords": [
     "ankilang",

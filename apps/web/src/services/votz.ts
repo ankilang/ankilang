@@ -1,3 +1,5 @@
+import { CacheManager } from './cache-manager'
+
 const PROD = 'https://ankilangvotz.netlify.app/.netlify/functions/votz'
 
 // Utiliser l'URL de production par défaut (LOCAL disponible via variable d'env si besoin)
@@ -197,7 +199,9 @@ export async function ttsToTempURL(text: string, language: VotzLanguage = 'langu
  */
 export async function ttsToObjectURL(text: string, language: VotzLanguage = 'languedoc'): Promise<string> {
   const blob = await ttsToBlob(text, language)
-  return URL.createObjectURL(blob)
+  const url = URL.createObjectURL(blob)
+  CacheManager.trackObjectUrl(url)
+  return url
 }
 
 /**

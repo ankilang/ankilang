@@ -18,10 +18,11 @@ export default defineConfig({
         navigateFallbackDenylist: [
           /^\/api\//,                    // ✅ Évite les fallbacks sur API
           /^\/sqljs\/.*$/,              // ✅ Protection complète du dossier sqljs
-          /^\/manifest\.webmanifest$/,   // ✅ Protection manifest
+          /^\/assets\/.*\.wasm$/,       // ✅ Protection fichiers WASM
+          /^\/manifest\.webmanifest(\?.*)?$/,   // ✅ Protection manifest avec query params
         ],
         // ✅ FORCER la mise à jour du Service Worker
-        cacheId: 'ankilang-v2-sqljs-fix', // Version unique pour forcer la mise à jour
+        cacheId: `ankilang-${process.env.VITE_SW_CACHE_VERSION ?? 'v4'}`, // Version unique pour forcer la mise à jour
         navigationPreload: false, // ✅ Désactiver temporairement pour éviter les conflits
         cleanupOutdatedCaches: true, // ✅ Nettoie les anciens caches
         skipWaiting: true, // ✅ Prend effet immédiatement
@@ -36,6 +37,18 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 7 // 7 jours
+              }
+            }
+          },
+          {
+            // ✅ Cache-first pour les médias Appwrite Storage
+            urlPattern: ({ url }) => url.pathname.startsWith('/v1/storage/buckets/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'appwrite-media',
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 60 * 60 * 24 * 90 // 90 jours
               }
             }
           },

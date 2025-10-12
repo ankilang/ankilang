@@ -13,6 +13,10 @@ import '@fontsource/playfair-display/700.css'
 import '@fontsource/playfair-display/900.css'
 import './index.css'
 
+// Cache migration et configuration
+import { migrateLegacyCache } from './services/cache/migrate-legacy'
+import { logFlags, validateFlags } from './config/flags'
+
 // ✅ Bootstrap anti-cache PWA
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -21,6 +25,35 @@ if ('serviceWorker' in navigator) {
     window.location.reload()
   })
 }
+
+// ✅ Initialisation du cache et migration legacy
+async function initializeCache() {
+  try {
+    // Valider la configuration des flags
+    const { valid, errors } = validateFlags()
+    if (!valid) {
+      console.error('[Cache][init] Configuration invalide:', errors)
+      return
+    }
+
+    // Logger la configuration (dev seulement)
+    logFlags()
+
+    // Migrer les anciens caches
+    const { moved, errors: migrationErrors } = await migrateLegacyCache()
+    if (moved > 0) {
+      console.info(`[Cache][init] Migration terminée: ${moved} fichiers migrés`)
+    }
+    if (migrationErrors > 0) {
+      console.warn(`[Cache][init] ${migrationErrors} erreurs lors de la migration`)
+    }
+  } catch (error) {
+    console.error('[Cache][init] Erreur lors de l\'initialisation:', error)
+  }
+}
+
+// Lancer l'initialisation du cache
+initializeCache()
 
 const queryClient = new QueryClient({
   defaultOptions: {

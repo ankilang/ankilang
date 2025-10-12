@@ -24,7 +24,8 @@ export const CardSchema = z.object({
   targetLanguage: z.string().optional(), // Langue cible pour l'audio (ex: 'fr', 'de', 'oc')
   tags: z.array(z.string()).optional().default([]),
   createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional()
+  updatedAt: z.string().datetime().optional(),
+  
 });
 
 /**
@@ -215,3 +216,5 @@ export const signupSchema = z.object({
 
 export type LoginData = z.infer<typeof loginSchema>;
 export type SignupData = z.infer<typeof signupSchema>;
+
+

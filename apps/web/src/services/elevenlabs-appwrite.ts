@@ -1,5 +1,6 @@
 import { Functions, Storage, Databases } from 'appwrite';
 import client from './appwrite';
+import { CacheManager } from './cache-manager';
 
 const functions = new Functions(client);
 const storage = new Storage(client);
@@ -257,6 +258,7 @@ export async function ttsPreview({
 
   const blob = b64ToBlob(data.audio, data.contentType || 'audio/mpeg');
   const url = URL.createObjectURL(blob);
+  CacheManager.trackObjectUrl(url);
   
   console.log('✅ [TTS Preview] Audio généré:', {
       size: blob.size, 

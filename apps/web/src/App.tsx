@@ -38,6 +38,7 @@ const AudioTest = lazy(() => import('./pages/test/AudioTest'))
 const FlashcardWorkshop = lazy(() => import('./pages/app/resources/FlashcardWorkshop'))
 const ProLibrary = lazy(() => import('./pages/app/resources/ProLibrary'))
 
+
 // Fallback pour Suspense
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-dvh">
@@ -185,6 +186,7 @@ function App() {
               <AccountIndex />
             </Suspense>
           } />
+          
           
           {/* Route de test audio (dev only) */}
           {process.env.NODE_ENV === 'development' && (
