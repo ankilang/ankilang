@@ -6,6 +6,8 @@ import PageMeta from '../../../components/seo/PageMeta'
 import { useAuth } from '../../../hooks/useAuth'
 import { TESTER_ID, useSubscription } from '../../../contexts/SubscriptionContext'
 import { AppwriteException } from 'appwrite'
+import CacheClearButton from '../../../components/cache/CacheClearButton'
+import { CacheJanitorPanel } from '../../../components/cache/CacheJanitorPanel'
 
 function getInitials(name?: string | null) {
   if (!name || !name.trim()) return 'A'
@@ -126,6 +128,14 @@ export default function AccountIndex() {
                 Basculer vers le mode {plan !== 'free' ? 'gratuit' : 'premium'} (test)
               </button>
             )}
+
+            <CacheClearButton className="mt-4" />
+
+            {/* Section Maintenance - Cache Janitor */}
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-dark-charcoal mb-3">Maintenance</h3>
+              <CacheJanitorPanel />
+            </div>
 
             <form
               onSubmit={handleEmailSubmit}
