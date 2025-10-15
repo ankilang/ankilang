@@ -94,13 +94,25 @@ export type UpdateCard = z.infer<typeof UpdateCardSchema>;
 export type AnyCard = BasicCard | ClozeCard;
 
 /**
+ * Catégories de thèmes supportées
+ */
+export const ThemeCategorySchema = z.enum([
+  'language',    // Apprentissage de langues (comportement actuel)
+  'academic',    // Études (médecine, histoire, sciences, etc.)
+  'professional', // Compétences professionnelles
+  'personal'     // Développement personnel, culture générale
+]);
+
+/**
  * Schéma Zod pour un thème
  */
 export const ThemeSchema = z.object({
   id: z.string().min(1, 'ID du thème requis'),
   userId: z.string().min(1, 'ID utilisateur requis'),
   name: z.string().min(1, 'Nom du thème requis'),
-  targetLang: z.string().min(2, 'Code langue requis'),
+  category: ThemeCategorySchema.default('language'),
+  targetLang: z.string().optional(), // Devient optionnel pour les catégories non-linguistiques
+  subject: z.string().optional(), // Nouveau : matière/sujet pour les catégories spécialisées
   cardCount: z.number().int().min(0).default(0),
   shareStatus: z.enum(['private', 'public']).default('private'),
   createdAt: z.string().datetime().optional(),
@@ -111,6 +123,11 @@ export const ThemeSchema = z.object({
  * Type TypeScript inféré du schéma Theme
  */
 export type Theme = z.infer<typeof ThemeSchema>;
+
+/**
+ * Type pour la catégorie de thème
+ */
+export type ThemeCategory = z.infer<typeof ThemeCategorySchema>;
 
 /**
  * Schéma pour la création d'un thème

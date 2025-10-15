@@ -3,15 +3,19 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Sparkles, Tag, Globe, Wand2, CheckCircle } from 'lucide-react'
+import { Sparkles, Tag, Globe, Wand2, CheckCircle, Layers } from 'lucide-react'
 import { getLanguageByCode } from '../../constants/languages'
-import { CreateThemeSchema } from '../../types/shared'
+import { CreateThemeSchema, type ThemeCategory } from '../../types/shared'
 import FlagIcon from '../ui/FlagIcon'
 import LanguageSelector from '../ui/LanguageSelector'
+import CategorySelector from '../ui/CategorySelector'
+import SubjectSelector from '../ui/SubjectSelector'
 
 const themeFormSchema = z.object({
   name: z.string().min(1, 'Le nom du thème est requis').max(128, 'Le nom est trop long'),
-  targetLang: z.string().min(2, 'La langue cible est requise'),
+  category: z.enum(['language', 'academic', 'professional', 'personal']).default('language'),
+  targetLang: z.string().optional(),
+  subject: z.string().optional(),
   tags: z.string().optional(),
 })
 
@@ -22,13 +26,15 @@ interface ThemeFormProps {
   isLoading?: boolean
   error?: string
   initialData?: Partial<ThemeFormData>
+  preselectedCategory?: ThemeCategory // Pour la présélection contextuelle
 }
 
 export default function ThemeForm({ 
   onSubmit, 
   isLoading = false, 
   error,
-  initialData 
+  initialData,
+  preselectedCategory
 }: ThemeFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
   
@@ -43,21 +49,24 @@ export default function ThemeForm({
   })
 
   const watchedValues = watch()
-  const selectedLanguage = getLanguageByCode(watchedValues.targetLang)
+  const selectedLanguage = getLanguageByCode(watchedValues.targetLang || '')
   const [ocDialect, setOcDialect] = useState<'oc' | 'oc-gascon'>('oc')
 
   const handleFormSubmit = (data: ThemeFormData) => {
     onSubmit({
       name: data.name,
-      targetLang: (data.targetLang === 'oc' ? ocDialect : data.targetLang),
+      category: data.category,
+      targetLang: data.category === 'language' ? (data.targetLang === 'oc' ? ocDialect : data.targetLang) : undefined,
+      subject: data.subject,
       shareStatus: 'private' as const,
     } as z.infer<typeof CreateThemeSchema>)
   }
 
   const steps = [
     { id: 1, title: 'Nom du thème', icon: Wand2 },
-    { id: 2, title: 'Langue cible', icon: Globe },
-    { id: 3, title: 'Personnalisation', icon: Sparkles }
+    { id: 2, title: 'Type de thème', icon: Layers },
+    { id: 3, title: 'Configuration', icon: Globe },
+    { id: 4, title: 'Personnalisation', icon: Sparkles }
   ]
 
     return (
@@ -149,7 +158,7 @@ export default function ThemeForm({
           )}
         </motion.div>
 
-        {/* Étape 2: Langue cible - Avec LanguageSelector responsive */}
+        {/* Étape 2: Type de thème - Sélection de catégorie */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -157,22 +166,86 @@ export default function ThemeForm({
           className="space-y-4"
         >
           <label className="label-field flex items-center gap-2">
-            <Globe className="w-4 h-4 text-purple-600" />
-            Langue que vous souhaitez apprendre
+            <Layers className="w-4 h-4 text-purple-600" />
+            Quel type de thème voulez-vous créer ?
           </label>
           
-          {/* Sélecteur de langue responsive */}
-          <LanguageSelector
-            value={watchedValues.targetLang}
-            onChange={(value) => {
+          {/* Sélecteur de catégorie */}
+          <CategorySelector
+            value={watchedValues.category}
+            onChange={(category) => {
               // Mettre à jour le formulaire
-              const event = { target: { value } } as any
-              register('targetLang').onChange(event)
+              const event = { target: { value: category } } as any
+              register('category').onChange(event)
               setCurrentStep(2)
             }}
             onFocus={() => setCurrentStep(2)}
-            error={errors.targetLang?.message}
+            error={errors.category?.message}
+            preselectedCategory={preselectedCategory}
           />
+        </motion.div>
+
+        {/* Étape 3: Configuration spécialisée selon la catégorie */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-4"
+        >
+          <label className="label-field flex items-center gap-2">
+            <Globe className="w-4 h-4 text-purple-600" />
+            {watchedValues.category === 'language' 
+              ? 'Langue que vous souhaitez apprendre'
+              : watchedValues.category === 'academic'
+              ? 'Configuration académique'
+              : watchedValues.category === 'professional'
+              ? 'Configuration professionnelle'
+              : 'Configuration personnelle'
+            }
+          </label>
+          
+          {/* Interface conditionnelle selon la catégorie */}
+          {watchedValues.category === 'language' && (
+            <LanguageSelector
+              value={watchedValues.targetLang || ''}
+              onChange={(value) => {
+                const event = { target: { value } } as any
+                register('targetLang').onChange(event)
+                setCurrentStep(3)
+              }}
+              onFocus={() => setCurrentStep(3)}
+              error={errors.targetLang?.message}
+            />
+          )}
+
+          {(watchedValues.category === 'academic' || watchedValues.category === 'professional') && (
+            <SubjectSelector
+              category={watchedValues.category}
+              value={watchedValues.subject}
+              onChange={(subject) => {
+                const event = { target: { value: subject } } as any
+                register('subject').onChange(event)
+                setCurrentStep(3)
+              }}
+              onFocus={() => setCurrentStep(3)}
+              error={errors.subject?.message}
+            />
+          )}
+
+          {watchedValues.category === 'personal' && (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-xl">
+              <div className="text-center">
+                <div className="text-3xl mb-3">🧠</div>
+                <h3 className="font-sans font-semibold text-dark-charcoal mb-2">
+                  Thème Personnel
+                </h3>
+                <p className="font-sans text-sm text-dark-charcoal/70">
+                  Créez des cartes pour la culture générale, le développement personnel, 
+                  ou tout autre sujet qui vous passionne !
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Dialecte occitan quand oc sélectionné */}
           {watchedValues.targetLang === 'oc' && (
@@ -280,11 +353,11 @@ export default function ThemeForm({
           )}
         </motion.div>
 
-        {/* Étape 3: Personnalisation */}
+        {/* Étape 4: Personnalisation */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="space-y-6"
         >
           <div>
