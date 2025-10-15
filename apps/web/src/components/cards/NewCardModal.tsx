@@ -900,6 +900,10 @@ export default function NewCardModal({
                                       src={(watchedValues as any).versoImage}  
                                       alt="Illustration verso" 
                                       className="max-w-full max-h-full object-contain"
+                                      width="400"
+                                      height="160"
+                                      loading="lazy"
+                                      decoding="async"
                                     />
                                     <motion.button
                                       type="button"
@@ -948,8 +952,11 @@ export default function NewCardModal({
                                               <div className="w-full h-24 bg-white flex items-center justify-center">
                                                 <img
                                                   loading="lazy"
+                                                  decoding="async"
                                                   src={img.src?.medium || img.src?.small || img.src?.tiny}
                                                   alt={img.alt || ''}
+                                                  width="96"
+                                                  height="96"
                                                   className="max-w-full max-h-full object-contain transition-transform duration-200 group-hover:scale-105"
                                                 />
                                               </div>
@@ -1114,6 +1121,10 @@ export default function NewCardModal({
                                       src={(watchedValues as any).clozeImage}  
                                       alt="Cloze" 
                                       className="max-w-full max-h-full object-contain"
+                                      width="400"
+                                      height="160"
+                                      loading="lazy"
+                                      decoding="async"
                                     />
                                     <motion.button
                                       type="button"
@@ -1162,8 +1173,11 @@ export default function NewCardModal({
                                               <div className="w-full h-24 bg-white flex items-center justify-center">
                                                 <img
                                                   loading="lazy"
+                                                  decoding="async"
                                                   src={img.src?.medium || img.src?.small || img.src?.tiny}
                                                   alt={img.alt || ''}
+                                                  width="96"
+                                                  height="96"
                                                   className="max-w-full max-h-full object-contain transition-transform duration-200 group-hover:scale-105"
                                                 />
                                               </div>

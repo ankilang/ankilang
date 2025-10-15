@@ -458,6 +458,10 @@ export default function EditCardModal({
                                   src={getImageUrl(watch('versoImage') || '', watch('versoImageType') || 'external')}
                                   alt="Image actuelle"
                                   className="w-32 h-24 object-cover rounded-lg border-2 border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                  width="128"
+                                  height="96"
+                                  loading="lazy"
+                                  decoding="async"
                                   onClick={() => window.open(getImageUrl(watch('versoImage') || '', watch('versoImageType') || 'external'), '_blank')}
                                 />
                                 
@@ -601,6 +605,10 @@ export default function EditCardModal({
                                   }
                                   alt="Image actuelle"
                                   className="w-32 h-24 object-cover rounded-lg border-2 border-gray-200"
+                                  width="128"
+                                  height="96"
+                                  loading="lazy"
+                                  decoding="async"
                                 />
                                 <button
                                   type="button"
@@ -741,6 +749,10 @@ export default function EditCardModal({
                                 src={image.src.small}
                                 alt={image.alt || 'Image Pexels'}
                                 className="w-full h-24 object-cover rounded-lg border-2 border-transparent group-hover:border-blue-500 transition-colors"
+                                width="96"
+                                height="96"
+                                loading="lazy"
+                                decoding="async"
                               />
                               {isOptimizingImage && (
                                 <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">

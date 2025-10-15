@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Download, Settings, Lock, Users, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
-import CardList from '../../../components/cards/CardList'
+import VirtualizedCardList from '../../../components/cards/VirtualizedCardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
-import { themesService, type AppwriteTheme } from '../../../services/themes.service'
-import { cardsService } from '../../../services/cards.service'
 import { ttsSaveAndLink } from '../../../services/elevenlabs-appwrite'
 import { useAuth } from '../../../hooks/useAuth'
+import { useThemeData, useCreateCard, useUpdateCard, useDeleteCard } from '../../../hooks'
+import { ErrorBoundary } from '../../../components/error/ErrorBoundary'
+import { ThemeDetailSkeleton } from '../../../components/ui/Skeletons'
 import { LANGUAGES } from '../../../constants/languages'
 import { getLanguageColor } from '../../../utils/languageColors'
 import { CreateCardSchema } from '../../../types/shared'
@@ -24,87 +25,44 @@ export default function ThemeDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string>()
-  const [cards, setCards] = useState<Card[]>([])
-  const [theme, setTheme] = useState<AppwriteTheme | null>(null)
+
+  // 🚀 NOUVEAU: Utilisation des hooks React Query
+  const { 
+    theme, 
+    cards, 
+    isLoading, 
+    error
+  } = useThemeData(id!, user!.$id)
+
+  // Hooks de mutations avec optimistic updates
+  const createCardMutation = useCreateCard()
+  const updateCardMutation = useUpdateCard()
+  const deleteCardMutation = useDeleteCard()
 
   const language = LANGUAGES.find(lang => lang.code === theme?.targetLang)
   const colors = getLanguageColor(theme?.targetLang || 'default')
 
-  // Charger le thème et les cartes depuis Appwrite
-  useEffect(() => {
-    if (id && user) {
-      loadThemeData()
-    }
-  }, [id, user])
-
-  const loadThemeData = async () => {
-    if (!id || !user) return
-
-    setIsLoading(true)
-    setError(undefined)
-    
-    try {
-      // Charger le thème depuis Appwrite
-      const themeData = await themesService.getThemeById(id, user.$id)
-      setTheme(themeData)
-      
-      // Charger les cartes depuis Appwrite
-      const cardsData = await cardsService.getCardsByThemeId(id, user.$id)
-      const formattedCards = cardsData.map(card => ({
-        id: card.$id,
-        userId: card.userId,
-        themeId: card.themeId,
-        type: card.type,
-        frontFR: card.frontFR,
-        backText: card.backText,
-        clozeTextTarget: card.clozeTextTarget,
-        extra: card.extra,
-        imageUrl: card.imageUrl,
-        imageUrlType: card.imageUrlType || 'external', // Valeur par défaut pour les cartes existantes
-        audioUrl: card.audioUrl,
-        tags: card.tags,
-        createdAt: card.$createdAt,
-        updatedAt: card.$updatedAt
-      }))
-      setCards(formattedCards)
-      
-    } catch (err) {
-      console.error('Error loading theme:', err)
-      if (err instanceof Error) {
-        if (err.message.includes('not found') || err.message.includes('Document not found')) {
-          setError('Thème introuvable')
-        } else if (err.message.includes('non autorisé') || err.message.includes('unauthorized')) {
-          setError('Accès non autorisé à ce thème')
-        } else {
-          setError('Erreur lors du chargement du thème')
-        }
-      } else {
-        setError('Erreur inconnue')
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // 🚀 NOUVEAU: Conversion des cartes Appwrite vers le format attendu
+  const formattedCards: Card[] = cards?.map((card: any) => ({
+    id: card.$id,
+    userId: card.userId,
+    themeId: card.themeId,
+    type: card.type,
+    frontFR: card.frontFR,
+    backText: card.backText,
+    clozeTextTarget: card.clozeTextTarget,
+    extra: card.extra,
+    imageUrl: card.imageUrl,
+    imageUrlType: card.imageUrlType || 'external',
+    audioUrl: card.audioUrl,
+    tags: card.tags,
+    createdAt: card.$createdAt,
+    updatedAt: card.$updatedAt
+  })) || []
 
   // États de chargement et d'erreur
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20 flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/20"
-        >
-          <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-rose rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <FileText className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">Chargement...</h1>
-          <p className="font-sans text-dark-charcoal/70 mb-6">Récupération du thème depuis Appwrite</p>
-        </motion.div>
-      </div>
-    )
+    return <ThemeDetailSkeleton />
   }
 
   if (error || !theme) {
@@ -119,10 +77,10 @@ export default function ThemeDetail() {
             <FileText className="w-8 h-8 text-white" />
           </div>
           <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">
-            {error || 'Thème introuvable'}
+            {error instanceof Error ? error.message : 'Thème introuvable'}
           </h1>
           <p className="font-sans text-dark-charcoal/70 mb-6">
-            {error === 'Thème introuvable' 
+            {error instanceof Error && (error.message.includes('not found') || error.message.includes('Document not found'))
               ? 'Le thème que vous recherchez n\'existe pas dans vos thèmes.'
               : 'Une erreur est survenue lors du chargement.'}
           </p>
@@ -148,60 +106,49 @@ export default function ThemeDetail() {
     setIsEditModalOpen(true)
   }
 
+  // 🚀 NOUVEAU: Gestion optimiste de la suppression de carte
   const handleDeleteCard = async (card: Card) => {
     if (!user || !id) return
 
     try {
-      // Supprimer la carte avec tous ses médias (audio + image) en cascade
-      await cardsService.deleteCard(card.id, user.$id)
-      
-      // Décrémenter le compteur de cartes dans Appwrite et récupérer le thème mis à jour
-      const updatedTheme = await themesService.decrementCardCount(id, user.$id)
-      
-      // Mettre à jour l'état local
-      setCards(prevCards => prevCards.filter(c => c.id !== card.id))
-      
-      // Mettre à jour le thème avec la valeur retournée par Appwrite
-      setTheme(updatedTheme)
+      await deleteCardMutation.mutateAsync({
+        cardId: card.id,
+        userId: user.$id
+      })
       
       console.log('✅ Carte supprimée avec succès (médias inclus)')
     } catch (error) {
       console.error('❌ Erreur lors de la suppression de la carte:', error)
-      setError('Impossible de supprimer la carte. Veuillez réessayer.')
+      // L'erreur est déjà gérée par le hook avec rollback automatique
     }
   }
 
+  // 🚀 NOUVEAU: Gestion optimiste de la création de carte
   const handleCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
     if (!user || !id) return
-    
-    setIsLoading(true)
-    setError(undefined)
     
     try {
       console.log('Creating card in Appwrite:', data)
       
-      // Créer la carte dans Appwrite
-      const newCard = await cardsService.createCard(user.$id, id, {
-        type: data.type,
+      // Créer la carte avec optimistic update
+      const newCard = await createCardMutation.mutateAsync({
+        userId: user.$id,
         themeId: id,
-        frontFR: data.frontFR,
-        backText: data.backText,
-        clozeTextTarget: data.clozeTextTarget,
-        extra: data.extra,
-        imageUrl: data.imageUrl || '',
-        imageUrlType: data.imageUrlType || 'external',
-        audioUrl: data.audioUrl || '',
-        tags: data.tags || []
+        cardData: {
+          type: data.type,
+          themeId: id,
+          frontFR: data.frontFR,
+          backText: data.backText,
+          clozeTextTarget: data.clozeTextTarget,
+          extra: data.extra,
+          imageUrl: data.imageUrl || '',
+          imageUrlType: data.imageUrlType || 'external',
+          audioUrl: data.audioUrl || '',
+          tags: data.tags || []
+        }
       })
       
-      // Incrémenter le compteur de cartes dans Appwrite et récupérer le thème mis à jour
-      const updatedTheme = await themesService.incrementCardCount(id, user.$id)
-      
       // Sauvegarder l'audio TTS si du texte est présent
-      let audioFileId = null
-      let audioMime = null
-      let audioUrl = newCard.audioUrl
-      
       const textToTts = data.type === 'basic' ? data.backText : data.clozeTextTarget
       if (textToTts?.trim() && !data.audioUrl) {
         try {
@@ -213,9 +160,6 @@ export default function ThemeDetail() {
             voiceId: '21m00Tcm4TlvDq8ikWAM',
             outputFormat: 'mp3_44100_128'
           })
-          audioFileId = fileId
-          audioMime = mime
-          audioUrl = fileUrl
           console.log('✅ Audio TTS sauvegardé:', { fileId, fileUrl, mime })
         } catch (error) {
           console.error('❌ Erreur lors de la génération audio TTS:', error)
@@ -223,99 +167,49 @@ export default function ThemeDetail() {
         }
       }
       
-      // Mettre à jour l'état local avec la nouvelle carte
-      setCards(prevCards => [
-        {
-          id: newCard.$id,
-          userId: newCard.userId,
-          themeId: newCard.themeId,
-          type: newCard.type,
-          frontFR: newCard.frontFR,
-          backText: newCard.backText,
-          clozeTextTarget: newCard.clozeTextTarget,
-          extra: newCard.extra,
-          imageUrl: newCard.imageUrl,
-          imageUrlType: newCard.imageUrlType || 'external',
-          audioUrl: audioUrl,
-          audioFileId: audioFileId,
-          audioMime: audioMime,
-          tags: newCard.tags,
-          createdAt: newCard.$createdAt,
-          updatedAt: newCard.$updatedAt
-        },
-        ...prevCards
-      ])
-      
-      // Mettre à jour le thème avec la valeur retournée par Appwrite
-      setTheme(updatedTheme)
-
       setIsModalOpen(false)
       console.log('✅ Carte créée avec succès dans Appwrite')
     } catch (err) {
       console.error('❌ Erreur lors de la création de la carte:', err)
-      setError('Erreur lors de la création de la carte. Veuillez réessayer.')
-    } finally {
-      setIsLoading(false)
+      // L'erreur est déjà gérée par le hook avec rollback automatique
     }
   }
 
+  // 🚀 NOUVEAU: Gestion optimiste de la mise à jour de carte
   const handleEditCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
     if (!editingCard || !user) return
-    
-    setIsLoading(true)
-    setError(undefined)
     
     try {
       console.log('Updating card in Appwrite:', data)
       
-      // Mettre à jour la carte dans Appwrite
-      const updatedCard = await cardsService.updateCard(editingCard.id, user.$id, {
-        type: data.type,
-        themeId: data.themeId,
-        frontFR: data.frontFR,
-        backText: data.backText,
-        clozeTextTarget: data.clozeTextTarget,
-        extra: data.extra,
-        imageUrl: data.imageUrl || '',
-        audioUrl: data.audioUrl || '',
-        tags: data.tags || []
+      // Mettre à jour la carte avec optimistic update
+      await updateCardMutation.mutateAsync({
+        cardId: editingCard.id,
+        userId: user.$id,
+        updates: {
+          type: data.type,
+          themeId: data.themeId,
+          frontFR: data.frontFR,
+          backText: data.backText,
+          clozeTextTarget: data.clozeTextTarget,
+          extra: data.extra,
+          imageUrl: data.imageUrl || '',
+          audioUrl: data.audioUrl || '',
+          tags: data.tags || []
+        }
       })
-      
-      // Mettre à jour l'état local
-      setCards(prevCards => prevCards.map(card => 
-        card.id === editingCard.id 
-          ? {
-              id: updatedCard.$id,
-              userId: updatedCard.userId,
-              themeId: updatedCard.themeId,
-              type: updatedCard.type,
-              frontFR: updatedCard.frontFR,
-              backText: updatedCard.backText,
-              clozeTextTarget: updatedCard.clozeTextTarget,
-              extra: updatedCard.extra,
-              imageUrl: updatedCard.imageUrl,
-              imageUrlType: updatedCard.imageUrlType || 'external',
-              audioUrl: updatedCard.audioUrl,
-              tags: updatedCard.tags,
-              createdAt: updatedCard.$createdAt,
-              updatedAt: updatedCard.$updatedAt
-            }
-          : card
-      ))
       
       setIsEditModalOpen(false)
       setEditingCard(null)
       console.log('✅ Carte mise à jour avec succès dans Appwrite')
     } catch (err) {
       console.error('❌ Erreur lors de la modification de la carte:', err)
-      setError('Erreur lors de la modification de la carte. Veuillez réessayer.')
-    } finally {
-      setIsLoading(false)
+      // L'erreur est déjà gérée par le hook avec rollback automatique
     }
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <PageMeta 
         title={`${theme.name} — Ankilang`}
         description={`Thème de flashcards en ${language?.label} avec ${theme.cardCount} cartes.`}
@@ -460,8 +354,8 @@ export default function ThemeDetail() {
             transition={{ delay: 0.4 }}
             className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 p-6 sm:p-8"
           >
-            <CardList
-              cards={cards}
+            <VirtualizedCardList
+              cards={formattedCards}
               onAddCard={handleAddCard}
               onEditCard={handleEditCard}
               onDeleteCard={handleDeleteCard}
@@ -476,8 +370,8 @@ export default function ThemeDetail() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleCardSubmit}
-          isLoading={isLoading}
-          error={error}
+            isLoading={createCardMutation.isPending}
+            error={createCardMutation.error?.message}
           themeId={theme.$id}
           themeLanguage={theme.targetLang}
           themeColors={colors}
@@ -492,13 +386,13 @@ export default function ThemeDetail() {
               setEditingCard(null)
             }}
             onSubmit={handleEditCardSubmit}
-            isLoading={isLoading}
-            error={error}
+            isLoading={updateCardMutation.isPending}
+            error={updateCardMutation.error?.message}
             card={editingCard}
             themeColors={colors}
           />
         )}
       </div>
-    </>
+    </ErrorBoundary>
   )
 }

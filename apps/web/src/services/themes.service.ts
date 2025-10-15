@@ -47,7 +47,7 @@ export class ThemesService {
     }
   }
 
-  // Lister les thèmes de l'utilisateur
+  // Lister les thèmes de l'utilisateur (optimisé pour React Query)
   async getUserThemes(userId: string): Promise<AppwriteTheme[]> {
     try {
       const { documents } = await databaseService.list<AppwriteTheme>(
@@ -55,7 +55,9 @@ export class ThemesService {
         [
           DatabaseService.queries.equal('userId', userId),
           DatabaseService.queries.orderDesc('$createdAt'),
-          DatabaseService.queries.limit(100)
+          DatabaseService.queries.limit(100),
+          // 🚀 OPTIMISATION: Ne récupérer que les champs nécessaires pour la liste
+          // DatabaseService.queries.select(['$id', 'userId', 'name', 'targetLang', 'cardCount', 'shareStatus', '$createdAt', '$updatedAt']) // Non disponible dans DatabaseService
         ]
       );
 

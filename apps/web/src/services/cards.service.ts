@@ -18,7 +18,7 @@ export interface AppwriteCard extends Card {
 export class CardsService {
   private collectionId = 'cards';
 
-  // Récupérer toutes les cartes d'un thème
+  // Récupérer toutes les cartes d'un thème (optimisé pour React Query)
   async getCardsByThemeId(themeId: string, userId: string): Promise<AppwriteCard[]> {
     try {
       const response = await databaseService.list<AppwriteCard>(
@@ -26,12 +26,46 @@ export class CardsService {
         [
           Query.equal('themeId', themeId),
           Query.equal('userId', userId),
-          Query.orderDesc('$createdAt')
+          Query.orderDesc('$createdAt'),
+          Query.limit(1000), // 🚀 OPTIMISATION: Limiter le nombre de résultats
+          // 🚀 OPTIMISATION: Ne récupérer que les champs nécessaires
+          // Query.select(['$id', 'userId', 'themeId', 'type', 'frontFR', 'backText', 'clozeTextTarget', 'extra', 'imageUrl', 'imageUrlType', 'audioUrl', 'tags', '$createdAt', '$updatedAt']) // À implémenter côté Appwrite
         ]
       );
       return response.documents;
     } catch (error) {
       console.error('[CardsService] Error fetching cards:', error);
+      throw error;
+    }
+  }
+
+  // 🚀 NOUVEAU: Récupérer les cartes avec pagination (pour useInfiniteQuery)
+  async getCardsByThemeIdPaginated(
+    themeId: string, 
+    userId: string, 
+    limit: number = 50, 
+    offset: number = 0
+  ): Promise<{ documents: AppwriteCard[]; total: number }> {
+    try {
+      const response = await databaseService.list<AppwriteCard>(
+        this.collectionId,
+        [
+          Query.equal('themeId', themeId),
+          Query.equal('userId', userId),
+          Query.orderDesc('$createdAt'),
+          Query.limit(limit),
+          Query.offset(offset),
+          // 🚀 OPTIMISATION: Ne récupérer que les champs nécessaires
+          // Query.select(['$id', 'userId', 'themeId', 'type', 'frontFR', 'backText', 'clozeTextTarget', 'extra', 'imageUrl', 'imageUrlType', 'audioUrl', 'tags', '$createdAt', '$updatedAt']) // À implémenter côté Appwrite
+        ]
+      );
+      
+      return {
+        documents: response.documents,
+        total: response.total
+      };
+    } catch (error) {
+      console.error('[CardsService] Error fetching paginated cards:', error);
       throw error;
     }
   }

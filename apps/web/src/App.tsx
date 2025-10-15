@@ -3,6 +3,7 @@ import { Suspense, lazy, useEffect } from 'react'
 import { AuthProvider } from './contexts/AuthContext'
 import { PWAProvider } from './contexts/PWAContext'
 import { SubscriptionProvider } from './contexts/SubscriptionContext'
+import { ErrorBoundary } from './components/error/ErrorBoundary'
 import PublicLayout from './components/layout/PublicLayout'
 import AppLayout from './components/layout/AppLayout'
 import AuthLayout from './components/layout/AuthLayout'
@@ -75,14 +76,15 @@ function App() {
   }, [])
 
   return (
-    <AuthProvider>
-      <SubscriptionProvider>
-        <PWAProvider>
-          {/* Barre d'installation PWA */}
-          <InstallPrompt />
-          {/* Notification de mise à jour PWA */}
-          <UpdatePrompt />
-          <Routes>
+    <ErrorBoundary>
+      <AuthProvider>
+        <SubscriptionProvider>
+          <PWAProvider>
+            {/* Barre d'installation PWA */}
+            <InstallPrompt />
+            {/* Notification de mise à jour PWA */}
+            <UpdatePrompt />
+            <Routes>
         {/* Routes publiques */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Landing />} />
@@ -201,6 +203,7 @@ function App() {
         </PWAProvider>
       </SubscriptionProvider>
     </AuthProvider>
+    </ErrorBoundary>
   )
 }
 
