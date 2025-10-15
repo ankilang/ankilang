@@ -30,9 +30,14 @@
     /* Alias */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      // Alias direct vers le code source du package partagé (évite le pré-build)
+      "@ankilang/shared-cache": ["../../packages/shared-cache/src/index.ts"]
     }
   },
   "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "../../packages/shared-cache" }
+  ]
 }

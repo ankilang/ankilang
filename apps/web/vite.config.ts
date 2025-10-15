@@ -87,6 +87,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Alias direct vers le code source du package partagé (évite le pré-build)
+      '@ankilang/shared-cache': path.resolve(__dirname, '../../packages/shared-cache/src/index.ts'),
     },
   },
   server: {
