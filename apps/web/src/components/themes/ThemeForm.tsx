@@ -4,9 +4,10 @@ import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Sparkles, Tag, Globe, Wand2, CheckCircle } from 'lucide-react'
-import { LANGUAGES, getLanguageByCode } from '../../constants/languages'
+import { getLanguageByCode } from '../../constants/languages'
 import { CreateThemeSchema } from '../../types/shared'
 import FlagIcon from '../ui/FlagIcon'
+import LanguageSelector from '../ui/LanguageSelector'
 
 const themeFormSchema = z.object({
   name: z.string().min(1, 'Le nom du thème est requis').max(128, 'Le nom est trop long'),
@@ -44,7 +45,6 @@ export default function ThemeForm({
   const watchedValues = watch()
   const selectedLanguage = getLanguageByCode(watchedValues.targetLang)
   const [ocDialect, setOcDialect] = useState<'oc' | 'oc-gascon'>('oc')
-  const [langQuery, setLangQuery] = useState('')
 
   const handleFormSubmit = (data: ThemeFormData) => {
     onSubmit({
@@ -149,7 +149,7 @@ export default function ThemeForm({
           )}
         </motion.div>
 
-        {/* Étape 2: Langue cible - SANS dropdown */}
+        {/* Étape 2: Langue cible - Avec LanguageSelector responsive */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -161,77 +161,18 @@ export default function ThemeForm({
             Langue que vous souhaitez apprendre
           </label>
           
-          {/* Recherche de langue */}
-          <div className="flex items-center gap-2 mb-2">
-            <input
-              type="text"
-              value={langQuery}
-              onChange={(e) => setLangQuery(e.target.value)}
-              placeholder="Rechercher une langue (code, nom, natif)"
-              className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
-              aria-label="Rechercher une langue"
-            />
-          </div>
-
-          {/* Grille de langues améliorée */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-            {(langQuery ? LANGUAGES.filter(l => {
-              const q = langQuery.trim().toLowerCase()
-              return (
-                l.code.toLowerCase().includes(q) ||
-                l.label.toLowerCase().includes(q) ||
-                (l.nativeName?.toLowerCase() || '').includes(q)
-              )
-            }) : LANGUAGES).map((language) => (
-              <motion.label
-                key={language.code}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`relative cursor-pointer p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 ${
-                  watchedValues.targetLang === language.code
-                    ? language.code === 'oc' 
-                      ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-red-50 shadow-lg'
-                      : 'border-purple-500 bg-purple-50 shadow-lg'
-                    : language.code === 'oc'
-                      ? 'border-yellow-300 bg-gradient-to-br from-yellow-100 to-red-100 hover:border-yellow-400'
-                      : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  value={language.code}
-                  {...register('targetLang')}
-                  onFocus={() => setCurrentStep(2)}
-
-                  className="sr-only"
-                />
-                <div className="text-center">
-                  <div className="text-lg sm:text-2xl mb-1 sm:mb-2 flex justify-center items-center">
-                    <FlagIcon 
-                      languageCode={language.code}
-                      size={32}
-                      alt={`Drapeau ${language.label}`}
-                      className="sm:w-8 sm:h-8 w-6 h-6"
-                    />
-                  </div>
-                  <div className="font-sans font-medium text-xs sm:text-sm text-dark-charcoal leading-tight">
-                    {language.label}
-                  </div>
-                  {language.nativeName && (
-                    <div className="font-sans text-xs text-dark-charcoal/50 mt-1">
-                      {language.nativeName}
-                    </div>
-                  )}
-                  {language.code === 'oc' && (
-                    <div className="absolute -top-1 -right-1 px-1 sm:px-2 py-0.5 sm:py-1 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full text-xs text-white font-bold shadow-lg">
-                      <span className="hidden sm:inline">GRATUIT</span>
-                      <span className="sm:hidden">✨</span>
-                    </div>
-                  )}
-                </div>
-              </motion.label>
-            ))}
-          </div>
+          {/* Sélecteur de langue responsive */}
+          <LanguageSelector
+            value={watchedValues.targetLang}
+            onChange={(value) => {
+              // Mettre à jour le formulaire
+              const event = { target: { value } } as any
+              register('targetLang').onChange(event)
+              setCurrentStep(2)
+            }}
+            onFocus={() => setCurrentStep(2)}
+            error={errors.targetLang?.message}
+          />
 
           {/* Dialecte occitan quand oc sélectionné */}
           {watchedValues.targetLang === 'oc' && (
