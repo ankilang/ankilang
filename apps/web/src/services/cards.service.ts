@@ -1,7 +1,8 @@
 import { DatabaseService } from './database.service';
 import { StorageService } from './storage.service';
 import { Query } from 'appwrite';
-import type { Card } from '../types/shared';
+import type { Card, CreateCard, Theme } from '../types/shared';
+import { createAdaptiveCard, getServicesForCategory } from '../plugins/cards';
 
 const databaseService = new DatabaseService();
 const storageService = new StorageService();
@@ -166,6 +167,29 @@ export class CardsService {
       return await databaseService.create<AppwriteCard>(this.collectionId, data, userId);
     } catch (error) {
       console.error('[CardsService] Error creating card:', error);
+      throw error;
+    }
+  }
+
+  // Créer une carte adaptative selon la catégorie du thème
+  async createAdaptiveCard(userId: string, theme: Theme, cardData: CreateCard): Promise<AppwriteCard> {
+    try {
+      // Utiliser l'adapter approprié pour la catégorie
+      const adaptedCardData = await createAdaptiveCard(cardData, theme);
+      
+      // Vérifier les services disponibles pour cette catégorie
+      const services = getServicesForCategory(theme.category);
+      
+      console.log(`[CardsService] Création de carte adaptative pour catégorie: ${theme.category}`, {
+        services,
+        theme: theme.name,
+        subject: theme.subject
+      });
+      
+      // Créer la carte avec les données adaptées
+      return await this.createCard(userId, theme.id, adaptedCardData);
+    } catch (error) {
+      console.error('[CardsService] Error creating adaptive card:', error);
       throw error;
     }
   }
