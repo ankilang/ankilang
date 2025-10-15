@@ -45,12 +45,18 @@ export default function ThemeForm({
     formState: { errors }
   } = useForm<ThemeFormData>({
     resolver: zodResolver(themeFormSchema),
-    defaultValues: initialData
+    defaultValues: {
+      category: 'language', // Défaut pour la rétrocompatibilité
+      ...initialData
+    }
   })
 
   const watchedValues = watch()
   const selectedLanguage = getLanguageByCode(watchedValues.targetLang || '')
   const [ocDialect, setOcDialect] = useState<'oc' | 'oc-gascon'>('oc')
+
+  // Debug: afficher les valeurs surveillées
+  console.log('ThemeForm - watchedValues:', watchedValues)
 
   const handleFormSubmit = (data: ThemeFormData) => {
     onSubmit({
@@ -170,9 +176,16 @@ export default function ThemeForm({
             Quel type de thème voulez-vous créer ?
           </label>
           
+          {/* Champ caché pour la catégorie */}
+          <input
+            type="hidden"
+            {...register('category')}
+            value={watchedValues.category || 'language'}
+          />
+
           {/* Sélecteur de catégorie */}
           <CategorySelector
-            value={watchedValues.category}
+            value={watchedValues.category || 'language'}
             onChange={(category) => {
               // Mettre à jour le formulaire
               const event = { target: { value: category } } as any
@@ -205,7 +218,7 @@ export default function ThemeForm({
           </label>
           
           {/* Interface conditionnelle selon la catégorie */}
-          {watchedValues.category === 'language' && (
+          {(watchedValues.category === 'language' || !watchedValues.category) && (
             <LanguageSelector
               value={watchedValues.targetLang || ''}
               onChange={(value) => {
