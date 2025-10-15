@@ -6,16 +6,17 @@ import { useState, useEffect } from 'react'
  * @returns boolean - true si la query correspond
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false)
+  const [matches, setMatches] = useState(() => {
+    // Initialisation synchrone pour éviter les re-renders
+    if (typeof window !== 'undefined') {
+      return window.matchMedia(query).matches
+    }
+    return false
+  })
 
   useEffect(() => {
     const media = window.matchMedia(query)
     
-    // Vérifier si la query correspond au chargement initial
-    if (media.matches !== matches) {
-      setMatches(media.matches)
-    }
-
     // Écouter les changements de taille d'écran
     const listener = () => setMatches(media.matches)
     
@@ -27,7 +28,7 @@ export function useMediaQuery(query: string): boolean {
     // Support legacy
     media.addListener(listener)
     return () => media.removeListener(listener)
-  }, [matches, query])
+  }, [query]) // Supprimer 'matches' des dépendances
 
   return matches
 }

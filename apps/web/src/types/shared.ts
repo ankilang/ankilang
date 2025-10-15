@@ -98,9 +98,7 @@ export type AnyCard = BasicCard | ClozeCard;
  */
 export const ThemeCategorySchema = z.enum([
   'language',    // Apprentissage de langues (comportement actuel)
-  'academic',    // Études (médecine, histoire, sciences, etc.)
-  'professional', // Compétences professionnelles
-  'personal'     // Développement personnel, culture générale
+  'other'        // Tous les autres domaines (médecine, histoire, culture générale, etc.)
 ]);
 
 /**

@@ -9,13 +9,11 @@ import { CreateThemeSchema, type ThemeCategory } from '../../types/shared'
 import FlagIcon from '../ui/FlagIcon'
 import LanguageSelector from '../ui/LanguageSelector'
 import CategorySelector from '../ui/CategorySelector'
-import SubjectSelector from '../ui/SubjectSelector'
 
 const themeFormSchema = z.object({
   name: z.string().min(1, 'Le nom du thème est requis').max(128, 'Le nom est trop long'),
-  category: z.enum(['language', 'academic', 'professional', 'personal']).default('language'),
+  category: z.enum(['language', 'other']).default('language'),
   targetLang: z.string().optional(),
-  subject: z.string().optional(),
   tags: z.string().optional(),
 })
 
@@ -42,6 +40,7 @@ export default function ThemeForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<ThemeFormData>({
     resolver: zodResolver(themeFormSchema),
@@ -55,15 +54,14 @@ export default function ThemeForm({
   const selectedLanguage = getLanguageByCode(watchedValues.targetLang || '')
   const [ocDialect, setOcDialect] = useState<'oc' | 'oc-gascon'>('oc')
 
-  // Debug: afficher les valeurs surveillées
-  console.log('ThemeForm - watchedValues:', watchedValues)
+  // Debug: afficher les valeurs surveillées (à supprimer en production)
+  // console.log('ThemeForm - watchedValues:', watchedValues)
 
   const handleFormSubmit = (data: ThemeFormData) => {
     onSubmit({
       name: data.name,
       category: data.category,
       targetLang: data.category === 'language' ? (data.targetLang === 'oc' ? ocDialect : data.targetLang) : undefined,
-      subject: data.subject,
       shareStatus: 'private' as const,
     } as z.infer<typeof CreateThemeSchema>)
   }
@@ -75,10 +73,10 @@ export default function ThemeForm({
     { id: 4, title: 'Personnalisation', icon: Sparkles }
   ]
 
-    return (
-    <div className="space-y-8">
-      {/* Indicateur d'étapes */}
-      <div className="flex items-center justify-center space-x-4">
+  return (
+    <div className="space-y-6">
+      {/* Indicateur d'étapes - Version mobile compacte */}
+      <div className="flex items-center justify-center space-x-2 sm:space-x-4">
         {steps.map((step, index) => (
           <motion.div
             key={step.id}
@@ -87,15 +85,15 @@ export default function ThemeForm({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
           >
-            <div className={`flex items-center justify-center w-12 h-12 rounded-2xl border-2 transition-all duration-300 ${
-              currentStep >= step.id 
-                ? 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-500 text-white shadow-lg' 
+            <div className={`flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 ${
+              currentStep >= step.id
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-500 text-white shadow-lg'
                 : 'bg-white border-gray-200 text-gray-400'
             }`}>
-              <step.icon className="w-5 h-5" />
+              <step.icon className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             {index < steps.length - 1 && (
-              <div className={`w-16 h-0.5 mx-2 transition-colors duration-300 ${
+              <div className={`w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 transition-colors duration-300 ${
                 currentStep > step.id ? 'bg-purple-500' : 'bg-gray-200'
               }`} />
             )}
@@ -103,29 +101,29 @@ export default function ThemeForm({
         ))}
       </div>
 
-      {/* Introduction directe */}
+      {/* Introduction directe - Version mobile compacte */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center py-6"
+        className="text-center py-3 sm:py-6"
       >
         <motion.div
           animate={{ rotate: [0, 10, -10, 0] }}
           transition={{ duration: 3, repeat: Infinity }}
-          className="text-4xl mb-4"
+          className="text-2xl sm:text-4xl mb-2 sm:mb-4"
         >
           ✨
         </motion.div>
-        <h3 className="font-display text-xl font-semibold text-dark-charcoal mb-2">
+        <h3 className="font-display text-lg sm:text-xl font-semibold text-dark-charcoal mb-1 sm:mb-2">
           Créons votre thème ensemble
         </h3>
-        <p className="font-sans text-dark-charcoal/70 max-w-md mx-auto">
+        <p className="font-sans text-sm sm:text-base text-dark-charcoal/70 max-w-md mx-auto">
           Quelques informations suffisent pour organiser parfaitement vos flashcards
         </p>
       </motion.div>
 
       {/* Formulaire */}
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {error && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
@@ -180,16 +178,21 @@ export default function ThemeForm({
           <input
             type="hidden"
             {...register('category')}
-            value={watchedValues.category || 'language'}
           />
 
           {/* Sélecteur de catégorie */}
           <CategorySelector
             value={watchedValues.category || 'language'}
             onChange={(category) => {
-              // Mettre à jour le formulaire
-              const event = { target: { value: category } } as any
-              register('category').onChange(event)
+              // Mettre à jour le formulaire avec setValue
+              setValue('category', category)
+              
+              // Réinitialiser targetLang SEULEMENT si on passe à "other"
+              if (category === 'other') {
+                setValue('targetLang', '')
+              }
+              // Si on revient à "language", on garde la valeur existante
+              
               setCurrentStep(2)
             }}
             onFocus={() => setCurrentStep(2)}
@@ -209,54 +212,29 @@ export default function ThemeForm({
             <Globe className="w-4 h-4 text-purple-600" />
             {watchedValues.category === 'language' 
               ? 'Langue que vous souhaitez apprendre'
-              : watchedValues.category === 'academic'
-              ? 'Configuration académique'
-              : watchedValues.category === 'professional'
-              ? 'Configuration professionnelle'
-              : 'Configuration personnelle'
+              : 'Configuration du thème'
             }
           </label>
           
           {/* Interface conditionnelle selon la catégorie */}
-          {(watchedValues.category === 'language' || !watchedValues.category) && (
-            <LanguageSelector
-              value={watchedValues.targetLang || ''}
-              onChange={(value) => {
-                const event = { target: { value } } as any
-                register('targetLang').onChange(event)
-                setCurrentStep(3)
-              }}
-              onFocus={() => setCurrentStep(3)}
-              error={errors.targetLang?.message}
-            />
-          )}
+                 {watchedValues.category === 'language' && (
+                   <LanguageSelector
+                     value={watchedValues.targetLang || ''}
+                     onChange={(value) => {
+                       setValue('targetLang', value)
+                       setCurrentStep(3)
+                     }}
+                     onFocus={() => setCurrentStep(3)}
+                     error={errors.targetLang?.message}
+                   />
+                 )}
 
-          {(watchedValues.category === 'academic' || watchedValues.category === 'professional') && (
-            <SubjectSelector
-              category={watchedValues.category}
-              value={watchedValues.subject}
-              onChange={(subject) => {
-                const event = { target: { value: subject } } as any
-                register('subject').onChange(event)
-                setCurrentStep(3)
-              }}
-              onFocus={() => setCurrentStep(3)}
-              error={errors.subject?.message}
-            />
-          )}
-
-          {watchedValues.category === 'personal' && (
-            <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-xl">
-              <div className="text-center">
-                <div className="text-3xl mb-3">🧠</div>
-                <h3 className="font-sans font-semibold text-dark-charcoal mb-2">
-                  Thème Personnel
-                </h3>
-                <p className="font-sans text-sm text-dark-charcoal/70">
-                  Créez des cartes pour la culture générale, le développement personnel, 
-                  ou tout autre sujet qui vous passionne !
-                </p>
-              </div>
+          {watchedValues.category === 'other' && (
+            <div className="text-center py-4">
+              <div className="text-2xl mb-2">📚</div>
+              <p className="text-sm text-dark-charcoal/70 font-sans">
+                Thème général pour tous types de contenu (médecine, histoire, culture générale...)
+              </p>
             </div>
           )}
 
@@ -366,13 +344,13 @@ export default function ThemeForm({
           )}
         </motion.div>
 
-        {/* Étape 4: Personnalisation */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="space-y-6"
-        >
+               {/* Étape 4: Personnalisation */}
+               <motion.div
+                 initial={{ opacity: 0, x: -20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 transition={{ delay: 0.5 }}
+                 className="space-y-4"
+               >
           <div>
             <label htmlFor="tags" className="label-field flex items-center gap-2">
               <Tag className="w-4 h-4 text-purple-600" />
@@ -393,14 +371,14 @@ export default function ThemeForm({
           </div>
         </motion.div>
 
-        {/* Bouton de soumission */}
-        <motion.button
-          type="submit"
-          disabled={isLoading}
-          whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(124, 58, 237, 0.3)" }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-white text-lg py-4 sm:text-base sm:py-3 rounded-2xl font-semibold shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden"
-        >
+               {/* Bouton de soumission */}
+               <motion.button
+                 type="submit"
+                 disabled={isLoading}
+                 whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(124, 58, 237, 0.3)" }}
+                 whileTap={{ scale: 0.98 }}
+                 className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-white text-base py-3 sm:text-lg sm:py-4 rounded-2xl font-semibold shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden"
+               >
           {/* Effet de brillance au survol */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
 import { CATEGORIES } from '../../constants/categories'
@@ -24,6 +24,13 @@ export default function CategorySelector({
   const [selectedCategory, setSelectedCategory] = useState<ThemeCategory>(
     preselectedCategory || value || 'language'
   )
+
+  // Synchroniser l'état local avec la valeur du formulaire
+  useEffect(() => {
+    if (value && value !== selectedCategory) {
+      setSelectedCategory(value)
+    }
+  }, [value, selectedCategory])
 
   const handleCategorySelect = (category: ThemeCategory) => {
     setSelectedCategory(category)

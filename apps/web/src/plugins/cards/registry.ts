@@ -2,9 +2,7 @@ import { type CardAdapter } from './types'
 import { type ThemeCategory } from '../../types/shared'
 import { type CreateCard, type Theme } from '../../types/shared'
 import { LanguageCardAdapter } from './language'
-import { AcademicCardAdapter } from './academic'
-import { ProfessionalCardAdapter } from './professional'
-import { PersonalCardAdapter } from './personal'
+import { OtherCardAdapter } from './other'
 
 /**
  * Registry central pour les adapters de cartes
@@ -16,9 +14,7 @@ class CardAdapterRegistry {
   constructor() {
     // Initialisation des adapters
     this.adapters.set('language', new LanguageCardAdapter())
-    this.adapters.set('academic', new AcademicCardAdapter())
-    this.adapters.set('professional', new ProfessionalCardAdapter())
-    this.adapters.set('personal', new PersonalCardAdapter())
+    this.adapters.set('other', new OtherCardAdapter())
   }
 
   /**
@@ -27,7 +23,8 @@ class CardAdapterRegistry {
   getAdapter(category: ThemeCategory): CardAdapter {
     const adapter = this.adapters.get(category)
     if (!adapter) {
-      throw new Error(`Aucun adapter trouvé pour la catégorie: ${category}`)
+      console.warn(`[CardAdapterRegistry] No adapter found for category: ${category}. Falling back to LanguageAdapter.`)
+      return this.adapters.get('language')! // Fallback to language for safety
     }
     return adapter
   }

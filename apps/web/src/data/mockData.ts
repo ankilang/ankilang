@@ -44,6 +44,28 @@ export const mockThemes: Theme[] = [
     shareStatus: 'private',
     createdAt: '2024-01-12T15:00:00Z',
     updatedAt: '2024-01-19T10:15:00Z'
+  },
+  {
+    id: '5',
+    userId: 'user1',
+    name: 'Anatomie humaine',
+    category: 'other',
+    subject: 'medicine',
+    cardCount: 4,
+    shareStatus: 'private',
+    createdAt: '2024-01-20T08:00:00Z',
+    updatedAt: '2024-01-22T14:30:00Z'
+  },
+  {
+    id: '6',
+    userId: 'user1',
+    name: 'Histoire de France',
+    category: 'other',
+    subject: 'history',
+    cardCount: 3,
+    shareStatus: 'public',
+    createdAt: '2024-01-18T10:00:00Z',
+    updatedAt: '2024-01-21T16:45:00Z'
   }
 ]
 
@@ -160,6 +182,61 @@ export const mockCards: Record<string, Card[]> = {
       tags: ['verbe manger', 'présent'],
       createdAt: '2024-01-12T15:00:00Z',
       updatedAt: '2024-01-12T15:00:00Z'
+    }
+  ],
+  '5': [
+    {
+      id: '5-1',
+      userId: 'user1',
+      themeId: '5',
+      type: 'basic',
+      frontFR: 'Quel est le plus grand organe du corps humain ?',
+      backText: 'La peau',
+      extra: 'Surface d\'environ 2 m² chez l\'adulte',
+      imageUrlType: 'external',
+      tags: ['anatomie', 'organes'],
+      createdAt: '2024-01-20T08:00:00Z',
+      updatedAt: '2024-01-20T08:00:00Z'
+    },
+    {
+      id: '5-2',
+      userId: 'user1',
+      themeId: '5',
+      type: 'cloze',
+      clozeTextTarget: 'Le {{c1::cœur}} pompe le {{c2::sang}} dans tout le {{c3::corps}}',
+      extra: 'Organe vital du système circulatoire',
+      imageUrlType: 'external',
+      tags: ['anatomie', 'cœur'],
+      createdAt: '2024-01-20T08:05:00Z',
+      updatedAt: '2024-01-20T08:05:00Z'
+    }
+  ],
+  '6': [
+    {
+      id: '6-1',
+      userId: 'user1',
+      themeId: '6',
+      type: 'basic',
+      frontFR: 'En quelle année a eu lieu la Révolution française ?',
+      backText: '1789',
+      extra: 'Révolution qui a marqué la fin de l\'Ancien Régime',
+      imageUrlType: 'external',
+      tags: ['histoire', 'révolution'],
+      createdAt: '2024-01-18T10:00:00Z',
+      updatedAt: '2024-01-18T10:00:00Z'
+    },
+    {
+      id: '6-2',
+      userId: 'user1',
+      themeId: '6',
+      type: 'basic',
+      frontFR: 'Qui était le roi de France en 1789 ?',
+      backText: 'Louis XVI',
+      extra: 'Dernier roi de l\'Ancien Régime, guillotiné en 1793',
+      imageUrlType: 'external',
+      tags: ['histoire', 'monarchie'],
+      createdAt: '2024-01-18T10:05:00Z',
+      updatedAt: '2024-01-18T10:05:00Z'
     }
   ]
 }

@@ -22,58 +22,15 @@ export const CATEGORIES: CategoryOption[] = [
     gradient: 'bg-gradient-to-br from-blue-100 to-cyan-100'
   },
   {
-    id: 'academic',
-    label: 'Études',
-    icon: '🎓',
-    description: 'Médecine, histoire, sciences...',
+    id: 'other',
+    label: 'Autres',
+    icon: '📚',
+    description: 'Médecine, histoire, culture générale...',
     color: 'from-green-400 to-emerald-500',
     gradient: 'bg-gradient-to-br from-green-100 to-emerald-100'
-  },
-  {
-    id: 'professional',
-    label: 'Professionnel',
-    icon: '💼',
-    description: 'Compétences métier',
-    color: 'from-purple-400 to-violet-500',
-    gradient: 'bg-gradient-to-br from-purple-100 to-violet-100'
-  },
-  {
-    id: 'personal',
-    label: 'Personnel',
-    icon: '🧠',
-    description: 'Culture générale, développement',
-    color: 'from-orange-400 to-red-500',
-    gradient: 'bg-gradient-to-br from-orange-100 to-red-100'
   }
 ]
 
-/**
- * Sujets spécialisés par catégorie académique
- */
-export const ACADEMIC_SUBJECTS = [
-  { id: 'medicine', label: 'Médecine', icon: '🩺' },
-  { id: 'history', label: 'Histoire', icon: '📚' },
-  { id: 'science', label: 'Sciences', icon: '🔬' },
-  { id: 'law', label: 'Droit', icon: '⚖️' },
-  { id: 'literature', label: 'Littérature', icon: '📖' },
-  { id: 'philosophy', label: 'Philosophie', icon: '🤔' },
-  { id: 'mathematics', label: 'Mathématiques', icon: '🔢' },
-  { id: 'geography', label: 'Géographie', icon: '🌍' }
-]
-
-/**
- * Domaines professionnels
- */
-export const PROFESSIONAL_DOMAINS = [
-  { id: 'it', label: 'Informatique', icon: '💻' },
-  { id: 'marketing', label: 'Marketing', icon: '📈' },
-  { id: 'finance', label: 'Finance', icon: '💰' },
-  { id: 'hr', label: 'Ressources Humaines', icon: '👥' },
-  { id: 'sales', label: 'Ventes', icon: '🛒' },
-  { id: 'design', label: 'Design', icon: '🎨' },
-  { id: 'management', label: 'Management', icon: '📊' },
-  { id: 'communication', label: 'Communication', icon: '📢' }
-]
 
 /**
  * Récupère une catégorie par son ID

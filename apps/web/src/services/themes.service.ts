@@ -20,12 +20,19 @@ export class ThemesService {
   // Créer un nouveau thème
   async createTheme(userId: string, themeData: CreateTheme): Promise<AppwriteTheme> {
     try {
+      // Filtrer les champs non reconnus par la base de données actuelle
+      const { category, ...legacyData } = themeData;
+      
       const dataWithUserId = {
-        ...themeData,
+        ...legacyData,
         userId,
         cardCount: 0, // Nouveau thème = 0 carte
-        shareStatus: 'private' as const // Par défaut privé
+        shareStatus: 'private' as const, // Par défaut privé
+        // Ajouter targetLang par défaut si manquant (pour les thèmes "autres")
+        targetLang: legacyData.targetLang || 'general'
       };
+
+      console.log('[ThemesService] Creating theme with data:', dataWithUserId);
 
       const theme = await databaseService.create<AppwriteTheme>(
         this.collectionId, 

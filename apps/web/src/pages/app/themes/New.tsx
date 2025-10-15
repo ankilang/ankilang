@@ -69,7 +69,7 @@ export default function NewTheme() {
           transition={{ duration: 0.8 }}
           className="bg-white shadow-sm border-b border-gray-100"
         >
-          <div className="container mx-auto px-4 py-6">
+          <div className="container mx-auto px-4 py-4 sm:py-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/app/themes')}
@@ -80,11 +80,11 @@ export default function NewTheme() {
               </button>
               
               <div>
-                <h1 className="text-2xl font-playfair font-bold text-dark-charcoal">
+                <h1 className="text-xl sm:text-2xl font-playfair font-bold text-dark-charcoal">
                   Nouveau thème
                 </h1>
-                <p className="text-sm text-dark-charcoal/70 font-sans mt-1">
-                  Créez un nouveau thème de flashcards pour apprendre une langue
+                <p className="text-xs sm:text-sm text-dark-charcoal/70 font-sans mt-1">
+                  Créez un nouveau thème de flashcards
                 </p>
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function NewTheme() {
         </motion.header>
 
         {/* Contenu principal */}
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-4 sm:py-8">
           <div className="max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
