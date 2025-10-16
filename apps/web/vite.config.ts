@@ -22,7 +22,7 @@ export default defineConfig({
           /^\/manifest\.webmanifest(\?.*)?$/,   // ✅ Protection manifest avec query params
         ],
         // ✅ FORCER la mise à jour du Service Worker
-        cacheId: `ankilang-${process.env.VITE_SW_CACHE_VERSION ?? 'v4'}`, // Version unique pour forcer la mise à jour
+        cacheId: `ankilang-${Date.now()}`, // Version unique basée sur timestamp pour forcer la mise à jour
         navigationPreload: false, // ✅ Désactiver temporairement pour éviter les conflits
         cleanupOutdatedCaches: true, // ✅ Nettoie les anciens caches
         skipWaiting: true, // ✅ Prend effet immédiatement
