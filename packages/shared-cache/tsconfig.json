@@ -6,7 +6,8 @@
     "declaration": true,
     "module": "ESNext",
     "target": "ES2021",
-    "lib": ["ES2021", "DOM"]
+    "lib": ["ES2021", "DOM"],
+    "composite": true
   },
   "include": ["src"]
 }
