@@ -5,8 +5,7 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext'
 import { ErrorBoundary } from './components/error/ErrorBoundary'
 import InstallPrompt from './components/ui/InstallPrompt'
 import UpdatePrompt from './components/ui/UpdatePrompt'
-import { AppRoutes } from './routes/AppRoutes'
-import { ProtectedRoutes } from './routes/ProtectedRoutes'
+import { RootRoutes } from './routes/RootRoutes'
 
 
 function App() {
@@ -46,9 +45,8 @@ function App() {
             <InstallPrompt />
             {/* Notification de mise à jour PWA */}
             <UpdatePrompt />
-            {/* ✅ Routes organisées en modules pour une meilleure maintenabilité */}
-            <AppRoutes />
-            <ProtectedRoutes />
+            {/* ✅ Arbre unique de routes (public + protégé) */}
+            <RootRoutes />
           </PWAProvider>
         </SubscriptionProvider>
       </AuthProvider>

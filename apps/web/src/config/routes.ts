@@ -83,7 +83,8 @@ export function generateRouteUrl<K extends RouteKeys>(
  * @returns true si la route nécessite une authentification
  */
 export function requiresAuth(route: RouteKeys): boolean {
-  return route.startsWith('/app') && route !== 'AUDIO_TEST'
+  const path = ROUTES[route] as string
+  return path.startsWith('/app') && route !== 'AUDIO_TEST'
 }
 
 /**

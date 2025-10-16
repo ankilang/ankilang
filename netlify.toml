@@ -10,3 +10,7 @@
   command = "pnpm -w dev"
   targetPort = 5173
 
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
