@@ -76,6 +76,9 @@ jspm_packages/
 # Gatsby files
 .cache/
 public/
+!apps/web/public/
+apps/web/public/*
+!apps/web/public/manifest.webmanifest
 
 # Storybook build outputs
 .out/
