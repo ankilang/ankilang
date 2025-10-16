@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 
 // Layouts
 import PublicLayout from '../components/layout/PublicLayout'
@@ -7,35 +7,36 @@ import AuthLayout from '../components/layout/AuthLayout'
 import LegalLayout from '../components/layout/LegalLayout'
 import AppLayout from '../components/layout/AppLayout'
 
-// Pages publiques
-import Landing from '../pages/Landing'
-import Abonnement from '../pages/Abonnement'
-import Offline from '../pages/Offline'
-import NotFound from '../pages/NotFound'
+// Pages publiques (lazy)
+const Landing = lazy(() => import('../pages/Landing'))
+const Abonnement = lazy(() => import('../pages/Abonnement'))
+const Offline = lazy(() => import('../pages/Offline'))
+const NotFound = lazy(() => import('../pages/NotFound'))
 
-// Auth
-import Login from '../pages/auth/Login'
-import Register from '../pages/auth/Register'
-import ForgotPassword from '../pages/auth/ForgotPassword'
-import VerifyEmail from '../pages/auth/VerifyEmail'
+// Auth (lazy)
+const Login = lazy(() => import('../pages/auth/Login'))
+const Register = lazy(() => import('../pages/auth/Register'))
+const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'))
+const VerifyEmail = lazy(() => import('../pages/auth/VerifyEmail'))
 
-// Légal
-import Terms from '../pages/legal/Terms'
-import Privacy from '../pages/legal/Privacy'
+// Légal (lazy)
+const Terms = lazy(() => import('../pages/legal/Terms'))
+const Privacy = lazy(() => import('../pages/legal/Privacy'))
 
 // Protégées
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 import ProOnly from '../components/auth/ProOnly'
-import Dashboard from '../pages/app/Dashboard'
-import ThemesIndex from '../pages/app/themes/Index'
-import NewTheme from '../pages/app/themes/New'
-import ThemeDetail from '../pages/app/themes/Detail'
-import ThemeExport from '../pages/app/themes/Export'
-import BaseTips from '../pages/app/resources/BaseTips'
-import FlashcardWorkshop from '../pages/app/resources/FlashcardWorkshop'
-import ProLibrary from '../pages/app/resources/ProLibrary'
-import AccountIndex from '../pages/app/account/Index'
-import AudioTest from '../pages/test/AudioTest'
+// Pages protégées (lazy)
+const Dashboard = lazy(() => import('../pages/app/Dashboard'))
+const ThemesIndex = lazy(() => import('../pages/app/themes/Index'))
+const NewTheme = lazy(() => import('../pages/app/themes/New'))
+const ThemeDetail = lazy(() => import('../pages/app/themes/Detail'))
+const ThemeExport = lazy(() => import('../pages/app/themes/Export'))
+const BaseTips = lazy(() => import('../pages/app/resources/BaseTips'))
+const FlashcardWorkshop = lazy(() => import('../pages/app/resources/FlashcardWorkshop'))
+const ProLibrary = lazy(() => import('../pages/app/resources/ProLibrary'))
+const AccountIndex = lazy(() => import('../pages/app/account/Index'))
+const AudioTest = lazy(() => import('../pages/test/AudioTest'))
 
 // Fallback de chargement léger
 const PageLoadingFallback = ({ type }: { type: 'auth' | 'app' | 'legal' }) => {
@@ -63,9 +64,9 @@ export const RootRoutes = () => (
   <Routes>
     {/* Public */}
     <Route path="/" element={<PublicLayout />}>
-      <Route index element={<Landing />} />
-      <Route path="abonnement" element={<Abonnement />} />
-      <Route path="offline" element={<Offline />} />
+      <Route index element={<Suspense fallback={<PageLoadingFallback type="app" />}><Landing /></Suspense>} />
+      <Route path="abonnement" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Abonnement /></Suspense>} />
+      <Route path="offline" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Offline /></Suspense>} />
       {/* Ne pas mettre de catch-all ici pour ne pas intercepter /app */}
     </Route>
 
@@ -176,7 +177,6 @@ export const RootRoutes = () => (
     </Route>
 
     {/* Catch-all global */}
-    <Route path="*" element={<NotFound />} />
+    <Route path="*" element={<Suspense fallback={<PageLoadingFallback type="app" />}><NotFound /></Suspense>} />
   </Routes>
 )
-

@@ -1,0 +1,121 @@
+Ankilang — Plan de mise en place (modale de création de flashcards)
+
+Objectif
+Créer une modale de création de cartes plus claire et ergonomique, en 3 étapes, avec aperçu instantané, aides contextuelles, gestion d’images/audio, validation réactive, accessibilité, et robustesse réseau/offline — sans régressions sur le flux actuel.
+
+Phasage général
+0) Préparation
+1) Spécification UX/UI
+2) Architecture & composants
+3) Logique métier & validations
+4) Intégrations (Traduction, Images, TTS)
+5) Accessibilité, i18n, clavier
+6) Performance & fiabilité
+7) Tests & QA
+8) Déploiement & suivi
+
+Détails — étapes pas à pas
+
+0) Préparation
+  0.1 – Créer une branche dédiée: feature/modal-new-flow
+  0.2 – Ouvrir un document de référence (docs/ux/flashcard-modal-spec.md) pour l’UX détaillée
+  0.3 – Faire un inventaire des dépendances côté modale: react-hook-form, react-query, services (tts, pexels, deepl/revirada)
+
+1) Spécification UX/UI
+  1.1 – Définir les 3 étapes du flux: Type & intention → Rédaction → Enrichir & Prévisualiser
+  1.2 – Produire 3 wireframes (mobile + desktop) et l’aperçu “style Anki”
+  1.3 – Rédiger la micro‑copy (labels, placeholders, aides, erreurs) FR/EN
+  1.4 – Définir les états: loading (TTS/Images), offline, erreurs API, brouillon enregistré
+  1.5 – Définir la palette/couleurs (dégradé header, surfaces, boutons) calées sur themeColors
+
+2) Architecture & composants
+  2.1 – Créer un nouveau composant conteneur: NewCardModalV2 (sans casser l’actuel)
+  2.2 – Découper par sous‑composants:
+       - StepperHeader (étapes + état brouillon)
+       - StepType (sélection Basic/Cloze + intention + langue cible)
+       - StepContent (formulaire principal: Basic ou Cloze) + PreviewPane
+       - StepEnhance (Images, Audio, Tags) + PreviewPane
+       - FooterActions (Annuler/Précédent/Suivant/Enregistrer)
+  2.3 – Créer un composant PreviewCard (aperçu unifié style Anki)
+  2.4 – Conserver les props actuelles (isOpen, onClose, onSubmit, themeId, themeLanguage, themeColors)
+  2.5 – Intégrer un store local interne (useReducer) pour l’état du wizard + synchronisation avec react-hook-form
+
+3) Logique métier & validations
+  3.1 – Définir le schéma des données internes (draft) et le mapping -> CreateCardSchema
+  3.2 – Valider par type:
+       - Basic: recto + verso requis
+       - Cloze: clozeTextTarget requis et contient {{cN::...}}
+  3.3 – Validation “live” pour activer/désactiver Suivant/Enregistrer
+  3.4 – Gestion des tags: chips + split/trim -> array
+  3.5 – Normalisation image/audio: champs + type (appwrite/external)
+  3.6 – Construire le payload final dans onSubmit (inchangé côté ThemeDetail)
+
+4) Intégrations (réutiliser les services existants)
+  4.1 – Traduction
+       - Bouton “Traduire” sur Verso (Basic) → deepl/revirada selon langue
+       - États: idle/loading/success/error, message discret “Traduction ajoutée”
+  4.2 – Images (Pexels)
+       - Recherche debouncée + pagination (reuse useQuery actuel)
+       - Carte image → “Optimiser et ajouter” (optimizeAndUploadImage) → set imageUrl + type
+       - Messages: “Optimisation en cours…”, “Image optimisée (−XX%)”
+  4.3 – Audio (TTS)
+       - Bouton “Générer l’audio” + player inline
+       - Occitan → Votz; autres → ElevenLabs via Appwrite (generateTTS existant)
+       - Gestion “save to storage” si demandé (facultatif à ce stade)
+
+5) Accessibilité, i18n, clavier
+  5.1 – Labels et descriptions aria pour tous les contrôles
+  5.2 – Focus management: ouverture modale, navigation Tab, fermeture Esc, retour focus
+  5.3 – Raccourcis: Cmd/Ctrl+Enter (Enregistrer), Shift+Enter (Suivant), Esc (Fermer)
+  5.4 – i18n des libellés (FR/EN), placeholders et messages d’erreur
+  5.5 – Contrastes et zones de focus visibles
+
+6) Performance & fiabilité
+  6.1 – Autosave d’un brouillon local (localStorage/IDB) toutes 3s et à la fermeture
+  6.2 – Restauration du brouillon à la ré‑ouverture (clé par themeId + userId)
+  6.3 – Préchargement léger du PreviewCard et des icônes
+  6.4 – Éviter de bloquer le formulaire pendant TTS/Optimisation (actions async indépendantes)
+  6.5 – Gestion offline explicite: traductions/images/tts désactivés avec message, mais création de carte possible
+
+7) Tests & QA
+  7.1 – Tests unitaires ciblés (utils: normalisation, validation cloze)
+  7.2 – Tests d’intégration (simuler saisie Basic/Cloze, traduire, ajouter image/audio, sauvegarder)
+  7.3 – Scénarios offline (désactiver réseau → vérifier UI et soumission sans enrichissements)
+  7.4 – A11y (axe + focus-trap), navigation clavier, lecteurs d’écran
+  7.5 – Mobile: vérifier clavier virtuel, scroll contenu, boutons collants
+  7.6 – Performance: profiler temps de rendu, tailles réponses Pexels/TTS, absence de jank
+
+8) Déploiement & suivi
+  8.1 – Derrière un flag (ex: VITE_FEATURE_NEW_CARD_MODAL) pour déploiement progressif
+  8.2 – Activer tracking minimal (compte: ouverture modale, type choisi, succès/erreurs soumission)
+  8.3 – Dogfooding interne + feedback rapide
+  8.4 – Graduellement remplacer NewCardModal par NewCardModalV2 (garder fallback 1 version)
+  8.5 – Nettoyage: retirer l’ancien composant une fois validé
+
+Livrables
+  - docs/ux/flashcard-modal-spec.md (wireframes + copy)
+  - Composants: NewCardModalV2 + sous‑composants (StepperHeader, StepType, StepContent, StepEnhance, PreviewCard, FooterActions)
+  - Tests: unité + intégration + a11y
+  - Plan de rollback (flag)
+
+Critères d’acceptation (DoD)
+  - Création Basic et Cloze via 3 étapes sans ambiguïté
+  - Aperçu “style Anki” en temps réel et fidèle
+  - Traduction/Images/TTS fonctionnels, non bloquants si offline
+  - Validation réactive, erreurs claires, raccourcis clavier
+  - Autosave/restauration brouillon fiable
+  - A11y: navigation clavier, aria, contrastes OK
+  - Pas de régression: flux existant toujours possible pendant la phase de transition
+
+Risques & mitigations
+  - Latence API (Pexels/TTS/Traduction): indicateurs discrets + non‑blocage du formulaire
+  - Conflits d’état RHF/Redux/Query: isoler l’état wizard, ne pas dupliquer la source de vérité
+  - Surcharge UI: progressive disclosure, sections repliables, micro‑copy concise
+  - Offline: chemin heureux (création sans enrichissements) documenté et testé
+
+Roadmap indicative
+  - Semaine 1: Spec UX + wireframes + structure V2 (sans logique)
+  - Semaine 2: StepType + StepContent + validations + PreviewCard
+  - Semaine 3: StepEnhance (Images/TTS/Tags) + autosave + a11y/raccourcis
+  - Semaine 4: QA complète (offline, mobile), flag, déploiement progressif
+
