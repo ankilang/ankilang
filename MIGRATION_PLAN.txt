@@ -1,0 +1,251 @@
+================================================================================
+                   PLAN DE MIGRATION SÉCURISÉE - ANKILANG
+                   Simplification de l'architecture des fonctions
+================================================================================
+
+STATUT : En attente de démarrage
+VERSION : 1.0
+DATE : 16 octobre 2025
+AUTEUR : Assistant IA
+
+================================================================================
+                               ARCHITECTURE ACTUELLE
+================================================================================
+
+FONCTIONS NETLIFY EXTERNES ACTIVES (4) :
+========================================
+✅ ankilangdeepl    → https://ankilangdeepl.netlify.app/.netlify/functions/translate
+✅ ankilangpexels   → https://ankilangpexels.netlify.app/.netlify/functions/pexels
+✅ ankilangrevirada → https://ankilangrevirada.netlify.app/.netlify/functions/revirada
+✅ ankilangvotz     → https://ankilangvotz.netlify.app/.netlify/functions/votz
+❌ ankilangtts      → NON UTILISÉ (supprimer)
+
+FONCTIONS APPWRITE ACTIVES (2) :
+===============================
+✅ ElevenLabs       → Fonction Appwrite (TTS avec ElevenLabs)
+✅ Cache Janitor    → Fonction Appwrite (nettoyage automatique)
+
+================================================================================
+                               PROBLÈMES IDENTIFIÉS
+================================================================================
+
+1. CODE DUPLIQUÉ :
+   - 5 fichiers identiques dans chaque fonction externe (auth.ts, cors.ts, etc.)
+   - 25 fichiers dupliqués au total
+
+2. MAINTENANCE LOURDE :
+   - 10 fichiers package.json à maintenir
+   - 6 déploiements séparés à gérer
+   - Clés API éparpillées
+
+3. ARCHITECTURE COMPLEXE :
+   - Fonctions déployées sur des domaines séparés
+   - Gestion des erreurs décentralisée
+   - Tests manuels uniquement
+
+================================================================================
+                               OBJECTIFS DE MIGRATION
+================================================================================
+
+1. ✅ MAINTENIR LA STABILITÉ PRODUCTION (priorité absolue)
+2. ✅ RÉDUIRE LE CODE DUPLIQUÉ (-80%)
+3. ✅ SIMPLIFIER LA MAINTENANCE (-40% fichiers package.json)
+4. ✅ CENTRALISER LA GESTION DES ERREURS
+5. ✅ AUTOMATISER LES TESTS
+
+================================================================================
+                               PHASES DE MIGRATION
+================================================================================
+
+--------------------------------------------------------------------------------
+PHASE 0 : PRÉPARATION (SEMAINE 1 - Statut: À FAIRE)
+--------------------------------------------------------------------------------
+
+ÉTAPES :
+--------
+0.1 ✅ CRÉER LE PACKAGE PARTAGÉ
+     ├── packages/shared-external/
+     │   ├── src/auth.ts
+     │   ├── src/cors.ts
+     │   ├── src/logging.ts
+     │   ├── src/problem.ts
+     │   └── src/rate-limit.ts
+     └── package.json
+
+0.2 ✅ DOCUMENTER LES URLs DE PRODUCTION
+     └── docs/external-functions-architecture.md
+
+0.3 ✅ CRÉER LES TESTS D'INTÉGRATION
+     └── scripts/test-external-functions.mjs
+
+POINTS DE CONTRÔLE :
+- Package shared-external créé et testé
+- Documentation des URLs actuelle complétée
+- Tests automatisés fonctionnels
+
+--------------------------------------------------------------------------------
+PHASE 1 : MIGRATION PROGRESSIVE (SEMAINE 2-3 - Statut: À FAIRE)
+--------------------------------------------------------------------------------
+
+STRATÉGIE : Déploiement parallèle (ancienne + nouvelle fonction)
+
+ÉTAPES PAR FONCTION :
+---------------------
+
+1. MIGRATION REvirada (SEMAINE 2 - Moins critique)
+   ├── Étape 1 : Créer dans fonctions principales
+   │   └── apps/functions/src/external-apis/revirada.ts
+   ├── Étape 2 : Déployer en parallèle
+   ├── Étape 3 : Mettre à jour le service client avec fallback
+   │   └── apps/web/src/services/revirada.ts
+   └── Étape 4 : Tester pendant 1 semaine
+
+2. MIGRATION VOTZ (SEMAINE 2 - Occitan)
+   ├── Même processus que Revirada
+   └── apps/functions/src/external-apis/votz.ts
+
+3. MIGRATION PEXELS (SEMAINE 3 - Images)
+   ├── Même processus
+   └── apps/functions/src/external-apis/pexels.ts
+
+4. MIGRATION DEEPL (SEMAINE 3 - Critique)
+   ├── Même processus
+   └── apps/functions/src/external-apis/deepl.ts
+
+POINTS DE CONTRÔLE :
+- Chaque fonction migrée testée individuellement
+- Monitoring des erreurs et latence
+- Rollback possible à tout moment
+
+--------------------------------------------------------------------------------
+PHASE 2 : VALIDATION ET NETTOYAGE (SEMAINE 4 - Statut: À FAIRE)
+--------------------------------------------------------------------------------
+
+ÉTAPES :
+--------
+2.1 ✅ VALider TOUTES LES FONCTIONS
+     ├── Tests automatisés quotidiens
+     ├── Monitoring latence et disponibilité
+     └── Validation fonctionnelle complète
+
+2.2 ✅ SUPPRIMER LES FONCTIONS OBSOLÈTES
+     └── rm -rf external-functions/
+
+2.3 ✅ NETTOYER LES DÉPENDANCES
+     └── Suppression des packages inutiles
+
+================================================================================
+                               GARANTIES DE STABILITÉ
+================================================================================
+
+STRATÉGIES DE SÉCURITÉ :
+------------------------
+1. DÉPLOIEMENT PARALLÈLE
+   - Ancienne et nouvelle fonction coexistent
+   - Basculement automatique en cas de problème
+
+2. TESTS AUTOMATISÉS QUOTIDIENS
+   - Test de chaque fonction externe
+   - Alertes en cas de régression
+
+3. MONITORING RENFORCÉ
+   - Latence, disponibilité, erreurs
+   - Seuils d'alerte définis
+
+4. ROLLBACK INSTANTANÉ
+   - Retour aux URLs netlify.app en 1 clic
+   - Procédure documentée
+
+CRITÈRES DE SUCCÈS :
+--------------------
+- ✅ Latence identique ou améliorée
+- ✅ Disponibilité maintenue à 99.9%
+- ✅ Zéro régression fonctionnelle
+- ✅ Sécurité préservée ou renforcée
+
+================================================================================
+                               BÉNÉFICES ATTENDUS
+================================================================================
+
+MAINTENANCE :
+- -40% fichiers package.json (10 → 6)
+- -80% code dupliqué (25 → 5 fichiers)
+- +300% simplicité de déploiement
+
+SÉCURITÉ :
+- Gestion centralisée des clés API
+- Logs et erreurs unifiés
+- Tests automatisés
+
+ÉVOLUTIVITÉ :
+- Ajout de nouvelles fonctions simplifié
+- Architecture plus maintenable
+- Coûts de développement réduits
+
+================================================================================
+                               RISQUES ET MITIGATION
+================================================================================
+
+RISQUE 1 : RÉGRESSION FONCTIONNELLE
+Mitigation : Tests approfondis + déploiement parallèle + rollback
+
+RISQUE 2 : PERTE DE DONNÉES
+Mitigation : Backups automatiques + validation avant suppression
+
+RISQUE 3 : DOWNTIME EN PRODUCTION
+Mitigation : Migration progressive + monitoring 24/7
+
+================================================================================
+                               PROCÉDURE D'URGENCE
+================================================================================
+
+EN CAS DE PROBLÈME CRITIQUE :
+-----------------------------
+
+1. ROLLBACK IMMÉDIAT
+   ```bash
+   # Revenir aux URLs externes
+   git checkout HEAD~1 -- apps/web/src/services/
+   ```
+
+2. ANALYSE DES CAUSES
+   - Vérifier les logs des fonctions
+   - Analyser les métriques de monitoring
+   - Identifier la fonction défaillante
+
+3. CORRECTION ITÉRATIVE
+   - Correction du problème identifié
+   - Redéploiement progressif
+   - Tests renforcés
+
+================================================================================
+                               SUIVI ET RESPONSABILITÉS
+================================================================================
+
+RESPONSABLE : [Votre nom]
+ÉQUIPE : [Équipe technique]
+
+RÉUNIONS DE SUIVI :
+- Lundi : Point hebdomadaire
+- Jeudi : Revue technique
+
+MÉTRIQUES À SURVEILLER :
+- Disponibilité des fonctions (99.9% cible)
+- Latence moyenne (< 500ms)
+- Taux d'erreur (< 0.1%)
+- Couverture des tests (> 95%)
+
+================================================================================
+                               NOTES IMPORTANTES
+================================================================================
+
+⚠️  NE PAS SUPPRIMER les fonctions externes avant validation complète
+⚠️  TESTER en environnement de développement avant production
+⚠️  SAUVEGARDER les variables d'environnement avant modifications
+⚠️  DOCUMENTER chaque étape de migration
+
+Ce plan garantit une migration 100% sécurisée avec zéro impact sur la production.
+
+================================================================================
+                               FIN DU DOCUMENT
+================================================================================
