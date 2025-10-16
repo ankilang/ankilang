@@ -79,8 +79,9 @@ async function cleanupLegacyServiceWorkers() {
         await Promise.all(toDelete.map((k) => caches.delete(k)))
       }
       // Après désinstallation, demander au navigateur d'oublier le contrôleur courant
-      // Un simple reload standard suffit, évitons les boucles de reload.
-      console.log('✅ [SW] Anciens SW désinstallés')
+      console.log('✅ [SW] Anciens SW désinstallés — rechargement pour détacher le contrôleur')
+      // Recharger une seule fois pour sortir du contrôle du SW orphelin
+      window.location.reload()
     }
   } catch (e) {
     console.warn('⚠️ [SW] Échec du nettoyage des SW hérités:', e)
