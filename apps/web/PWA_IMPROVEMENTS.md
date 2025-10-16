@@ -11,6 +11,7 @@ Ce document décrit les améliorations PWA implémentées pour Ankilang, rendant
 - **iOS** : Guide d'installation avec instructions visuelles
 - **Manifest** : Configuration complète avec icônes maskable
 - **Barre d'installation** : Interface utilisateur intuitive
+- **Correction bug** : Syntaxe JSON du manifest corrigée (erreur "Line: 1, column: 1, Syntax error")
 
 ### ✅ Offline-first
 - **Service Worker** : Cache intelligent avec Workbox
@@ -32,9 +33,10 @@ Ce document décrit les améliorations PWA implémentées pour Ankilang, rendant
 ## 📁 Fichiers modifiés/créés
 
 ### Manifest et Configuration
-- `apps/web/public/manifest.webmanifest` - Manifest PWA complet
+- `apps/web/public/manifest.webmanifest` - Manifest PWA complet (corrigé)
 - `apps/web/vite.config.ts` - Configuration VitePWA
 - `apps/web/index.html` - Meta tags iOS et icônes
+- `.gitignore` - Mise à jour pour inclure le manifest
 
 ### Service Worker
 - Service worker Workbox généré automatiquement
@@ -98,7 +100,7 @@ if (hasUpdate) {
 ## 🎨 Design System PWA
 
 ### Couleurs
-- **Theme Color** : `#3b82f6` (Bleu)
+- **Theme Color** : `#8b5cf6` (Violet Ankilang)
 - **Background Color** : `#ffffff` (Blanc)
 - **Status Bar** : `black-translucent` (iOS)
 
@@ -194,17 +196,27 @@ VitePWA({
 ### Manifest
 ```json
 {
-  "name": "Ankilang - Flashcards Occitanes",
+  "name": "Ankilang",
   "short_name": "Ankilang",
+  "description": "Créez des cartes Anki à partir de vos contenus",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "theme_color": "#3b82f6",
   "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
   "icons": [
-    // Icônes standard et maskable
-  ],
-  "shortcuts": [
-    // Raccourcis rapides
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
 ```

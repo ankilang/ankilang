@@ -236,6 +236,19 @@ VitePWA({
 
 ---
 
+## 🔧 Corrections Récentes
+
+### ✅ Bug Manifest Corrigé (Décembre 2024)
+- **Problème** : Erreur "Manifest: Line: 1, column: 1, Syntax error"
+- **Cause** : Structure JSON incomplète dans `manifest.webmanifest`
+- **Solution** : Ajout des accolades manquantes et structure complète
+- **Résultat** : PWA fonctionne correctement, plus d'erreur 404
+
+### ✅ Améliorations
+- **Couleurs** : Theme color mis à jour vers `#8b5cf6` (violet Ankilang)
+- **Icônes** : Configuration complète avec `purpose: "any maskable"`
+- **Git** : `.gitignore` mis à jour pour inclure le manifest
+
 ## 🚀 Prochaines Étapes
 
 ### Déploiement
