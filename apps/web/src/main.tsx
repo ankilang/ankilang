@@ -3,14 +3,50 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
-// Local fonts (self-hosted)
-import '@fontsource/inter/400.css'
-import '@fontsource/inter/500.css'
-import '@fontsource/inter/600.css'
-import '@fontsource/inter/700.css'
-import '@fontsource/playfair-display/400.css'
-import '@fontsource/playfair-display/700.css'
-import '@fontsource/playfair-display/900.css'
+// ✅ Optimisation des performances : chargement conditionnel des polices
+async function loadFonts() {
+  // Vérifier la connexion réseau pour optimiser le chargement
+  const connection = (navigator as any).connection as {
+    effectiveType?: string;
+    saveData?: boolean;
+  } | undefined;
+
+  // Éviter le chargement des polices sur les connexions lentes ou en mode économie de données
+  const shouldLoadFonts = !connection?.saveData &&
+    (!connection?.effectiveType || !/(^2g$|^3g$)/.test(connection.effectiveType));
+
+  if (shouldLoadFonts) {
+    try {
+      // Charger les polices Inter (principale)
+      await Promise.all([
+        import('@fontsource/inter/400.css'),
+        import('@fontsource/inter/500.css'),
+        import('@fontsource/inter/600.css'),
+        import('@fontsource/inter/700.css'),
+      ]);
+
+      // Charger les polices Playfair Display (titres) avec priorité plus faible
+      if (!connection?.effectiveType || !/(^3g$)/.test(connection.effectiveType)) {
+        await Promise.all([
+          import('@fontsource/playfair-display/400.css'),
+          import('@fontsource/playfair-display/700.css'),
+          import('@fontsource/playfair-display/900.css'),
+        ]);
+      }
+
+      console.log('✅ Polices chargées avec succès');
+    } catch (error) {
+      console.warn('⚠️ Erreur lors du chargement des polices:', error);
+      // Fallback vers les polices système si le chargement échoue
+    }
+  } else {
+    console.log('📱 Connexion lente détectée - polices système utilisées');
+  }
+}
+
+// Lancer le chargement des polices en arrière-plan
+loadFonts();
+
 import './index.css'
 
 // Cache migration et configuration

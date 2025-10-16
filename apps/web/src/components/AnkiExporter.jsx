@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useAnkiLang } from '../exporter/hooks/useAnkiLang.js';
 
+/**
+ * Composant d'export Anki pour créer des decks de flashcards
+ * @returns {JSX.Element} Le composant d'export Anki
+ */
+
 export function AnkiExporter() {
   const { isReady, isLoading, error, generateBasicDeck } = useAnkiLang();
   const [cards, setCards] = useState([]);

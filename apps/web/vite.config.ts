@@ -108,7 +108,23 @@ export default defineConfig({
             return 'assets/flags/[name].[ext]'
           }
           return 'assets/[name]-[hash].[ext]'
-        }
+        },
+        // ✅ Optimisation des performances : chunking manuel
+        manualChunks: {
+          // Vendor chunks pour les dépendances externes
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          'ui-vendor': ['framer-motion', 'lucide-react'],
+          'query': ['@tanstack/react-query'],
+          'forms': ['react-hook-form', 'zod'],
+          // Fonctionnalités spécifiques
+          'export': ['sql.js', 'jszip'],
+          'cache': ['localforage'],
+          'pwa': ['workbox-window']
+        },
+        // Optimisation pour les gros chunks
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js'
       }
     }
   },
