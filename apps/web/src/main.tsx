@@ -62,6 +62,33 @@ if ('serviceWorker' in navigator) {
   })
 }
 
+// 🧹 Nettoyage proactif des anciens Service Workers (orphan SW)
+// Contexte: le plugin PWA est désactivé. Si un SW ancien est resté installé,
+// il peut servir d'anciens bundles et provoquer des 404/routage cassé jusqu'à un hard refresh.
+// On s'assure de le désinstaller proprement et de purger ses caches.
+async function cleanupLegacyServiceWorkers() {
+  if (!('serviceWorker' in navigator)) return
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations()
+    if (regs.length > 0) {
+      console.log('🧹 [SW] Nettoyage des Service Workers hérités...')
+      await Promise.all(regs.map((r) => r.unregister()))
+      if ('caches' in window) {
+        const keys = await caches.keys()
+        const toDelete = keys.filter((k) => k.startsWith('workbox') || k.startsWith('ankilang'))
+        await Promise.all(toDelete.map((k) => caches.delete(k)))
+      }
+      // Après désinstallation, demander au navigateur d'oublier le contrôleur courant
+      // Un simple reload standard suffit, évitons les boucles de reload.
+      console.log('✅ [SW] Anciens SW désinstallés')
+    }
+  } catch (e) {
+    console.warn('⚠️ [SW] Échec du nettoyage des SW hérités:', e)
+  }
+}
+
+cleanupLegacyServiceWorkers()
+
 // ✅ Initialisation du cache et migration legacy
 async function initializeCache() {
   try {
