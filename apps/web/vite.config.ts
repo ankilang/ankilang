@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: false, // ✅ PWA activée en production
+      disable: true, // 🚨 DÉSACTIVÉ TEMPORAIREMENT POUR RÉSOUDRE LA RÉGRESSION
       registerType: 'autoUpdate', // ✅ SW se met à jour automatiquement
       injectRegister: 'auto',
       manifest: false, // Utilise le manifest externe
