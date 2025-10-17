@@ -7,6 +7,8 @@ import StepContent from './StepContent'
 import StepEnhance from './StepEnhance'
 import PreviewCard from './PreviewCard'
 import FooterActions from './FooterActions'
+import { translate as deeplTranslate } from '../../../services/deepl'
+import { reviradaTranslate, toReviCode } from '../../../services/revirada'
 
 export type ThemeColors = {
   primary: string
@@ -45,6 +47,8 @@ export default function NewCardModalV2({
   const [verso, setVerso] = useState('')
   const [clozeText, setClozeText] = useState('')
   const [tags, setTags] = useState('')
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [translateError, setTranslateError] = useState<string | undefined>(undefined)
 
   // Validation minimaliste
   const isBasicValid = useMemo(() => recto.trim().length > 0 && verso.trim().length > 0, [recto, verso])
@@ -81,6 +85,42 @@ export default function NewCardModalV2({
         : { type: 'cloze', clozeTextTarget: clozeText, themeId, tags: tagsToArray(tags) }
 
     onSubmit(payload)
+  }
+
+  async function handleTranslate() {
+    if (selectedType !== 'basic') return
+    const text = recto.trim()
+    if (!text) return
+    setIsTranslating(true)
+    setTranslateError(undefined)
+    try {
+      const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
+      if (isOccitan) {
+        const res = await reviradaTranslate({
+          text,
+          sourceLang: toReviCode('fr'),
+          targetLang: toReviCode(themeLanguage)
+        })
+        if (res.success) {
+          const translated = Array.isArray(res.translated) ? res.translated[0] : res.translated
+          setVerso(translated)
+        } else {
+          setTranslateError(res.error)
+        }
+      } else {
+        const res = await deeplTranslate(text, themeLanguage, 'fr')
+        if (res.success) {
+          const item = Array.isArray(res.result) ? (res.result[0] ?? null) : res.result
+          if (item) setVerso(item.translated)
+        } else {
+          setTranslateError(res.error)
+        }
+      }
+    } catch (e) {
+      setTranslateError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setIsTranslating(false)
+    }
   }
 
   function tagsToArray(s: string): string[] {
@@ -136,6 +176,9 @@ export default function NewCardModalV2({
                       onRectoChange={setRecto}
                       onVersoChange={setVerso}
                       onClozeChange={setClozeText}
+                      onTranslate={handleTranslate}
+                      isTranslating={isTranslating}
+                      translateError={translateError}
                       themeLanguage={themeLanguage}
                       themeColors={themeColors}
                     />

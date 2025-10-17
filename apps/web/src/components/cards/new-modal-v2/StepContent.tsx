@@ -1,6 +1,6 @@
 import type { ThemeColors } from './NewCardModalV2'
 
-export default function StepContent({ selectedType, recto, verso, clozeText, onRectoChange, onVersoChange, onClozeChange, themeLanguage, themeColors }: { selectedType: 'basic'|'cloze'; recto: string; verso: string; clozeText: string; onRectoChange: (v: string) => void; onVersoChange: (v: string) => void; onClozeChange: (v: string) => void; themeLanguage: string; themeColors: ThemeColors }) {
+export default function StepContent({ selectedType, recto, verso, clozeText, onRectoChange, onVersoChange, onClozeChange, onTranslate, isTranslating, translateError, themeLanguage, themeColors }: { selectedType: 'basic'|'cloze'; recto: string; verso: string; clozeText: string; onRectoChange: (v: string) => void; onVersoChange: (v: string) => void; onClozeChange: (v: string) => void; onTranslate: () => void; isTranslating: boolean; translateError?: string; themeLanguage: string; themeColors: ThemeColors }) {
   return (
     <section aria-labelledby="step-content-title" className="space-y-4">
       <h3 id="step-content-title" className="font-sans text-sm font-medium text-dark-charcoal">Étape 2 — Rédaction</h3>
@@ -12,9 +12,12 @@ export default function StepContent({ selectedType, recto, verso, clozeText, onR
 
           <div className="flex items-center justify-between">
             <label className="block text-xs text-dark-charcoal/70">Verso ({themeLanguage?.toUpperCase()})</label>
-            <button type="button" className="text-xs text-blue-600 hover:text-blue-800">Traduire</button>
+            <button type="button" onClick={onTranslate} disabled={isTranslating || !recto.trim()} className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50">
+              {isTranslating ? 'Traduction…' : 'Traduire'}
+            </button>
           </div>
           <textarea value={verso} onChange={(e) => onVersoChange(e.target.value)} rows={3} className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple text-sm" placeholder="Résultat traduction" />
+          {translateError && <p className="text-xs text-red-600 mt-1">{translateError}</p>}
         </div>
       )}
 
