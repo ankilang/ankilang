@@ -209,6 +209,7 @@ export default function NewCardModalV2({
                     recto={recto}
                     verso={verso}
                     clozeText={clozeText}
+                    imageUrl={imageUrl}
                   />
                 </div>
               </div>
