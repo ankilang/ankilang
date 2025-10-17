@@ -49,6 +49,7 @@ export default function NewCardModalV2({
   const [tags, setTags] = useState('')
   const [imageUrl, setImageUrl] = useState<string>('')
   const [imageType, setImageType] = useState<'appwrite' | 'external'>('external')
+  const [audioUrl, setAudioUrl] = useState<string>('')
   const [isTranslating, setIsTranslating] = useState(false)
   const [translateError, setTranslateError] = useState<string | undefined>(undefined)
 
@@ -81,7 +82,7 @@ export default function NewCardModalV2({
     if (selectedType === 'basic' && !isBasicValid) return
     if (selectedType === 'cloze' && !isClozeValid) return
 
-    const common = { imageUrl: imageUrl || undefined, imageUrlType: imageUrl ? imageType : undefined, tags: tagsToArray(tags) }
+    const common = { imageUrl: imageUrl || undefined, imageUrlType: imageUrl ? imageType : undefined, audioUrl: audioUrl || undefined, tags: tagsToArray(tags) }
     const payload =
       selectedType === 'basic'
         ? { type: 'basic', frontFR: recto, backText: verso, themeId, ...common }
@@ -186,21 +187,24 @@ export default function NewCardModalV2({
                       themeColors={themeColors}
                     />
                   )}
-                {step === 3 && (
-                  <StepEnhance
-                    themeId={themeId}
-                    themeLanguage={themeLanguage}
-                    themeColors={themeColors}
-                    recto={recto}
-                    verso={verso}
-                    clozeText={clozeText}
-                    imageUrl={imageUrl}
-                    onChangeImage={(url, type) => { setImageUrl(url); setImageType(type) }}
-                    onRemoveImage={() => { setImageUrl(''); setImageType('external') }}
-                    tags={tags}
-                    onChangeTags={setTags}
-                  />
-                )}
+                  {step === 3 && (
+                    <StepEnhance
+                      themeId={themeId}
+                      themeLanguage={themeLanguage}
+                      themeColors={themeColors}
+                      recto={recto}
+                      verso={verso}
+                      clozeText={clozeText}
+                      imageUrl={imageUrl}
+                      onChangeImage={(url, type) => { setImageUrl(url); setImageType(type) }}
+                      onRemoveImage={() => { setImageUrl(''); setImageType('external') }}
+                      audioUrl={audioUrl}
+                      onChangeAudio={(url) => setAudioUrl(url)}
+                      onRemoveAudio={() => setAudioUrl('')}
+                      tags={tags}
+                      onChangeTags={setTags}
+                    />
+                  )}
                 </div>
                 <div className="p-6 md:p-8 border-t md:border-t-0 md:border-l border-gray-100 bg-gray-50/70 overflow-y-auto max-h-[calc(92vh-180px)]">
                   <PreviewCard
