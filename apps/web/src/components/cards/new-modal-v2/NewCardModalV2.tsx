@@ -77,16 +77,26 @@ export default function NewCardModalV2({
     onClose()
   }
 
+  // Si on bascule en Cloze, on neutralise média (image/audio) pour éviter tout transport involontaire
+  useEffect(() => {
+    if (selectedType === 'cloze') {
+      setImageUrl('')
+      setImageType('external')
+      setAudioUrl('')
+    }
+  }, [selectedType])
+
   const handleSave = () => {
     if (!selectedType) return
     if (selectedType === 'basic' && !isBasicValid) return
     if (selectedType === 'cloze' && !isClozeValid) return
 
-    const common = { imageUrl: imageUrl || undefined, imageUrlType: imageUrl ? imageType : undefined, audioUrl: audioUrl || undefined, tags: tagsToArray(tags) }
+    const commonBasic = { imageUrl: imageUrl || undefined, imageUrlType: imageUrl ? imageType : undefined, audioUrl: audioUrl || undefined, tags: tagsToArray(tags) }
+    const commonCloze = { tags: tagsToArray(tags) }
     const payload =
       selectedType === 'basic'
-        ? { type: 'basic', frontFR: recto, backText: verso, themeId, ...common }
-        : { type: 'cloze', clozeTextTarget: clozeText, themeId, ...common }
+        ? { type: 'basic', frontFR: recto, backText: verso, themeId, ...commonBasic }
+        : { type: 'cloze', clozeTextTarget: clozeText, themeId, ...commonCloze }
 
     onSubmit(payload)
   }
@@ -189,6 +199,7 @@ export default function NewCardModalV2({
                   )}
                   {step === 3 && (
                     <StepEnhance
+                      selectedType={selectedType}
                       themeId={themeId}
                       themeLanguage={themeLanguage}
                       themeColors={themeColors}

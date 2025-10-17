@@ -64,7 +64,7 @@ export default function PreviewCard({ themeColors, selectedType, recto, verso, c
         )}
       </div>
 
-      {audioUrl && (
+      {selectedType === 'basic' && audioUrl && (
         <div className="mt-3 flex items-center justify-center">
           <button
             type="button"

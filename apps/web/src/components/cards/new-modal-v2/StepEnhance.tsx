@@ -7,6 +7,7 @@ import { generateTTS } from '../../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../../services/votz'
 
 export default function StepEnhance({
+  selectedType,
   themeId,
   themeLanguage,
   themeColors,
@@ -22,6 +23,7 @@ export default function StepEnhance({
   tags,
   onChangeTags,
 }: {
+  selectedType: 'basic' | 'cloze' | null
   themeId: string
   themeLanguage: string
   themeColors: ThemeColors
@@ -43,6 +45,15 @@ export default function StepEnhance({
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Si le type n'est pas basic, ne pas afficher/laisser de médias
+  useEffect(() => {
+    if (selectedType !== 'basic') {
+      if (imageUrl) onRemoveImage()
+      if (audioUrl) onRemoveAudio()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedType])
 
   // Pré-remplir la recherche avec le contenu saisi
   useEffect(() => {
@@ -127,7 +138,7 @@ export default function StepEnhance({
     <section aria-labelledby="step-enhance-title" className="space-y-4">
       <h3 id="step-enhance-title" className="font-sans text-sm font-medium text-dark-charcoal">Étape 3 — Enrichir & prévisualiser</h3>
 
-      {/* Image selector */}
+      {selectedType === 'basic' && (
       <div className="bg-white/60 rounded-2xl p-4 border border-white/60">
         <div className="flex items-center justify-between">
           <label className="block text-xs text-dark-charcoal/70">Image (Pexels)</label>
@@ -174,7 +185,7 @@ export default function StepEnhance({
             </div>
           </>
         )}
-      </div>
+      </div>) }
 
       {/* Tags */}
       <div className="bg-white/60 rounded-2xl p-4 border border-white/60">
@@ -183,6 +194,7 @@ export default function StepEnhance({
       </div>
 
       {/* Audio (TTS) */}
+      {selectedType === 'basic' && (
       <div className="bg-white/60 rounded-2xl p-4 border border-white/60">
         <div className="flex items-center justify-between">
           <label className="block text-xs text-dark-charcoal/70">Audio (TTS)</label>
@@ -204,7 +216,7 @@ export default function StepEnhance({
             </button>
           )}
         </div>
-      </div>
+      </div>) }
     </section>
   )
 }
