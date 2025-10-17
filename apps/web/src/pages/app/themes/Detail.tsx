@@ -4,10 +4,12 @@ import { ArrowLeft, Download, Settings, Lock, Users, FileText } from 'lucide-rea
 import { motion } from 'framer-motion'
 import VirtualizedCardList from '../../../components/cards/VirtualizedCardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
+import { NewCardModalV2 } from '../../../components/cards/new-modal-v2'
 import EditCardModal from '../../../components/cards/EditCardModal'
 import { ttsSaveAndLink } from '../../../services/elevenlabs-appwrite'
 import { useAuth } from '../../../hooks/useAuth'
 import { useThemeData, useCreateCard, useUpdateCard, useDeleteCard } from '../../../hooks'
+import { useFeatureFlag } from '../../../hooks/useFeatureFlag'
 import { ErrorBoundary } from '../../../components/error/ErrorBoundary'
 import { ThemeDetailSkeleton } from '../../../components/ui/Skeletons'
 import { LANGUAGES } from '../../../constants/languages'
@@ -25,6 +27,7 @@ export default function ThemeDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
+  const useModalV2 = useFeatureFlag('newCardModalV2')
 
   // 🚀 NOUVEAU: Utilisation des hooks React Query
   const { 
@@ -366,16 +369,27 @@ export default function ThemeDetail() {
         </main>
 
         {/* Modale d'ajout de carte */}
-        <NewCardModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleCardSubmit}
-            isLoading={createCardMutation.isPending}
-            error={createCardMutation.error?.message}
-          themeId={theme.$id}
-          themeLanguage={theme.targetLang}
-          themeColors={colors}
-        />
+        {useModalV2 ? (
+          <NewCardModalV2
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleCardSubmit}
+            themeId={theme.$id}
+            themeLanguage={theme.targetLang}
+            themeColors={colors}
+          />
+        ) : (
+          <NewCardModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleCardSubmit}
+              isLoading={createCardMutation.isPending}
+              error={createCardMutation.error?.message}
+            themeId={theme.$id}
+            themeLanguage={theme.targetLang}
+            themeColors={colors}
+          />
+        )}
 
         {/* Modale d'édition de carte */}
         {editingCard && (

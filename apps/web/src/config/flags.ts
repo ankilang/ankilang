@@ -10,6 +10,8 @@ export const FLAGS = {
   SW_CACHE_VERSION: String(import.meta.env.VITE_SW_CACHE_VERSION ?? 'v4'),
   TTS_TTL_DAYS: Number(import.meta.env.VITE_CACHE_TTS_TTL_DAYS ?? 7),
   PEXELS_TTL_DAYS: Number(import.meta.env.VITE_CACHE_PEXELS_TTL_DAYS ?? 180),
+  // Feature: activer la modale V2 localement (non activée par défaut)
+  FEATURE_NEW_CARD_MODAL_V2: import.meta.env.VITE_FEATURE_NEW_CARD_MODAL_V2 === 'true',
 } as const
 
 /**
@@ -48,6 +50,7 @@ export function logFlags(): void {
       SW_CACHE_VERSION: FLAGS.SW_CACHE_VERSION,
       TTS_TTL_DAYS: FLAGS.TTS_TTL_DAYS,
       PEXELS_TTL_DAYS: FLAGS.PEXELS_TTL_DAYS,
+      FEATURE_NEW_CARD_MODAL_V2: FLAGS.FEATURE_NEW_CARD_MODAL_V2,
     })
   }
 }
