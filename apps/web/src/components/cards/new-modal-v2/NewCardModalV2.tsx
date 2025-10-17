@@ -214,6 +214,7 @@ export default function NewCardModalV2({
                     verso={verso}
                     clozeText={clozeText}
                     imageUrl={imageUrl}
+                    audioUrl={audioUrl}
                   />
                 </div>
               </div>

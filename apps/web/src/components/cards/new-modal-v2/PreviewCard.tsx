@@ -1,6 +1,41 @@
+import { useEffect, useRef, useState } from 'react'
+import { Play, Pause } from 'lucide-react'
 import type { ThemeColors } from './NewCardModalV2'
 
-export default function PreviewCard({ themeColors, selectedType, recto, verso, clozeText, imageUrl }: { themeColors: ThemeColors; selectedType: 'basic'|'cloze'|null; recto: string; verso: string; clozeText: string; imageUrl?: string }) {
+export default function PreviewCard({ themeColors, selectedType, recto, verso, clozeText, imageUrl, audioUrl }: { themeColors: ThemeColors; selectedType: 'basic'|'cloze'|null; recto: string; verso: string; clozeText: string; imageUrl?: string; audioUrl?: string }) {
+  const [playing, setPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    // Reset player when URL changes
+    if (audioRef.current) {
+      try { audioRef.current.pause() } catch {}
+    }
+    setPlaying(false)
+    audioRef.current = audioUrl ? new Audio(audioUrl) : null
+    if (audioRef.current) {
+      audioRef.current.onended = () => setPlaying(false)
+      audioRef.current.onpause = () => setPlaying(false)
+      audioRef.current.onplay = () => setPlaying(true)
+    }
+    return () => {
+      if (audioRef.current) {
+        try { audioRef.current.pause() } catch {}
+        audioRef.current = null
+      }
+    }
+  }, [audioUrl])
+
+  const togglePlay = async () => {
+    if (!audioRef.current) return
+    try {
+      if (audioRef.current.paused) {
+        await audioRef.current.play()
+      } else {
+        audioRef.current.pause()
+      }
+    } catch {}
+  }
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
       <div className="text-xs text-dark-charcoal/60 mb-2">Aperçu (style Anki) — placeholder</div>
@@ -28,6 +63,19 @@ export default function PreviewCard({ themeColors, selectedType, recto, verso, c
           </div>
         )}
       </div>
+
+      {audioUrl && (
+        <div className="mt-3 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-md hover:bg-purple-700"
+            aria-label={playing ? 'Pause audio' : 'Lire audio'}
+          >
+            {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
