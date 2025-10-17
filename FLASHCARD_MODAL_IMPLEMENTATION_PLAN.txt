@@ -17,9 +17,10 @@ Phasage général
 Détails — étapes pas à pas
 
 0) Préparation
-  0.1 – Créer une branche dédiée: feature/modal-new-flow
-  0.2 – Ouvrir un document de référence (docs/ux/flashcard-modal-spec.md) pour l’UX détaillée
-  0.3 – Faire un inventaire des dépendances côté modale: react-hook-form, react-query, services (tts, pexels, deepl/revirada)
+0.1 – Travailler sur la branche principale (main) uniquement, pas de branche spécifique
+0.2 – Commits petits et atomiques, messages explicites; optionnel: tags légers pour jalons
+0.3 – Ouvrir un document de référence (docs/ux/flashcard-modal-spec.md) pour l’UX détaillée
+0.4 – Faire un inventaire des dépendances côté modale: react-hook-form, react-query, services (tts, pexels, deepl/revirada)
 
 1) Spécification UX/UI
   1.1 – Définir les 3 étapes du flux: Type & intention → Rédaction → Enrichir & Prévisualiser
@@ -118,4 +119,3 @@ Roadmap indicative
   - Semaine 2: StepType + StepContent + validations + PreviewCard
   - Semaine 3: StepEnhance (Images/TTS/Tags) + autosave + a11y/raccourcis
   - Semaine 4: QA complète (offline, mobile), flag, déploiement progressif
-
