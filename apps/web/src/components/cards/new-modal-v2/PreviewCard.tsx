@@ -53,8 +53,8 @@ export default function PreviewCard({ themeColors, selectedType, recto, verso, c
           </>
         )}
         {selectedType === 'cloze' && (
-          <div className="text-sm text-gray-800 whitespace-pre-wrap">
-            {clozeText || 'Votre texte Cloze ici'}
+          <div className="text-sm text-gray-800 whitespace-pre-wrap leading-7">
+            {renderCloze(clozeText) || 'Votre texte Cloze ici'}
             {imageUrl && (
               <div className="mt-3">
                 <img src={imageUrl} alt="Illustration" className="max-w-full max-h-48 rounded-lg border border-gray-200 object-contain" />
@@ -78,4 +78,33 @@ export default function PreviewCard({ themeColors, selectedType, recto, verso, c
       )}
     </div>
   )
+}
+
+function renderCloze(text?: string) {
+  if (!text) return null
+  const nodes: React.ReactNode[] = []
+  const re = /\{\{c(\d+)::([^}|]+?)(?::([^}|]+?))?\}\}/g
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text))) {
+    const [full, num, answer, hint] = m
+    if (m.index > last) {
+      nodes.push(<span key={`txt-${last}`}>{text.slice(last, m.index)}</span>)
+    }
+    nodes.push(
+      <span key={`blank-${m.index}`} className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 align-baseline">
+        …
+      </span>
+    )
+    if (hint) {
+      nodes.push(
+        <span key={`hint-${m.index}`} className="ml-1 px-1 py-0.5 rounded bg-yellow-100 text-yellow-800 text-xs align-baseline">
+          {hint}
+        </span>
+      )
+    }
+    last = m.index + full.length
+  }
+  if (last < text.length) nodes.push(<span key={`tail-${last}`}>{text.slice(last)}</span>)
+  return nodes
 }

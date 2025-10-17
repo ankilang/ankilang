@@ -35,6 +35,7 @@ export default function StepContent({ selectedType, recto, verso, clozeText, onR
 
 function ClozeEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const ref = useRef<HTMLTextAreaElement | null>(null)
+  const hintRef = useRef<HTMLInputElement | null>(null)
 
   const getNextClozeIndex = useCallback((text: string) => {
     const re = /\{\{c(\d+)::/g
@@ -55,7 +56,8 @@ function ClozeEditor({ value, onChange }: { value: string; onChange: (v: string)
     const selected = value.slice(start, end)
     const index = getNextClozeIndex(value)
     const inner = selected || 'réponse'
-    const insertion = `{{c${index}::${inner}}}`
+    const hint = (hintRef.current?.value || '').trim()
+    const insertion = hint ? `{{c${index}::${inner}::${hint}}}` : `{{c${index}::${inner}}}`
     const next = value.slice(0, start) + insertion + value.slice(end)
     onChange(next)
     // replacer le caret après l'insertion
@@ -76,16 +78,19 @@ function ClozeEditor({ value, onChange }: { value: string; onChange: (v: string)
 
   return (
     <div className="bg-white/60 rounded-2xl p-4 border border-white/60">
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 gap-2">
         <label className="block text-xs text-dark-charcoal/70">Cloze</label>
-        <button 
-          type="button" 
-          onClick={wrapSelection}
-          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-purple-600 text-white hover:bg-purple-700"
-          title="Ajouter un trou (Cmd/Ctrl+K)"
-        >
-          <Plus className="w-3 h-3" /> Ajouter un trou
-        </button>
+        <div className="flex items-center gap-2">
+          <input ref={hintRef} type="text" className="px-2 py-1 text-xs border-2 border-gray-200 rounded-lg" placeholder="indice (optionnel)" aria-label="Indice (optionnel)" />
+          <button 
+            type="button" 
+            onClick={wrapSelection}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-purple-600 text-white hover:bg-purple-700"
+            title="Ajouter un trou (Cmd/Ctrl+K)"
+          >
+            <Plus className="w-3 h-3" /> Ajouter un trou
+          </button>
+        </div>
       </div>
       <textarea
         ref={ref}
