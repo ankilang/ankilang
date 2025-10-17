@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import StepperHeader from './StepperHeader'
@@ -38,6 +38,58 @@ export default function NewCardModalV2({
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
+  // Wizard state
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [selectedType, setSelectedType] = useState<'basic' | 'cloze' | null>(null)
+  const [recto, setRecto] = useState('')
+  const [verso, setVerso] = useState('')
+  const [clozeText, setClozeText] = useState('')
+  const [tags, setTags] = useState('')
+
+  // Validation minimaliste
+  const isBasicValid = useMemo(() => recto.trim().length > 0 && verso.trim().length > 0, [recto, verso])
+  const isClozeValid = useMemo(() => /\{\{c\d+::[^}]+\}\}/.test(clozeText), [clozeText])
+  const canNext = useMemo(() => {
+    if (step === 1) return Boolean(selectedType)
+    if (step === 2) {
+      if (selectedType === 'basic') return isBasicValid
+      if (selectedType === 'cloze') return isClozeValid
+      return false
+    }
+    return true
+  }, [step, selectedType, isBasicValid, isClozeValid])
+
+  const handleClose = () => {
+    // reset minimal à la fermeture
+    setStep(1)
+    setSelectedType(null)
+    setRecto('')
+    setVerso('')
+    setClozeText('')
+    setTags('')
+    onClose()
+  }
+
+  const handleSave = () => {
+    if (!selectedType) return
+    if (selectedType === 'basic' && !isBasicValid) return
+    if (selectedType === 'cloze' && !isClozeValid) return
+
+    const payload =
+      selectedType === 'basic'
+        ? { type: 'basic', frontFR: recto, backText: verso, themeId, tags: tagsToArray(tags) }
+        : { type: 'cloze', clozeTextTarget: clozeText, themeId, tags: tagsToArray(tags) }
+
+    onSubmit(payload)
+  }
+
+  function tagsToArray(s: string): string[] {
+    return s
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean)
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -60,23 +112,62 @@ export default function NewCardModalV2({
             className="relative w-full max-w-5xl max-h-[92vh] overflow-hidden"
           >
             <div className="bg-white/95 rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-              <StepperHeader themeLanguage={themeLanguage} themeColors={themeColors} />
+              <StepperHeader step={step} selectedType={selectedType} themeLanguage={themeLanguage} themeColors={themeColors} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                 <div className="p-6 md:p-8 overflow-y-auto max-h-[calc(92vh-180px)]">
-                  {/* Étapes placeholders – l’état et la logique seront ajoutés ensuite */}
-                  <StepType themeLanguage={themeLanguage} themeColors={themeColors} />
-                  <div className="h-6" />
-                  <StepContent themeLanguage={themeLanguage} themeColors={themeColors} />
-                  <div className="h-6" />
-                  <StepEnhance themeId={themeId} themeLanguage={themeLanguage} themeColors={themeColors} />
+                  {step === 1 && (
+                    <StepType
+                      selectedType={selectedType}
+                      onSelectType={(t) => {
+                        setSelectedType(t)
+                        setStep(2)
+                      }}
+                      themeLanguage={themeLanguage}
+                      themeColors={themeColors}
+                    />
+                  )}
+                  {step === 2 && selectedType && (
+                    <StepContent
+                      selectedType={selectedType}
+                      recto={recto}
+                      verso={verso}
+                      clozeText={clozeText}
+                      onRectoChange={setRecto}
+                      onVersoChange={setVerso}
+                      onClozeChange={setClozeText}
+                      themeLanguage={themeLanguage}
+                      themeColors={themeColors}
+                    />
+                  )}
+                  {step === 3 && (
+                    <StepEnhance
+                      themeId={themeId}
+                      themeLanguage={themeLanguage}
+                      themeColors={themeColors}
+                    />
+                  )}
                 </div>
                 <div className="p-6 md:p-8 border-t md:border-t-0 md:border-l border-gray-100 bg-gray-50/70 overflow-y-auto max-h-[calc(92vh-180px)]">
-                  <PreviewCard themeColors={themeColors} />
+                  <PreviewCard
+                    themeColors={themeColors}
+                    selectedType={selectedType}
+                    recto={recto}
+                    verso={verso}
+                    clozeText={clozeText}
+                  />
                 </div>
               </div>
 
-              <FooterActions onClose={onClose} onSubmit={() => onSubmit({})} />
+              <FooterActions
+                step={step}
+                canNext={canNext}
+                canSave={step >= 2 && canNext}
+                onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s))}
+                onNext={() => setStep((s) => (s < 3 ? ((s + 1) as 1 | 2 | 3) : s))}
+                onClose={handleClose}
+                onSubmit={handleSave}
+              />
             </div>
           </motion.div>
         </motion.div>
@@ -84,4 +175,3 @@ export default function NewCardModalV2({
     </AnimatePresence>
   )
 }
-

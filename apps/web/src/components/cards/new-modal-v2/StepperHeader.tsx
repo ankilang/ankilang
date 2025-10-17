@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import type { ThemeColors } from './NewCardModalV2'
 
-export default function StepperHeader({ themeLanguage, themeColors }: { themeLanguage: string; themeColors: ThemeColors }) {
+export default function StepperHeader({ step, selectedType, themeLanguage, themeColors }: { step: 1|2|3; selectedType: 'basic'|'cloze'|null; themeLanguage: string; themeColors: ThemeColors }) {
   return (
     <div
       className="px-6 py-5 border-b"
@@ -27,13 +27,12 @@ export default function StepperHeader({ themeLanguage, themeColors }: { themeLan
       </div>
       {/* Placeholder du stepper */}
       <div className="mt-4 flex items-center gap-2 text-xs text-dark-charcoal/70">
-        <span className="px-2 py-1 rounded-lg bg-white/70">1. Type</span>
+        <span className={`px-2 py-1 rounded-lg ${step === 1 ? 'bg-white/80 font-semibold' : 'bg-white/40'}`}>1. Type</span>
         <span>›</span>
-        <span className="px-2 py-1 rounded-lg bg-white/50">2. Rédaction</span>
+        <span className={`px-2 py-1 rounded-lg ${step === 2 ? 'bg-white/80 font-semibold' : 'bg-white/40'}`}>2. Rédaction {selectedType ? `(${selectedType})` : ''}</span>
         <span>›</span>
-        <span className="px-2 py-1 rounded-lg bg-white/30">3. Enrichir</span>
+        <span className={`px-2 py-1 rounded-lg ${step === 3 ? 'bg-white/80 font-semibold' : 'bg-white/40'}`}>3. Enrichir</span>
       </div>
     </div>
   )
 }
-

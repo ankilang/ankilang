@@ -1,18 +1,18 @@
 import type { ThemeColors } from './NewCardModalV2'
 
-export default function StepType({ themeLanguage, themeColors }: { themeLanguage: string; themeColors: ThemeColors }) {
+export default function StepType({ selectedType, onSelectType, themeLanguage, themeColors }: { selectedType: 'basic'|'cloze'|null; onSelectType: (t: 'basic'|'cloze') => void; themeLanguage: string; themeColors: ThemeColors }) {
   return (
     <section aria-labelledby="step-type-title" className="space-y-3">
       <h3 id="step-type-title" className="font-sans text-sm font-medium text-dark-charcoal">Étape 1 — Type & intention</h3>
       <div className="grid grid-cols-2 gap-3">
-        <button type="button" className="p-4 rounded-2xl border-2 border-gray-200 hover:border-gray-300 text-left">
+        <button type="button" onClick={() => onSelectType('basic')} className={`p-4 rounded-2xl border-2 text-left ${selectedType==='basic' ? 'border-current shadow-lg' : 'border-gray-200 hover:border-gray-300'}`}>
           <div className="font-semibold">Basic</div>
           <div className="text-xs text-dark-charcoal/70">Question / Réponse</div>
         </button>
-        <button type="button" className="p-4 rounded-2xl border-2 border-gray-200 hover:border-gray-300 text-left">
+        <button type="button" onClick={() => onSelectType('cloze')} className={`p-4 rounded-2xl border-2 text-left ${selectedType==='cloze' ? 'border-current shadow-lg' : 'border-gray-200 hover:border-gray-300'}`}>
           <div className="font-semibold">Cloze</div>
           <div className="text-xs text-dark-charcoal/70">
-            Texte à trous ({'{{c1::...}}'})
+            Texte à trous ({'{'}{'{'}c1::...{'}'}{'}'})
           </div>
         </button>
       </div>

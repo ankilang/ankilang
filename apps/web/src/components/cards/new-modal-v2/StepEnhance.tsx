@@ -36,4 +36,3 @@ export default function StepEnhance({ themeId, themeLanguage, themeColors }: { t
     </section>
   )
 }
-
