@@ -11,7 +11,9 @@ export default function StepType({ themeLanguage, themeColors }: { themeLanguage
         </button>
         <button type="button" className="p-4 rounded-2xl border-2 border-gray-200 hover:border-gray-300 text-left">
           <div className="font-semibold">Cloze</div>
-          <div className="text-xs text-dark-charcoal/70">Texte à trous ({{c1::...}})</div>
+          <div className="text-xs text-dark-charcoal/70">
+            Texte à trous ({'{{c1::...}}'})
+          </div>
         </button>
       </div>
       <div>
@@ -22,4 +24,3 @@ export default function StepType({ themeLanguage, themeColors }: { themeLanguage
     </section>
   )
 }
-
