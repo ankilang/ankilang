@@ -45,20 +45,28 @@ export class AppwriteStorageCache implements CacheAdapter {
     return `cache_${h.slice(0, 40)}`;
   }
 
-  private async fileIdWithExt(key: string): Promise<string> {
+  private sanitizePrefix(prefix?: string, variant: 'sanitized' | 'slash' = 'sanitized'): string | undefined {
+    if (!prefix) return undefined;
+    if (variant === 'slash') return prefix; // legacy style with '/'
+    return prefix.replace(/[\/]+/g, '.').replace(/\.+$/,'') + '__';
+  }
+
+  private async fileIdWithExt(key: string, variant: 'sanitized' | 'slash' = 'sanitized'): Promise<string> {
     const base = await this.baseIdForKey(key);
     const fmt = this.extractFormatFromKey(key) || 'bin';
     const id = `${base}.${fmt}`;
-    return this.pathPrefix ? `${this.pathPrefix}/${id}` : id;
+    const pref = this.sanitizePrefix(this.pathPrefix, variant);
+    return pref ? `${pref}${id}` : id;
   }
 
-  private async fileIdWithoutExt(key: string): Promise<string> {
+  private async fileIdWithoutExt(key: string, variant: 'sanitized' | 'slash' = 'sanitized'): Promise<string> {
     const base = await this.baseIdForKey(key);
-    return this.pathPrefix ? `${this.pathPrefix}/${base}` : base;
+    const pref = this.sanitizePrefix(this.pathPrefix, variant);
+    return pref ? `${pref}${base}` : base;
   }
 
   async get<T = CacheValue>(key: string): Promise<T | null> {
-    const idWithExt = await this.fileIdWithExt(key);
+    const idWithExt = await this.fileIdWithExt(key, 'sanitized');
     try {
       const blob = await this.deps.storage.getFileView(this.bucketId, idWithExt);
       cacheLog.hit(this.name, key);
@@ -66,19 +74,34 @@ export class AppwriteStorageCache implements CacheAdapter {
     } catch {
       // Try without extension for backward compatibility
       try {
-        const idNoExt = await this.fileIdWithoutExt(key);
+        const idNoExt = await this.fileIdWithoutExt(key, 'sanitized');
         const blob = await this.deps.storage.getFileView(this.bucketId, idNoExt);
         cacheLog.hit(this.name, key);
         return blob as T;
       } catch {
-        cacheLog.miss(this.name, key);
-        return null;
+        // Try legacy slash-based variants
+        try {
+          const legacyId = await this.fileIdWithExt(key, 'slash');
+          const blob = await this.deps.storage.getFileView(this.bucketId, legacyId);
+          cacheLog.hit(this.name, key);
+          return blob as T;
+        } catch {
+          try {
+            const legacyNoExt = await this.fileIdWithoutExt(key, 'slash');
+            const blob = await this.deps.storage.getFileView(this.bucketId, legacyNoExt);
+            cacheLog.hit(this.name, key);
+            return blob as T;
+          } catch {
+            cacheLog.miss(this.name, key);
+            return null;
+          }
+        }
       }
     }
   }
 
   async set<T = CacheValue>(key: string, value: T, opts?: CacheSetOptions): Promise<void> {
-    const id = await this.fileIdWithExt(key);
+    const id = await this.fileIdWithExt(key, 'sanitized');
     let blob: Blob;
 
     if (value instanceof Blob) blob = value;
@@ -106,27 +129,49 @@ export class AppwriteStorageCache implements CacheAdapter {
 
   async delete(key: string): Promise<void> {
     try {
-      const id = await this.fileIdWithExt(key);
+      const id = await this.fileIdWithExt(key, 'sanitized');
       await this.deps.storage.deleteFile(this.bucketId, id);
       cacheLog.del(this.name, key);
       return;
     } catch {}
     try {
-      const idNoExt = await this.fileIdWithoutExt(key);
+      const idNoExt = await this.fileIdWithoutExt(key, 'sanitized');
       await this.deps.storage.deleteFile(this.bucketId, idNoExt);
+      cacheLog.del(this.name, key);
+      return;
+    } catch {}
+    try {
+      const legacyId = await this.fileIdWithExt(key, 'slash');
+      await this.deps.storage.deleteFile(this.bucketId, legacyId);
+      cacheLog.del(this.name, key);
+      return;
+    } catch {}
+    try {
+      const legacyNoExt = await this.fileIdWithoutExt(key, 'slash');
+      await this.deps.storage.deleteFile(this.bucketId, legacyNoExt);
       cacheLog.del(this.name, key);
     } catch {}
   }
 
   async has(key: string): Promise<boolean> {
     try {
-      const id = await this.fileIdWithExt(key);
+      const id = await this.fileIdWithExt(key, 'sanitized');
       await this.deps.storage.getFile(this.bucketId, id);
       return true;
     } catch {}
     try {
-      const idNoExt = await this.fileIdWithoutExt(key);
+      const idNoExt = await this.fileIdWithoutExt(key, 'sanitized');
       await this.deps.storage.getFile(this.bucketId, idNoExt);
+      return true;
+    } catch {}
+    try {
+      const legacyId = await this.fileIdWithExt(key, 'slash');
+      await this.deps.storage.getFile(this.bucketId, legacyId);
+      return true;
+    } catch {}
+    try {
+      const legacyNoExt = await this.fileIdWithoutExt(key, 'slash');
+      await this.deps.storage.getFile(this.bucketId, legacyNoExt);
       return true;
     } catch {
       return false;
