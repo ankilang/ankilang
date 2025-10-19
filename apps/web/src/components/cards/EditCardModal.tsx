@@ -8,8 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '../../types/shared'
 import type { Card } from '../../types/shared'
-import { pexelsSearchPhotos } from '../../services/pexels'
-import { getCachedImage } from '../../services/image-cache'
+import { pexelsSearchPhotos, pexelsOptimizePreview, pexelsOptimizePersist } from '../../services/pexels'
 import AudioPlayer from './AudioPlayer'
 import { generateTTS } from '../../services/tts'
 
@@ -79,6 +78,8 @@ export default function EditCardModal({
   const [isLoadingImages, setIsLoadingImages] = useState(false)
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
   const [currentImageField, setCurrentImageField] = useState<'versoImage' | 'clozeImage' | null>(null)
+  // Stocker la dernière photo Pexels sélectionnée pour persistance au submit
+  const [pendingPhoto, setPendingPhoto] = useState<any | null>(null)
   
   // États pour la gestion de l'audio
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
@@ -175,28 +176,19 @@ export default function EditCardModal({
 
     setIsOptimizingImage(true)
     try {
-      // ✨ NOUVEAU: Utiliser le cache multi-niveau (IDB → Appwrite → API)
-      const result = await getCachedImage(image, {
+      const preview = await pexelsOptimizePreview({
+        imageUrl: image.src?.medium || image.src?.large || image.src?.original,
         width: 600,
         height: 400,
-        format: 'webp',
-        quality: 80
+        quality: 80,
+        format: 'webp'
       })
-
-      if (result.appwriteUrl) {
-        // L'image est déjà dans le cache Appwrite, utiliser son URL publique
-        console.log('✅ Image depuis cache Appwrite:', result.appwriteUrl)
-        setValue(currentImageField, result.appwriteUrl)
-        setValue(`${currentImageField}Type` as any, 'appwrite')
-      } else {
-        // Fallback: URL Pexels directe
-        console.log('⚠️ Appwrite URL non disponible, fallback sur Pexels')
-        setValue(currentImageField, image.src.medium)
-        setValue(`${currentImageField}Type` as any, 'external')
-      }
-
-      // Révoquer l'Object URL car on n'en a plus besoin
-      URL.revokeObjectURL(result.url)
+      const blob = await fetch(preview.optimizedImage).then(r => r.blob())
+      const url = URL.createObjectURL(blob)
+      // Preview via Object URL (pas d'upload Appwrite à ce stade)
+      setValue(currentImageField, url)
+      setValue(`${currentImageField}Type` as any, 'external')
+      setPendingPhoto(image)
     } catch (error) {
       console.error('❌ Erreur lors de la récupération de l\'image:', error)
       // Fallback: utiliser l'URL Pexels directe
@@ -275,7 +267,7 @@ export default function EditCardModal({
     }
   }
 
-  const handleFormSubmit = (data: CardFormData) => {
+  const handleFormSubmit = async (data: CardFormData) => {
     const submitData = {
       ...data,
       themeId: card.themeId,
@@ -285,6 +277,24 @@ export default function EditCardModal({
       imageUrlType: selectedType === 'basic' ? (data as any).versoImageType : (data as any).clozeImageType,
       // Gestion de l'audio (uniquement pour les cartes Basic)
       audioUrl: selectedType === 'basic' ? (data as any).versoAudio : undefined
+    }
+    // Si une photo Pexels a été sélectionnée et que l'image est encore 'external', persister dans Appwrite maintenant
+    try {
+      const typeField = selectedType === 'basic' ? 'versoImageType' : 'clozeImageType'
+      const currentType = (data as any)[typeField]
+      if (pendingPhoto && currentType !== 'appwrite') {
+        const persisted = await pexelsOptimizePersist({
+          imageUrl: pendingPhoto.src?.medium || pendingPhoto.src?.large || pendingPhoto.src?.original,
+          width: 600,
+          height: 400,
+          quality: 80,
+          format: 'webp'
+        })
+        ;(submitData as any).imageUrl = persisted.url
+        ;(submitData as any).imageUrlType = 'appwrite'
+      }
+    } catch (e) {
+      console.warn('⚠️ Persist image échoué, conserver URL existante')
     }
     onSubmit(submitData as z.infer<typeof CreateCardSchema>)
   }

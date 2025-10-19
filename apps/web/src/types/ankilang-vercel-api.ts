@@ -115,6 +115,8 @@ export interface PexelsOptimizeRequest {
   height?: number;
   quality?: number;
   format?: ImageFormat;
+  upload?: boolean; // preview=false by passing upload=false
+  fileId?: string;  // 36-chars Appwrite fileId when persisting
 }
 
 export interface PexelsOptimizeResponse {
@@ -196,6 +198,8 @@ export interface ElevenLabsRequest {
   similarityBoost?: number;
   style?: number;
   useSpeakerBoost?: boolean;
+  upload?: boolean; // preview=false by passing upload=false
+  fileId?: string;  // 36-chars Appwrite fileId when persisting
 }
 
 export interface ElevenLabsResponse {

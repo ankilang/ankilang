@@ -1,5 +1,7 @@
 import { BrowserIDBCache, AppwriteStorageCache, buildCacheKey } from '@ankilang/shared-cache'
 import { Storage, Permission, Role } from 'appwrite'
+import { createVercelApiClient } from '../lib/vercel-api-client'
+import { getSessionJWT } from './appwrite'
 import client from './appwrite'
 import { ttsToBlob as votzTtsToBlob } from './votz'
 import { generateTTS as elevenlabsGenerateTTS } from './elevenlabs'
@@ -127,40 +129,7 @@ export async function generateTTS({
       }
     }
 
-    // 3) Tentative cache Appwrite (serveur, partagé entre utilisateurs)
-    const appwriteCache = isOccitan(language_code) ? votzCache : elevenlabsCache
-    try {
-      const remoteBlob = await appwriteCache.get<Blob>(key)
-      if (remoteBlob) {
-        console.log('[TTS] ✅ Hit cache Appwrite (partagé)')
-        metric('TTS.cache', {
-          hit: true,
-          source: 'appwrite',
-          lang: language_code,
-          textLength: text.length,
-          provider: isOccitan(language_code) ? 'votz' : 'elevenlabs'
-        })
-
-        // Hydrater le cache IDB pour prochaine fois
-        try {
-          await idb.set(key, remoteBlob, { ttlMs: ONE_WEEK, contentType: 'audio/mpeg' })
-          console.log('[TTS] ✅ Cache IDB hydraté depuis Appwrite')
-        } catch (error) {
-          console.warn('[TTS] Échec hydratation IDB:', error)
-        }
-
-        const url = URL.createObjectURL(remoteBlob)
-        CacheManager.trackObjectUrl(url)
-        return {
-          url,
-          mimeType: 'audio/mpeg',
-          provider: isOccitan(language_code) ? 'votz' : 'elevenlabs'
-        }
-      }
-    } catch (error) {
-      console.warn('[TTS] Cache Appwrite indisponible:', error)
-      metric('TTS.cache.error', { adapter: 'appwrite', error: (error as Error).message })
-    }
+    // 3) Lecture Appwrite en preview désactivée pour réduire le bruit et la complexité
 
     // 4) Miss complet → Génération via API
     console.log('[TTS] ❌ Miss cache complet, génération...')
@@ -232,25 +201,7 @@ export async function generateTTS({
           metric('TTS.cache.set.error', { adapter: 'idb', error: (error as Error).message })
         }
 
-        // 6b) Cache Appwrite (serveur, partagé)
-        try {
-          await appwriteCache.set(key, blob, {
-            ttlMs: ONE_WEEK,
-            contentType: 'audio/mpeg',
-            publicRead: true // ✨ Lecture publique pour partage inter-utilisateurs
-          })
-          console.log('[TTS] ✅ Sauvegardé dans cache Appwrite (partagé)')
-          metric('TTS.cache.set', {
-            adapter: 'appwrite',
-            size: blob.size,
-            lang: language_code,
-            provider: isOccitan(language_code) ? 'votz' : 'elevenlabs'
-          })
-        } catch (error) {
-          // Échec non bloquant (le fichier peut déjà exister = idempotent)
-          console.warn('[TTS] Échec sauvegarde cache Appwrite (non bloquant):', error)
-          metric('TTS.cache.set.error', { adapter: 'appwrite', error: (error as Error).message })
-        }
+        // 6b) (désactivé en preview) Pas d'upload Appwrite ici pour éviter les orphelins
       }
 
       return result
@@ -303,4 +254,30 @@ export async function playTTS({
     console.error('TTS Play Error:', error)
     throw new Error(`TTS play failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
+}
+
+/**
+ * Persist TTS (upload=true) et renvoie l'URL Appwrite
+ */
+export async function persistTTS({
+  text,
+  language_code,
+  voice_id,
+}: {
+  text: string
+  language_code: string
+  voice_id?: string
+}): Promise<{ url: string }> {
+  const oc = isOccitan(language_code)
+  if (oc) {
+    const jwt = await getSessionJWT()
+    if (!jwt) throw new Error('User not authenticated')
+    const client = createVercelApiClient(jwt)
+    const res: any = await client.generateVotzTTS({ text, language: 'languedoc', mode: 'file', upload: true } as any)
+    if (res?.url) return { url: res.url }
+    throw new Error('Persist Votz TTS failed')
+  }
+  const { persistElevenlabsTTS } = await import('./elevenlabs')
+  const persisted = await persistElevenlabsTTS({ text, voiceId: voice_id ?? '21m00Tcm4TlvDq8ikWAM' })
+  return { url: persisted.url }
 }

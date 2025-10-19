@@ -11,10 +11,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
-import { generateTTS } from '../../services/tts'
+import { generateTTS, persistTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
-import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
-import { getCachedImage } from '../../services/image-cache'
+import { pexelsSearchPhotos, pexelsCurated, pexelsOptimizePreview, pexelsOptimizePersist } from '../../services/pexels'
 import type { PexelsPhoto } from '../../types/ankilang-vercel-api'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
@@ -35,14 +34,7 @@ type CardFormData = {
 }
 
 // Stockage temporaire des métadonnées d'image pour upload différé
-type ImageMetadata = {
-  photo: PexelsPhoto  // Photo Pexels originale
-  blob: Blob          // Blob optimisé (du cache)
-  objectUrl: string   // Object URL pour preview
-  format: string      // Format (webp/avif/jpeg)
-  appwriteUrl?: string  // URL Appwrite publique (si disponible)
-  appwriteFileId?: string // FileId Appwrite (si disponible)
-}
+// Plus de cache image: on gère uniquement une photo sélectionnée + Object URL de preview
 
 interface NewCardModalProps {
   isOpen: boolean
@@ -76,6 +68,8 @@ export default function NewCardModal({
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
+  const [pendingPhoto, setPendingPhoto] = useState<PexelsPhoto | null>(null)
+  const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -130,30 +124,30 @@ export default function NewCardModal({
   const [imageInput, setImageInput] = useState('')
   const [imagePage, setImagePage] = useState(1)
 
-  // Stockage temporaire des métadonnées d'image (pour upload différé au submit)
-  const [pendingImageMetadata, setPendingImageMetadata] = useState<ImageMetadata | null>(null)
+  // Preview image: on conserve uniquement l'Object URL et la photo sélectionnée
 
   // Nettoyage des Object URLs pour éviter les fuites mémoire
   useEffect(() => {
     return () => {
-      if (pendingImageMetadata?.objectUrl) {
-        console.log('🧹 Révocation de l\'Object URL:', pendingImageMetadata.objectUrl)
-        URL.revokeObjectURL(pendingImageMetadata.objectUrl)
+      if (previewObjectUrl) {
+        console.log('🧹 Révocation de l\'Object URL:', previewObjectUrl)
+        URL.revokeObjectURL(previewObjectUrl)
       }
     }
-  }, [pendingImageMetadata?.objectUrl])
+  }, [previewObjectUrl])
 
   // Nettoyage lors de la fermeture de la modale
   useEffect(() => {
     if (!isOpen) {
       // Révoquer l'Object URL si elle existe
-      if (pendingImageMetadata?.objectUrl) {
-        URL.revokeObjectURL(pendingImageMetadata.objectUrl)
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl)
       }
-      // Réinitialiser les métadonnées
-      setPendingImageMetadata(null)
+      // Réinitialiser
+      setPreviewObjectUrl(null)
+      setPendingPhoto(null)
     }
-  }, [isOpen, pendingImageMetadata?.objectUrl])
+  }, [isOpen, previewObjectUrl])
 
   // Pré-remplir la recherche d'images avec le recto/verso ou cloze
   useEffect(() => {
@@ -196,35 +190,23 @@ export default function NewCardModal({
   const handlePickImage = async (photo: PexelsPhoto) => {
     setIsOptimizingImage(true)
     try {
-      console.log('🖼️ Chargement de l\'image Pexels depuis le cache...')
-
-      // Récupérer l'image optimisée du cache (IDB → Appwrite → API Vercel)
-      // ⚠️ IMPORTANT: Ne PAS uploader dans Appwrite ici, juste récupérer pour preview
-      const result = await getCachedImage(photo, {
+      console.log('🖼️ Preview image Pexels (sans upload)...')
+      const preview = await pexelsOptimizePreview({
+        imageUrl: photo.src?.medium || photo.src?.large || photo.src?.original,
         width: 600,
         height: 400,
-        format: 'webp',
         quality: 80,
+        format: 'webp'
       })
-
-      console.log(`✅ Image chargée depuis ${result.source}: ${result.size} bytes (${result.format})`)
-
-      // Stocker les métadonnées pour upload différé au moment du submit
-      setPendingImageMetadata({
-        photo,
-        blob: result.blob,
-        objectUrl: result.url,
-        format: result.format,
-        appwriteUrl: result.appwriteUrl,
-        appwriteFileId: result.appwriteFileId,
-      })
-
-      // Utiliser l'Object URL pour l'aperçu dans le formulaire
+      const blob = await fetch(preview.optimizedImage).then(r => r.blob())
+      const url = URL.createObjectURL(blob)
+      setPreviewObjectUrl(url)
+      setPendingPhoto(photo)
       if (selectedType === 'basic') {
-        setValue('versoImage', result.url)
-        setValue('versoImageType', 'external') // Marquer comme external temporairement
+        setValue('versoImage', url)
+        setValue('versoImageType', 'external')
       } else {
-        setValue('clozeImage', result.url)
+        setValue('clozeImage', url)
         setValue('clozeImageType', 'external')
       }
     } catch (error) {
@@ -240,7 +222,7 @@ export default function NewCardModal({
         setValue('clozeImage', fallbackUrl)
         setValue('clozeImageType', 'external')
       }
-      setPendingImageMetadata(null)
+      setPendingPhoto(null)
     } finally {
       setIsOptimizingImage(false)
     }
@@ -620,16 +602,38 @@ export default function NewCardModal({
       let finalImageUrl: string | undefined
       let finalImageType: 'appwrite' | 'external' = 'external'
 
-      if (features.canAddImages && pendingImageMetadata) {
-        // L'image est déjà dans le cache Appwrite, on utilise directement son URL
-        console.log('✅ Utilisation de l\'image depuis le cache Appwrite')
-        finalImageUrl = pendingImageMetadata.appwriteUrl || pendingImageMetadata.photo.src.large
-        finalImageType = pendingImageMetadata.appwriteUrl ? 'appwrite' : 'external'
-        console.log(`✅ Image URL: ${finalImageUrl} (type: ${finalImageType})`)
+      if (features.canAddImages && pendingPhoto) {
+        // Persister l'image dans Appwrite au moment du submit
+        console.log('📤 Persist de l\'image dans Appwrite (au submit)')
+        const persisted = await pexelsOptimizePersist({
+          imageUrl: pendingPhoto.src?.medium || pendingPhoto.src?.large || pendingPhoto.src?.original,
+          width: 600,
+          height: 400,
+          quality: 80,
+          format: 'webp'
+        })
+        finalImageUrl = persisted.url
+        finalImageType = 'appwrite'
+        console.log('✅ Image persistée via Appwrite')
       } else if (features.canAddImages && (w.versoImage || w.clozeImage)) {
         // Pas de métadonnées pending = l'utilisateur a peut-être mis une URL externe manuellement
         finalImageUrl = w.versoImage || w.clozeImage
         finalImageType = w.versoImageType || w.clozeImageType || 'external'
+      }
+
+      // Persistance audio si l'audio est un preview local (blob/data)
+      let finalAudioUrl: string | undefined = w.versoAudio || undefined
+      try {
+        const maybe = w.versoAudio as string | undefined
+        if (maybe && (maybe.startsWith('blob:') || maybe.startsWith('data:'))) {
+          const textForTts = getValues('verso') || getValues('recto') || ''
+          if (textForTts.trim()) {
+            const persistedAudio = await persistTTS({ text: textForTts, language_code: themeLanguage })
+            finalAudioUrl = persistedAudio.url
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Persist TTS échoué, conserver l\'URL actuelle')
       }
 
       const common = {
@@ -637,7 +641,7 @@ export default function NewCardModal({
         extra: (data as any).extra || undefined,
         imageUrl: finalImageUrl,
         imageUrlType: finalImageType,
-        audioUrl: w.versoAudio || undefined,
+        audioUrl: finalAudioUrl,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
       }
 

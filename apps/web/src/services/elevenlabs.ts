@@ -70,12 +70,23 @@ export async function generateTTS(request: ElevenLabsRequest): Promise<Blob> {
       similarityBoost: request.similarityBoost,
       style: request.style,
       useSpeakerBoost: request.useSpeakerBoost,
+      upload: false,
     })
 
-    // Convert base64 to Blob
-    const blob = base64ToBlob(result.audio)
-    console.log(`[ElevenLabs] TTS generated successfully: ${blob.size} bytes (model: ${result.modelId})`)
-    return blob
+    // Support both preview (audio base64) and potential persist (url)
+    if ((result as any).audio) {
+      const blob = base64ToBlob((result as any).audio)
+      console.log(`[ElevenLabs] TTS generated successfully: ${blob.size} bytes (model: ${(result as any).modelId})`)
+      return blob
+    }
+    if ((result as any).url) {
+      const res = await fetch((result as any).url)
+      if (!res.ok) throw new Error(`Failed to fetch persisted audio: ${res.status}`)
+      const blob = await res.blob()
+      console.log(`[ElevenLabs] TTS fetched from URL: ${blob.size} bytes`)
+      return blob
+    }
+    throw new Error('Unexpected ElevenLabs response: neither audio nor url provided')
   } catch (error) {
     if (error instanceof VercelApiError) {
       console.error('[ElevenLabs] TTS error:', error.detail)
@@ -95,6 +106,22 @@ export async function generateTTSWithRachel(text: string, modelId?: ElevenLabsMo
     voiceId: '21m00Tcm4TlvDq8ikWAM', // Rachel
     modelId,
   })
+}
+
+/**
+ * Persist ElevenLabs TTS (upload=true) et renvoie l'URL Appwrite
+ */
+export async function persistElevenlabsTTS(request: { text: string; voiceId: string; modelId?: ElevenLabsModel; fileId?: string }): Promise<{ fileId: string; url: string }> {
+  const api = await getApiClient()
+  const res = await api.generateElevenlabsTTS({
+    text: request.text.trim(),
+    voiceId: request.voiceId,
+    modelId: request.modelId || 'eleven_multilingual_v2',
+    upload: true,
+    fileId: request.fileId,
+  } as any)
+  if ((res as any).url && (res as any).fileId) return res as any
+  throw new Error('Persist ElevenLabs TTS failed: missing url/fileId')
 }
 
 // ============================================

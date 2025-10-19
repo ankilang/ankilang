@@ -10,6 +10,7 @@ import { createVercelApiClient, VercelApiError } from '../lib/vercel-api-client'
 import { getSessionJWT } from './appwrite'
 import type {
   PexelsSearchResponse,
+  PexelsOptimizeResponse,
 } from '../types/ankilang-vercel-api'
 
 // ============================================
@@ -151,5 +152,69 @@ export async function optimizeAndUploadImage(pexelsUrl: string) {
     }
     console.error('[Pexels] Error:', error)
     throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+// ============================================
+// Preview/Persist helpers (sans cache partagé)
+// ============================================
+
+/**
+ * Optimise une image (Sharp) pour PREVIEW uniquement (pas d'upload Appwrite)
+ */
+export async function pexelsOptimizePreview(params: {
+  imageUrl: string
+  width?: number
+  height?: number
+  quality?: number
+  format?: 'webp' | 'jpeg' | 'png'
+}): Promise<{ optimizedImage: string; format: string; dimensions: { width: number; height: number }; originalSize: number; optimizedSize: number; compressionRatio: number }> {
+  const api = await getApiClient()
+  try {
+    const res = await api.optimizeImage({
+      imageUrl: params.imageUrl,
+      width: params.width ?? 600,
+      height: params.height ?? 400,
+      quality: params.quality ?? 80,
+      format: params.format ?? 'webp',
+      upload: false,
+    } as any)
+    // res contient optimizedImage base64
+    return res as any
+  } catch (error) {
+    if (error instanceof VercelApiError) {
+      throw new Error(`Preview optimization failed: ${error.detail}`)
+    }
+    throw error
+  }
+}
+
+/**
+ * Optimise et UPLOAD l'image dans Appwrite (utilisé au Submit)
+ */
+export async function pexelsOptimizePersist(params: {
+  imageUrl: string
+  width?: number
+  height?: number
+  quality?: number
+  format?: 'webp' | 'jpeg' | 'png'
+  filename?: string
+}): Promise<PexelsOptimizeResponse> {
+  const api = await getApiClient()
+  try {
+    const res = await api.optimizeImage({
+      imageUrl: params.imageUrl,
+      width: params.width ?? 600,
+      height: params.height ?? 400,
+      quality: params.quality ?? 80,
+      format: params.format ?? 'webp',
+      upload: true,
+    } as any)
+    return res
+  } catch (error) {
+    if (error instanceof VercelApiError) {
+      throw new Error(`Persist optimization failed: ${error.detail}`)
+    }
+    throw error
   }
 }

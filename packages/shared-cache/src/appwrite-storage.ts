@@ -124,25 +124,13 @@ export class AppwriteStorageCache implements CacheAdapter {
   }
 
   async get<T = CacheValue>(key: string): Promise<T | null> {
-    // Try new short format first
+    // Strict + silencieux: un seul essai d'ID, pas de variantes legacy ni de warning
     try {
       const shortId = await this.shortFileId(key);
       const blob = await this.deps.storage.getFileView(this.bucketId, shortId);
       cacheLog.hit(this.name, key);
       return blob as T;
     } catch {
-      // Try legacy formats for backward compatibility
-      const legacyIds = await this.legacyFileIds(key);
-      for (const legacyId of legacyIds) {
-        try {
-          const blob = await this.deps.storage.getFileView(this.bucketId, legacyId);
-          cacheLog.hit(this.name, key);
-          return blob as T;
-        } catch {
-          // Continue to next legacy format
-        }
-      }
-
       cacheLog.miss(this.name, key);
       return null;
     }
