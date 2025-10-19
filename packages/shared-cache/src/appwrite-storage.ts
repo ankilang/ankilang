@@ -27,6 +27,39 @@ export class AppwriteStorageCache implements CacheAdapter {
     private pathPrefix?: string
   ) {}
 
+  /**
+   * Get short prefix (1-2 chars) based on pathPrefix
+   * Examples:
+   * - 'cache/pexels' → 'p'
+   * - 'cache/tts/votz' → 'tv'
+   * - 'cache/tts/elevenlabs' → 'te'
+   * - undefined → 'c' (generic cache)
+   */
+  private getShortPrefix(): string {
+    if (!this.pathPrefix) return 'c';
+
+    const lower = this.pathPrefix.toLowerCase();
+
+    // Image types
+    if (lower.includes('pexels')) return 'p';
+    if (lower.includes('image')) return 'i';
+
+    // TTS types
+    if (lower.includes('votz')) return 'tv';
+    if (lower.includes('elevenlabs') || lower.includes('eleven')) return 'te';
+    if (lower.includes('tts')) return 't';
+
+    // User content
+    if (lower.includes('upload')) return 'u';
+    if (lower.includes('avatar')) return 'a';
+
+    // Generic cache
+    return 'c';
+  }
+
+  /**
+   * Extract format extension from key
+   */
   private extractFormatFromKey(key: string): string | null {
     // Try to extract fmt from key extras e.g., (v=1|w=600|...|fmt=webp|q=80)
     const m = key.match(/\(.*?\)/);
@@ -40,68 +73,84 @@ export class AppwriteStorageCache implements CacheAdapter {
     return null;
   }
 
-  private async baseIdForKey(key: string): Promise<string> {
+  /**
+   * Generate short fileId with extension (max 36 chars for Appwrite)
+   * Format: {prefix}-{hash16}.{ext}  (e.g., "p-330ac06ef292f0f0.webp")
+   *
+   * Appwrite constraints:
+   * - Max 36 chars
+   * - a-z A-Z 0-9 . - _ only
+   * - Cannot start with special char
+   * - File extension required by bucket settings
+   */
+  private async shortFileId(key: string): Promise<string> {
+    const fullHash = await sha256Hex(key);
+    const shortHash = fullHash.slice(0, 16); // 16 hex chars
+    const prefix = this.getShortPrefix();
+    const ext = this.extractFormatFromKey(key);
+
+    // Format: {prefix}-{hash}.{ext}  (max 25 chars: "te-" + 16 + ".mp3" = 23)
+    return ext ? `${prefix}-${shortHash}.${ext}` : `${prefix}-${shortHash}`;
+  }
+
+  /**
+   * Legacy fileId formats for backward compatibility
+   */
+  private async legacyFileIds(key: string): Promise<string[]> {
     const h = await sha256Hex(key);
-    return `cache_${h.slice(0, 40)}`;
-  }
+    const base = `cache_${h.slice(0, 40)}`;
+    const fmt = this.extractFormatFromKey(key);
 
-  private sanitizePrefix(prefix?: string, variant: 'sanitized' | 'slash' = 'sanitized'): string | undefined {
-    if (!prefix) return undefined;
-    if (variant === 'slash') return prefix; // legacy style with '/'
-    return prefix.replace(/[\/]+/g, '.').replace(/\.+$/,'') + '__';
-  }
+    const ids: string[] = [];
 
-  private async fileIdWithExt(key: string, variant: 'sanitized' | 'slash' = 'sanitized'): Promise<string> {
-    const base = await this.baseIdForKey(key);
-    const fmt = this.extractFormatFromKey(key) || 'bin';
-    const id = `${base}.${fmt}`;
-    const pref = this.sanitizePrefix(this.pathPrefix, variant);
-    return pref ? `${pref}${id}` : id;
-  }
+    // Old sanitized format with __ separator
+    if (this.pathPrefix) {
+      const sanitized = this.pathPrefix.replace(/[\/]+/g, '.').replace(/\.+$/,'') + '__';
+      ids.push(`${sanitized}${base}${fmt ? `.${fmt}` : ''}`);
+      ids.push(`${sanitized}${base}`);
+    }
 
-  private async fileIdWithoutExt(key: string, variant: 'sanitized' | 'slash' = 'sanitized'): Promise<string> {
-    const base = await this.baseIdForKey(key);
-    const pref = this.sanitizePrefix(this.pathPrefix, variant);
-    return pref ? `${pref}${base}` : base;
+    // Old slash format (invalid but we tried it)
+    if (this.pathPrefix) {
+      ids.push(`${this.pathPrefix}/${base}${fmt ? `.${fmt}` : ''}`);
+      ids.push(`${this.pathPrefix}/${base}`);
+    }
+
+    // Old format without prefix
+    ids.push(`${base}${fmt ? `.${fmt}` : ''}`);
+    ids.push(base);
+
+    return ids;
   }
 
   async get<T = CacheValue>(key: string): Promise<T | null> {
-    const idWithExt = await this.fileIdWithExt(key, 'sanitized');
+    // Try new short format first
     try {
-      const blob = await this.deps.storage.getFileView(this.bucketId, idWithExt);
+      const shortId = await this.shortFileId(key);
+      const blob = await this.deps.storage.getFileView(this.bucketId, shortId);
       cacheLog.hit(this.name, key);
       return blob as T;
     } catch {
-      // Try without extension for backward compatibility
-      try {
-        const idNoExt = await this.fileIdWithoutExt(key, 'sanitized');
-        const blob = await this.deps.storage.getFileView(this.bucketId, idNoExt);
-        cacheLog.hit(this.name, key);
-        return blob as T;
-      } catch {
-        // Try legacy slash-based variants
+      // Try legacy formats for backward compatibility
+      const legacyIds = await this.legacyFileIds(key);
+      for (const legacyId of legacyIds) {
         try {
-          const legacyId = await this.fileIdWithExt(key, 'slash');
           const blob = await this.deps.storage.getFileView(this.bucketId, legacyId);
           cacheLog.hit(this.name, key);
           return blob as T;
         } catch {
-          try {
-            const legacyNoExt = await this.fileIdWithoutExt(key, 'slash');
-            const blob = await this.deps.storage.getFileView(this.bucketId, legacyNoExt);
-            cacheLog.hit(this.name, key);
-            return blob as T;
-          } catch {
-            cacheLog.miss(this.name, key);
-            return null;
-          }
+          // Continue to next legacy format
         }
       }
+
+      cacheLog.miss(this.name, key);
+      return null;
     }
   }
 
   async set<T = CacheValue>(key: string, value: T, opts?: CacheSetOptions): Promise<void> {
-    const id = await this.fileIdWithExt(key, 'sanitized');
+    // Use new short format
+    const id = await this.shortFileId(key);
     let blob: Blob;
 
     if (value instanceof Blob) blob = value;
@@ -128,53 +177,46 @@ export class AppwriteStorageCache implements CacheAdapter {
   }
 
   async delete(key: string): Promise<void> {
+    // Try new short format first
     try {
-      const id = await this.fileIdWithExt(key, 'sanitized');
-      await this.deps.storage.deleteFile(this.bucketId, id);
+      const shortId = await this.shortFileId(key);
+      await this.deps.storage.deleteFile(this.bucketId, shortId);
       cacheLog.del(this.name, key);
       return;
     } catch {}
-    try {
-      const idNoExt = await this.fileIdWithoutExt(key, 'sanitized');
-      await this.deps.storage.deleteFile(this.bucketId, idNoExt);
-      cacheLog.del(this.name, key);
-      return;
-    } catch {}
-    try {
-      const legacyId = await this.fileIdWithExt(key, 'slash');
-      await this.deps.storage.deleteFile(this.bucketId, legacyId);
-      cacheLog.del(this.name, key);
-      return;
-    } catch {}
-    try {
-      const legacyNoExt = await this.fileIdWithoutExt(key, 'slash');
-      await this.deps.storage.deleteFile(this.bucketId, legacyNoExt);
-      cacheLog.del(this.name, key);
-    } catch {}
+
+    // Try legacy formats for backward compatibility
+    const legacyIds = await this.legacyFileIds(key);
+    for (const legacyId of legacyIds) {
+      try {
+        await this.deps.storage.deleteFile(this.bucketId, legacyId);
+        cacheLog.del(this.name, key);
+        return;
+      } catch {
+        // Continue to next legacy format
+      }
+    }
   }
 
   async has(key: string): Promise<boolean> {
+    // Try new short format first
     try {
-      const id = await this.fileIdWithExt(key, 'sanitized');
-      await this.deps.storage.getFile(this.bucketId, id);
+      const shortId = await this.shortFileId(key);
+      await this.deps.storage.getFile(this.bucketId, shortId);
       return true;
     } catch {}
-    try {
-      const idNoExt = await this.fileIdWithoutExt(key, 'sanitized');
-      await this.deps.storage.getFile(this.bucketId, idNoExt);
-      return true;
-    } catch {}
-    try {
-      const legacyId = await this.fileIdWithExt(key, 'slash');
-      await this.deps.storage.getFile(this.bucketId, legacyId);
-      return true;
-    } catch {}
-    try {
-      const legacyNoExt = await this.fileIdWithoutExt(key, 'slash');
-      await this.deps.storage.getFile(this.bucketId, legacyNoExt);
-      return true;
-    } catch {
-      return false;
+
+    // Try legacy formats for backward compatibility
+    const legacyIds = await this.legacyFileIds(key);
+    for (const legacyId of legacyIds) {
+      try {
+        await this.deps.storage.getFile(this.bucketId, legacyId);
+        return true;
+      } catch {
+        // Continue to next legacy format
+      }
     }
+
+    return false;
   }
 }

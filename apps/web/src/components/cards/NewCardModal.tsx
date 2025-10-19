@@ -15,8 +15,6 @@ import { generateTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
 import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
 import { getCachedImage } from '../../services/image-cache'
-import { createVercelApiClient } from '../../lib/vercel-api-client'
-import { getSessionJWT } from '../../services/appwrite'
 import type { PexelsPhoto } from '../../types/ankilang-vercel-api'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
@@ -42,6 +40,8 @@ type ImageMetadata = {
   blob: Blob          // Blob optimisé (du cache)
   objectUrl: string   // Object URL pour preview
   format: string      // Format (webp/avif/jpeg)
+  appwriteUrl?: string  // URL Appwrite publique (si disponible)
+  appwriteFileId?: string // FileId Appwrite (si disponible)
 }
 
 interface NewCardModalProps {
@@ -215,6 +215,8 @@ export default function NewCardModal({
         blob: result.blob,
         objectUrl: result.url,
         format: result.format,
+        appwriteUrl: result.appwriteUrl,
+        appwriteFileId: result.appwriteFileId,
       })
 
       // Utiliser l'Object URL pour l'aperçu dans le formulaire
@@ -619,31 +621,11 @@ export default function NewCardModal({
       let finalImageType: 'appwrite' | 'external' = 'external'
 
       if (features.canAddImages && pendingImageMetadata) {
-        console.log('📤 Upload de l\'image dans Appwrite Storage...')
-        try {
-          // Uploader le blob dans Appwrite via l'API Vercel
-          const jwt = await getSessionJWT()
-          if (!jwt) throw new Error('User not authenticated')
-          const apiClient = createVercelApiClient(jwt)
-
-          // Uploader via l'API Vercel qui va gérer le stockage Appwrite
-          const uploadResult = await apiClient.optimizeImage({
-            imageUrl: pendingImageMetadata.photo.src.medium,
-            width: 600,
-            height: 400,
-            quality: 80,
-            format: pendingImageMetadata.format as 'webp' | 'avif' | 'jpeg' | 'png',
-          })
-
-          finalImageUrl = uploadResult.url
-          finalImageType = 'appwrite'
-          console.log(`✅ Image uploadée dans Appwrite: ${uploadResult.fileId}`)
-        } catch (error) {
-          console.error('❌ Erreur upload Appwrite, fallback sur URL Pexels:', error)
-          // Fallback: utiliser l'URL Pexels originale
-          finalImageUrl = pendingImageMetadata.photo.src.large || pendingImageMetadata.photo.src.medium
-          finalImageType = 'external'
-        }
+        // L'image est déjà dans le cache Appwrite, on utilise directement son URL
+        console.log('✅ Utilisation de l\'image depuis le cache Appwrite')
+        finalImageUrl = pendingImageMetadata.appwriteUrl || pendingImageMetadata.photo.src.large
+        finalImageType = pendingImageMetadata.appwriteUrl ? 'appwrite' : 'external'
+        console.log(`✅ Image URL: ${finalImageUrl} (type: ${finalImageType})`)
       } else if (features.canAddImages && (w.versoImage || w.clozeImage)) {
         // Pas de métadonnées pending = l'utilisateur a peut-être mis une URL externe manuellement
         finalImageUrl = w.versoImage || w.clozeImage

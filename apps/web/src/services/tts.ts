@@ -1,5 +1,5 @@
 import { BrowserIDBCache, AppwriteStorageCache, buildCacheKey } from '@ankilang/shared-cache'
-import { Storage } from 'appwrite'
+import { Storage, Permission, Role } from 'appwrite'
 import client from './appwrite'
 import { ttsToBlob as votzTtsToBlob } from './votz'
 import { generateTTS as elevenlabsGenerateTTS } from './elevenlabs'
@@ -39,7 +39,11 @@ const appwriteDeps = {
     },
     createFile: async (bucketId: string, fileId: string, blob: Blob, permissions?: string[]) => {
       const file = new File([blob], fileId, { type: blob.type || 'application/octet-stream' })
-      await storageSdk.createFile(bucketId, fileId, file, permissions)
+      // Convert legacy 'role:all' permissions to new format
+      const appwritePermissions = permissions?.includes('role:all')
+        ? [Permission.read(Role.any())]
+        : permissions
+      await storageSdk.createFile(bucketId, fileId, file, appwritePermissions)
     },
     getFile: (bucketId: string, fileId: string) => storageSdk.getFile(bucketId, fileId),
     deleteFile: (bucketId: string, fileId: string) => storageSdk.deleteFile(bucketId, fileId),

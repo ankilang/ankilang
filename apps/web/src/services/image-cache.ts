@@ -16,8 +16,8 @@
  * @module image-cache
  */
 
-import { BrowserIDBCache, AppwriteStorageCache, buildCacheKey } from '@ankilang/shared-cache'
-import { Storage } from 'appwrite'
+import { BrowserIDBCache, AppwriteStorageCache, buildCacheKey, sha256Hex } from '@ankilang/shared-cache'
+import { Storage, Permission, Role } from 'appwrite'
 import client, { getSessionJWT } from './appwrite'
 import type { PexelsPhoto } from '../types/ankilang-vercel-api'
 import { createVercelApiClient } from '../lib/vercel-api-client'
@@ -55,6 +55,10 @@ export interface CachedImageResult {
   format: string
   /** Source du cache ('idb', 'appwrite', 'api') */
   source: 'idb' | 'appwrite' | 'api'
+  /** URL Appwrite publique (si disponible) */
+  appwriteUrl?: string
+  /** FileId Appwrite (si disponible) */
+  appwriteFileId?: string
 }
 
 // Cache IDB local (rapide, navigateur uniquement)
@@ -63,6 +67,8 @@ const idb = new BrowserIDBCache('ankilang', 'image-cache')
 // Cache Appwrite Storage (serveur, partagé entre utilisateurs)
 // Wrapper pour retourner un Blob depuis getFileView et gérer File pour createFile
 const storageSdk = new Storage(client)
+const BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images'
+
 const appwriteDeps = {
   storage: {
     getFileView: async (bucketId: string, fileId: string) => {
@@ -73,7 +79,11 @@ const appwriteDeps = {
     },
     createFile: async (bucketId: string, fileId: string, blob: Blob, permissions?: string[]) => {
       const file = new File([blob], fileId, { type: blob.type || 'application/octet-stream' })
-      await storageSdk.createFile(bucketId, fileId, file, permissions)
+      // Convert legacy 'role:all' permissions to new format
+      const appwritePermissions = permissions?.includes('role:all')
+        ? [Permission.read(Role.any())]
+        : permissions
+      await storageSdk.createFile(bucketId, fileId, file, appwritePermissions)
     },
     getFile: (bucketId: string, fileId: string) => storageSdk.getFile(bucketId, fileId),
     deleteFile: (bucketId: string, fileId: string) => storageSdk.deleteFile(bucketId, fileId),
@@ -82,9 +92,34 @@ const appwriteDeps = {
 
 const storage = new AppwriteStorageCache(
   appwriteDeps,
-  import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
+  BUCKET_ID,
   'cache/pexels'
 )
+
+/**
+ * Build Appwrite public URL for a fileId
+ */
+function buildAppwriteUrl(fileId: string): string {
+  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1'
+  const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || 'ankilang'
+  return `${endpoint}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?project=${projectId}`
+}
+
+/**
+ * Build Appwrite fileId from cache key (matches AppwriteStorageCache logic)
+ * Format: {prefix}-{hash16}.{ext}
+ */
+async function buildAppwriteFileId(cacheKey: string, format: string): Promise<string> {
+  const fullHash = await sha256Hex(cacheKey)
+  const shortHash = fullHash.slice(0, 16)
+  return `p-${shortHash}.${format}` // 'p' = pexels prefix
+}
+
+async function buildAppwriteInfo(cacheKey: string, format: string): Promise<{ url: string, fileId: string }> {
+  const fileId = await buildAppwriteFileId(cacheKey, format)
+  const url = buildAppwriteUrl(fileId)
+  return { url, fileId }
+}
 
 // TTL pour les images Pexels (6 mois)
 const PEXELS_TTL_MS = FLAGS.PEXELS_TTL_DAYS * 24 * 60 * 60 * 1000
@@ -207,12 +242,15 @@ export async function getCachedImage(
             metric('Image.cache', { hit: true, source: 'idb', photoId: photo.id })
 
             const url = URL.createObjectURL(cachedBlob)
+            const appwriteInfo = await buildAppwriteInfo(cacheKey, opts.format)
             return {
               blob: cachedBlob,
               url,
               size: cachedBlob.size,
               format: opts.format,
               source: 'idb',
+              appwriteUrl: appwriteInfo.url,
+              appwriteFileId: appwriteInfo.fileId,
             }
           }
         } catch (error) {
@@ -238,12 +276,15 @@ export async function getCachedImage(
             }
 
             const url = URL.createObjectURL(remoteBlob)
+            const appwriteInfo = await buildAppwriteInfo(cacheKey, opts.format)
             return {
               blob: remoteBlob,
               url,
               size: remoteBlob.size,
               format: opts.format,
               source: 'appwrite',
+              appwriteUrl: appwriteInfo.url,
+              appwriteFileId: appwriteInfo.fileId,
             }
           }
         } catch (error) {
@@ -299,12 +340,15 @@ export async function getCachedImage(
         }
 
         const url = URL.createObjectURL(blob)
+        const appwriteInfo = await buildAppwriteInfo(cacheKey, opts.format)
         return {
           blob,
           url,
           size: blob.size,
           format: opts.format,
           source: 'api',
+          appwriteUrl: appwriteInfo.url,
+          appwriteFileId: appwriteInfo.fileId,
         }
       } catch (error) {
         console.error('[Image Cache] Erreur critique:', error)

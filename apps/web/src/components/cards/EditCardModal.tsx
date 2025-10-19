@@ -8,7 +8,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '../../types/shared'
 import type { Card } from '../../types/shared'
-import { pexelsSearchPhotos, optimizeAndUploadImage } from '../../services/pexels'
+import { pexelsSearchPhotos } from '../../services/pexels'
+import { getCachedImage } from '../../services/image-cache'
 import AudioPlayer from './AudioPlayer'
 import { generateTTS } from '../../services/tts'
 
@@ -171,17 +172,33 @@ export default function EditCardModal({
 
   const handleSelectImage = async (image: any) => {
     if (!currentImageField) return
-    
+
     setIsOptimizingImage(true)
     try {
-      const result = await optimizeAndUploadImage(image.src.medium)
-      if (result.success) {
-        setValue(currentImageField, result.fileId)
+      // ✨ NOUVEAU: Utiliser le cache multi-niveau (IDB → Appwrite → API)
+      const result = await getCachedImage(image, {
+        width: 600,
+        height: 400,
+        format: 'webp',
+        quality: 80
+      })
+
+      if (result.appwriteUrl) {
+        // L'image est déjà dans le cache Appwrite, utiliser son URL publique
+        console.log('✅ Image depuis cache Appwrite:', result.appwriteUrl)
+        setValue(currentImageField, result.appwriteUrl)
         setValue(`${currentImageField}Type` as any, 'appwrite')
-        console.log(`✅ Image optimisée: ${result.savings}% de réduction`)
+      } else {
+        // Fallback: URL Pexels directe
+        console.log('⚠️ Appwrite URL non disponible, fallback sur Pexels')
+        setValue(currentImageField, image.src.medium)
+        setValue(`${currentImageField}Type` as any, 'external')
       }
+
+      // Révoquer l'Object URL car on n'en a plus besoin
+      URL.revokeObjectURL(result.url)
     } catch (error) {
-      console.error('❌ Erreur lors de l\'optimisation:', error)
+      console.error('❌ Erreur lors de la récupération de l\'image:', error)
       // Fallback: utiliser l'URL Pexels directe
       setValue(currentImageField, image.src.medium)
       setValue(`${currentImageField}Type` as any, 'external')
