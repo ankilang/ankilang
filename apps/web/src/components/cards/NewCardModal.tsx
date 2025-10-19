@@ -13,7 +13,9 @@ import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
-import { pexelsSearchPhotos, pexelsCurated, optimizeAndUploadImage } from '../../services/pexels'
+import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
+import { getCachedImage } from '../../services/image-cache'
+import type { PexelsPhoto } from '../../types/ankilang-vercel-api'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
@@ -30,6 +32,14 @@ type CardFormData = {
   clozeImageType?: 'appwrite' | 'external'
   extra?: string
   tags?: string
+}
+
+// Stockage temporaire des métadonnées d'image pour upload différé
+type ImageMetadata = {
+  photo: PexelsPhoto  // Photo Pexels originale
+  blob: Blob          // Blob optimisé (du cache)
+  objectUrl: string   // Object URL pour preview
+  format: string      // Format (webp/avif/jpeg)
 }
 
 interface NewCardModalProps {
@@ -118,6 +128,31 @@ export default function NewCardModal({
   const [imageInput, setImageInput] = useState('')
   const [imagePage, setImagePage] = useState(1)
 
+  // Stockage temporaire des métadonnées d'image (pour upload différé au submit)
+  const [pendingImageMetadata, setPendingImageMetadata] = useState<ImageMetadata | null>(null)
+
+  // Nettoyage des Object URLs pour éviter les fuites mémoire
+  useEffect(() => {
+    return () => {
+      if (pendingImageMetadata?.objectUrl) {
+        console.log('🧹 Révocation de l\'Object URL:', pendingImageMetadata.objectUrl)
+        URL.revokeObjectURL(pendingImageMetadata.objectUrl)
+      }
+    }
+  }, [pendingImageMetadata?.objectUrl])
+
+  // Nettoyage lors de la fermeture de la modale
+  useEffect(() => {
+    if (!isOpen) {
+      // Révoquer l'Object URL si elle existe
+      if (pendingImageMetadata?.objectUrl) {
+        URL.revokeObjectURL(pendingImageMetadata.objectUrl)
+      }
+      // Réinitialiser les métadonnées
+      setPendingImageMetadata(null)
+    }
+  }, [isOpen, pendingImageMetadata?.objectUrl])
+
   // Pré-remplir la recherche d'images avec le recto/verso ou cloze
   useEffect(() => {
     if (!imageQuery && !imageInput) {
@@ -156,38 +191,52 @@ export default function NewCardModal({
     staleTime: 1000 * 60 * 5,
   })
 
-  const handlePickImage = async (src: string) => {
+  const handlePickImage = async (photo: PexelsPhoto) => {
     setIsOptimizingImage(true)
     try {
-      console.log('🖼️ Optimisation de l\'image Pexels...')
-      
-      // Optimiser et uploader l'image via Netlify Function
-      const result = await optimizeAndUploadImage(src)
-      
-      if (result.success) {
-        console.log(`✅ Image optimisée: ${result.savings}% de réduction (${result.originalSize} → ${result.optimizedSize} bytes)`)
-        
-        // Stocker l'URL Appwrite pour l'affichage et marquer comme 'appwrite'
-        if (selectedType === 'basic') {
-          setValue('versoImage', result.fileUrl) // Utiliser l'URL pour l'affichage
-          setValue('versoImageType', 'appwrite')
-        } else {
-          setValue('clozeImage', result.fileUrl) // Utiliser l'URL pour l'affichage
-          setValue('clozeImageType', 'appwrite')
-        }
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'optimisation:', error)
-      
-      // Fallback: utiliser l'URL Pexels directe en cas d'erreur
-      console.log('⚠️ Fallback: utilisation de l\'URL Pexels directe')
+      console.log('🖼️ Chargement de l\'image Pexels depuis le cache...')
+
+      // Récupérer l'image optimisée du cache (IDB → Appwrite → API Vercel)
+      // ⚠️ IMPORTANT: Ne PAS uploader dans Appwrite ici, juste récupérer pour preview
+      const result = await getCachedImage(photo, {
+        width: 600,
+        height: 400,
+        format: 'webp',
+        quality: 80,
+      })
+
+      console.log(`✅ Image chargée depuis ${result.source}: ${result.size} bytes (${result.format})`)
+
+      // Stocker les métadonnées pour upload différé au moment du submit
+      setPendingImageMetadata({
+        photo,
+        blob: result.blob,
+        objectUrl: result.url,
+        format: result.format,
+      })
+
+      // Utiliser l'Object URL pour l'aperçu dans le formulaire
       if (selectedType === 'basic') {
-        setValue('versoImage', src)
-        setValue('versoImageType', 'external')
+        setValue('versoImage', result.url)
+        setValue('versoImageType', 'external') // Marquer comme external temporairement
       } else {
-        setValue('clozeImage', src)
+        setValue('clozeImage', result.url)
         setValue('clozeImageType', 'external')
       }
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement de l\'image:', error)
+
+      // Fallback: utiliser l'URL Pexels directe en cas d'erreur
+      console.log('⚠️ Fallback: utilisation de l\'URL Pexels directe')
+      const fallbackUrl = photo.src?.large || photo.src?.medium || photo.src?.original
+      if (selectedType === 'basic') {
+        setValue('versoImage', fallbackUrl)
+        setValue('versoImageType', 'external')
+      } else {
+        setValue('clozeImage', fallbackUrl)
+        setValue('clozeImageType', 'external')
+      }
+      setPendingImageMetadata(null)
     } finally {
       setIsOptimizingImage(false)
     }
@@ -551,31 +600,79 @@ export default function NewCardModal({
       console.log('🚫 Soumission déjà en cours, ignorée')
       return
     }
-    
+
     if (isGeneratingAudio) {
       console.log('🚫 Soumission bloquée pendant la génération audio')
       return
     }
-    
+
     setIsSubmitting(true)
     console.log('💾 SUBMIT MANUEL: clic Enregistrer')
-    
-    try {
-    
-    const w: any = watchedValues
-    const common = {
-      themeId,
-      extra: (data as any).extra || undefined,
-      // Images uniquement pour les abonnés (pas pour le plan gratuit)
-      imageUrl: features.canAddImages ? (w.versoImage || w.clozeImage || undefined) : undefined,
-      imageUrlType: features.canAddImages ? (w.versoImageType || w.clozeImageType || 'external') : 'external',
-      audioUrl: w.versoAudio || undefined,
-      tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
-    }
 
-    const submitData = data.type === 'basic'
-      ? { type: 'basic', frontFR: (data as any).recto, backText: (data as any).verso, ...common }
-      : { type: 'cloze', clozeTextTarget: (data as any).clozeTextTarget, ...common }
+    try {
+      const w: any = watchedValues
+
+      // ✨ NOUVEAU: Upload de l'image dans Appwrite uniquement au moment de la sauvegarde
+      let finalImageUrl: string | undefined
+      let finalImageType: 'appwrite' | 'external' = 'external'
+
+      if (features.canAddImages && pendingImageMetadata) {
+        console.log('📤 Upload de l\'image dans Appwrite Storage...')
+        try {
+          // Uploader le blob dans Appwrite via l'API Vercel
+          const api = await import('../lib/vercel-api-client').then(m => m.getApiClient())
+          const apiClient = await api
+
+          // Convertir le blob en base64 pour l'upload
+          const reader = new FileReader()
+          const base64Promise = new Promise<string>((resolve, reject) => {
+            reader.onload = () => {
+              const result = reader.result as string
+              // Extraire seulement la partie base64 (sans le préfixe data:image/...)
+              const base64 = result.split(',')[1]
+              resolve(base64 || '')
+            }
+            reader.onerror = reject
+          })
+          reader.readAsDataURL(pendingImageMetadata.blob)
+          const base64Data = await base64Promise
+
+          // Uploader via l'API Vercel qui va gérer le stockage Appwrite avec dossiers virtuels
+          const uploadResult = await apiClient.optimizeImage({
+            imageUrl: pendingImageMetadata.photo.src.medium,
+            width: 600,
+            height: 400,
+            quality: 80,
+            format: pendingImageMetadata.format as 'webp' | 'avif' | 'jpeg' | 'png',
+          })
+
+          finalImageUrl = uploadResult.url
+          finalImageType = 'appwrite'
+          console.log(`✅ Image uploadée dans Appwrite: ${uploadResult.fileId}`)
+        } catch (error) {
+          console.error('❌ Erreur upload Appwrite, fallback sur URL Pexels:', error)
+          // Fallback: utiliser l'URL Pexels originale
+          finalImageUrl = pendingImageMetadata.photo.src.large || pendingImageMetadata.photo.src.medium
+          finalImageType = 'external'
+        }
+      } else if (features.canAddImages && (w.versoImage || w.clozeImage)) {
+        // Pas de métadonnées pending = l'utilisateur a peut-être mis une URL externe manuellement
+        finalImageUrl = w.versoImage || w.clozeImage
+        finalImageType = w.versoImageType || w.clozeImageType || 'external'
+      }
+
+      const common = {
+        themeId,
+        extra: (data as any).extra || undefined,
+        imageUrl: finalImageUrl,
+        imageUrlType: finalImageType,
+        audioUrl: w.versoAudio || undefined,
+        tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+      }
+
+      const submitData = data.type === 'basic'
+        ? { type: 'basic', frontFR: (data as any).recto, backText: (data as any).verso, ...common }
+        : { type: 'cloze', clozeTextTarget: (data as any).clozeTextTarget, ...common }
 
       onSubmit(submitData)
     } finally {
@@ -947,7 +1044,7 @@ export default function NewCardModal({
                                               key={img.id}
                                               type="button"
                                               className="relative group rounded-lg overflow-hidden border border-gray-200 hover:ring-2 hover:ring-purple-300"
-                                              onClick={() => handlePickImage(img.src?.large || img.src?.medium || img.src?.original)}
+                                              onClick={() => handlePickImage(img)}
                                             >
                                               <div className="w-full h-24 bg-white flex items-center justify-center">
                                                 <img
@@ -1168,7 +1265,7 @@ export default function NewCardModal({
                                               key={img.id}
                                               type="button"
                                               className="relative group rounded-lg overflow-hidden border border-gray-200 hover:ring-2 hover:ring-purple-300"
-                                              onClick={() => handlePickImage(img.src?.large || img.src?.medium || img.src?.original)}
+                                              onClick={() => handlePickImage(img)}
                                             >
                                               <div className="w-full h-24 bg-white flex items-center justify-center">
                                                 <img

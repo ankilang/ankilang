@@ -13,11 +13,28 @@ export interface AppwriteStorageDeps {
 
 export class AppwriteStorageCache implements CacheAdapter {
   readonly name = 'appwrite-storage';
-  constructor(private deps: AppwriteStorageDeps, private bucketId: string) {}
+
+  /**
+   * @param deps - Dependencies (Appwrite Storage instance)
+   * @param bucketId - Appwrite bucket ID
+   * @param pathPrefix - Optional virtual folder prefix (e.g., 'cache/pexels', 'cache/tts/votz')
+   *                     When provided, all fileIds will be prefixed with this path
+   *                     Example: key 'abc123' with prefix 'cache/pexels' becomes 'cache/pexels/abc123'
+   */
+  constructor(
+    private deps: AppwriteStorageDeps,
+    private bucketId: string,
+    private pathPrefix?: string
+  ) {}
 
   private async safeFileId(key: string): Promise<string> {
     const clean = key.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
-    return clean.length < 10 ? await sha256Hex(key).then(h => `cache_${h.slice(0, 40)}`) : clean;
+    const baseId = clean.length < 10 ? await sha256Hex(key).then(h => `cache_${h.slice(0, 40)}`) : clean;
+
+    // Si un préfixe de dossier virtuel est défini, l'ajouter au fileId
+    // Format: {pathPrefix}/{fileId}
+    // Exemple: 'cache/pexels/abc123' au lieu de 'abc123'
+    return this.pathPrefix ? `${this.pathPrefix}/${baseId}` : baseId;
   }
 
   async get<T = CacheValue>(key: string): Promise<T | null> {
