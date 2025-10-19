@@ -42,9 +42,15 @@ function shouldUseRevirada(sourceLang: string, targetLang: string): boolean {
 /**
  * Normalise les codes langue pour DeepL (UPPERCASE → lowercase)
  * L'API Vercel attend les codes en lowercase ('en', 'fr', etc.)
+ * Note: 'en' is deprecated by DeepL, we use 'en-US' by default
  */
 function normalizeDeepLLang(lang: string): string {
-  return lang.toLowerCase()
+  const normalized = lang.toLowerCase()
+  // DeepL deprecated 'en', use 'en-US' instead
+  if (normalized === 'en') {
+    return 'en-us'
+  }
+  return normalized
 }
 
 /**

@@ -30,14 +30,15 @@ export interface RateLimitHeaders {
  * Note: API validation schema expects lowercase codes
  */
 export type DeepLSourceLang =
-  | 'fr' | 'en' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
+  | 'fr' | 'en' | 'en-us' | 'en-gb' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
 
 /**
  * DeepL target languages (lowercase as required by Vercel API)
  * Note: API validation schema expects lowercase codes
+ * Note: 'en' is deprecated by DeepL, use 'en-us' or 'en-gb'
  */
 export type DeepLTargetLang =
-  | 'fr' | 'en' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
+  | 'fr' | 'en-us' | 'en-gb' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
 
 export interface DeepLRequest {
   text: string;
