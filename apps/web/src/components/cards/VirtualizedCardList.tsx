@@ -303,7 +303,11 @@ function CardItem({
             onDelete={onDeleteCard}
             themeColors={themeColors}
           />
-          <QuickActions card={card} />
+          <QuickActions 
+            card={card}
+            onEdit={onEditCard}
+            onDelete={onDeleteCard}
+          />
         </div>
       </div>
     </motion.div>
