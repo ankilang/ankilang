@@ -42,7 +42,7 @@ function ClozeEditor({ value, onChange }: { value: string; onChange: (v: string)
     let m: RegExpExecArray | null
     let max = 0
     while ((m = re.exec(text))) {
-      const n = parseInt(m[1], 10)
+      const n = m[1] ? parseInt(m[1], 10) : 0
       if (!Number.isNaN(n)) max = Math.max(max, n)
     }
     return max + 1

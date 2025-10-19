@@ -117,7 +117,7 @@ export default function NewCardModalV2({
         })
         if (res.success) {
           const translated = Array.isArray(res.translated) ? res.translated[0] : res.translated
-          setVerso(translated)
+          if (translated) setVerso(translated)
         } else {
           setTranslateError(res.error)
         }

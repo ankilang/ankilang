@@ -362,8 +362,8 @@ export default function NewCardModal({
         setAudioPlaying(false)
         setCurrentAudio(null)
       } else {
-        // Vérifier que l'URL audio est valide (HTTP ou data:)
-        if (!audioUrl.startsWith('http') && !audioUrl.startsWith('data:audio/')) {
+        // Vérifier que l'URL audio est valide (HTTP, blob:, ou data:)
+        if (!audioUrl.startsWith('http') && !audioUrl.startsWith('data:audio/') && !audioUrl.startsWith('blob:')) {
           console.error('❌ URL audio invalide:', audioUrl)
           return
         }
