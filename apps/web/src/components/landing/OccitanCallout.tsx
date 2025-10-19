@@ -1,4 +1,4 @@
-import OcFlag from '../../assets/flags/oc.webp'
+import OcFlag from '../../assets/flags/oc.svg'
 
 export default function OccitanCallout() {
   return (

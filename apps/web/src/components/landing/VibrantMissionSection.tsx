@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import SectionTitle from "./SectionTitle";
 import OccitanParticles from "../effects/OccitanParticles";
-import OcFlag from "../../assets/flags/oc.webp";
+import OcFlag from "../../assets/flags/oc.svg";
 
 const VibrantMissionSection = () => {
   // Variants pour l'animation du texte de premier plan
