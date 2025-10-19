@@ -18,12 +18,12 @@
 
 import { BrowserIDBCache, AppwriteStorageCache, buildCacheKey } from '@ankilang/shared-cache'
 import { Storage } from 'appwrite'
-import client from './appwrite'
+import client, { getSessionJWT } from './appwrite'
 import type { PexelsPhoto } from '../types/ankilang-vercel-api'
-import { getApiClient } from '../lib/vercel-api-client'
+import { createVercelApiClient } from '../lib/vercel-api-client'
 import { FLAGS } from '../config/flags'
 import { metric, time } from './cache/metrics'
-import { buildStoragePath } from '../utils/storage-paths'
+// Note: storage-path generation is handled inside the AppwriteStorageCache
 
 /**
  * Options pour l'optimisation d'image
@@ -61,11 +61,29 @@ export interface CachedImageResult {
 const idb = new BrowserIDBCache('ankilang', 'image-cache')
 
 // Cache Appwrite Storage (serveur, partagé entre utilisateurs)
-// Utilise le préfixe 'cache/pexels' pour les dossiers virtuels
+// Wrapper pour retourner un Blob depuis getFileView et gérer File pour createFile
+const storageSdk = new Storage(client)
+const appwriteDeps = {
+  storage: {
+    getFileView: async (bucketId: string, fileId: string) => {
+      const url = storageSdk.getFileView(bucketId, fileId).toString()
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`getFileView fetch failed: ${res.status}`)
+      return await res.blob()
+    },
+    createFile: async (bucketId: string, fileId: string, blob: Blob, permissions?: string[]) => {
+      const file = new File([blob], fileId, { type: blob.type || 'application/octet-stream' })
+      await storageSdk.createFile(bucketId, fileId, file, permissions)
+    },
+    getFile: (bucketId: string, fileId: string) => storageSdk.getFile(bucketId, fileId),
+    deleteFile: (bucketId: string, fileId: string) => storageSdk.deleteFile(bucketId, fileId),
+  }
+}
+
 const storage = new AppwriteStorageCache(
-  { storage: new Storage(client) },
+  appwriteDeps,
   import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
-  'cache/pexels' // ✨ Préfixe de dossier virtuel
+  'cache/pexels'
 )
 
 // TTL pour les images Pexels (6 mois)
@@ -73,6 +91,21 @@ const PEXELS_TTL_MS = FLAGS.PEXELS_TTL_DAYS * 24 * 60 * 60 * 1000
 
 // Map de déduplication pour requêtes en vol
 const inFlightRequests = new Map<string, Promise<CachedImageResult>>()
+
+// ============================================
+// API Client Management
+// ============================================
+
+let apiClient: ReturnType<typeof createVercelApiClient> | null = null
+
+async function getApiClient() {
+  if (!apiClient) {
+    const jwt = await getSessionJWT()
+    if (!jwt) throw new Error('User not authenticated')
+    apiClient = createVercelApiClient(jwt)
+  }
+  return apiClient
+}
 
 /**
  * Détecte le meilleur format d'image supporté par le navigateur
@@ -252,19 +285,8 @@ export async function getCachedImage(
           console.warn('[Image Cache] Échec sauvegarde IDB:', error)
         }
 
-        // 5) Stocker dans Appwrite Storage avec dossier virtuel
-        // Note: L'API Vercel a déjà uploadé le fichier, mais avec un ID différent
-        // Pour utiliser notre convention de nommage, on doit re-uploader
+        // 5) Stocker dans Appwrite Storage (idempotent, lecture publique)
         try {
-          // Générer le fileId avec convention de dossiers virtuels
-          const virtualFileId = buildStoragePath('cache/pexels', {
-            hash: cacheKey,
-            extension: opts.format,
-          })
-
-          console.log(`[Image Cache] Upload vers Appwrite avec ID: ${virtualFileId}`)
-
-          // Le storage cache va gérer l'upload avec le bon fileId
           await storage.set(cacheKey, blob, {
             contentType: `image/${opts.format}`,
             publicRead: true,

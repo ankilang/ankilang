@@ -27,16 +27,35 @@ const ONE_WEEK = FLAGS.TTS_TTL_DAYS * 24 * 60 * 60 * 1000
 
 // Cache Appwrite Storage pour partage inter-utilisateurs
 // Utilise des dossiers virtuels pour organiser par provider
+// Appwrite deps wrapper to ensure Blob returns and proper File upload
+const storageSdk = new Storage(client)
+const appwriteDeps = {
+  storage: {
+    getFileView: async (bucketId: string, fileId: string) => {
+      const url = storageSdk.getFileView(bucketId, fileId).toString()
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`getFileView fetch failed: ${res.status}`)
+      return await res.blob()
+    },
+    createFile: async (bucketId: string, fileId: string, blob: Blob, permissions?: string[]) => {
+      const file = new File([blob], fileId, { type: blob.type || 'application/octet-stream' })
+      await storageSdk.createFile(bucketId, fileId, file, permissions)
+    },
+    getFile: (bucketId: string, fileId: string) => storageSdk.getFile(bucketId, fileId),
+    deleteFile: (bucketId: string, fileId: string) => storageSdk.deleteFile(bucketId, fileId),
+  }
+}
+
 const votzCache = new AppwriteStorageCache(
-  { storage: new Storage(client) },
+  appwriteDeps,
   import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
-  'cache/tts/votz' // ✨ Dossier virtuel pour Votz/Occitan
+  'cache/tts/votz'
 )
 
 const elevenlabsCache = new AppwriteStorageCache(
-  { storage: new Storage(client) },
+  appwriteDeps,
   import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
-  'cache/tts/elevenlabs' // ✨ Dossier virtuel pour ElevenLabs
+  'cache/tts/elevenlabs'
 )
 
 // Détection de l'occitan

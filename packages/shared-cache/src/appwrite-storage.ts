@@ -27,30 +27,58 @@ export class AppwriteStorageCache implements CacheAdapter {
     private pathPrefix?: string
   ) {}
 
-  private async safeFileId(key: string): Promise<string> {
-    const clean = key.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
-    const baseId = clean.length < 10 ? await sha256Hex(key).then(h => `cache_${h.slice(0, 40)}`) : clean;
+  private extractFormatFromKey(key: string): string | null {
+    // Try to extract fmt from key extras e.g., (v=1|w=600|...|fmt=webp|q=80)
+    const m = key.match(/\(.*?\)/);
+    if (m) {
+      const inside = m[0];
+      const fm = inside.match(/(?:^|\|)fmt=([a-z0-9]+)/);
+      if (fm && fm[1]) return fm[1];
+    }
+    // Heuristic based on path prefix for TTS
+    if (this.pathPrefix?.includes('tts')) return 'mp3';
+    return null;
+  }
 
-    // Si un préfixe de dossier virtuel est défini, l'ajouter au fileId
-    // Format: {pathPrefix}/{fileId}
-    // Exemple: 'cache/pexels/abc123' au lieu de 'abc123'
-    return this.pathPrefix ? `${this.pathPrefix}/${baseId}` : baseId;
+  private async baseIdForKey(key: string): Promise<string> {
+    const h = await sha256Hex(key);
+    return `cache_${h.slice(0, 40)}`;
+  }
+
+  private async fileIdWithExt(key: string): Promise<string> {
+    const base = await this.baseIdForKey(key);
+    const fmt = this.extractFormatFromKey(key) || 'bin';
+    const id = `${base}.${fmt}`;
+    return this.pathPrefix ? `${this.pathPrefix}/${id}` : id;
+  }
+
+  private async fileIdWithoutExt(key: string): Promise<string> {
+    const base = await this.baseIdForKey(key);
+    return this.pathPrefix ? `${this.pathPrefix}/${base}` : base;
   }
 
   async get<T = CacheValue>(key: string): Promise<T | null> {
-    const id = await this.safeFileId(key);
+    const idWithExt = await this.fileIdWithExt(key);
     try {
-      const blob = await this.deps.storage.getFileView(this.bucketId, id);
+      const blob = await this.deps.storage.getFileView(this.bucketId, idWithExt);
       cacheLog.hit(this.name, key);
       return blob as T;
     } catch {
-      cacheLog.miss(this.name, key);
-      return null;
+      // Try without extension for backward compatibility
+      try {
+        const idNoExt = await this.fileIdWithoutExt(key);
+        const blob = await this.deps.storage.getFileView(this.bucketId, idNoExt);
+        cacheLog.hit(this.name, key);
+        return blob as T;
+      } catch {
+        cacheLog.miss(this.name, key);
+        return null;
+      }
     }
   }
 
   async set<T = CacheValue>(key: string, value: T, opts?: CacheSetOptions): Promise<void> {
-    const id = await this.safeFileId(key);
+    const id = await this.fileIdWithExt(key);
     let blob: Blob;
 
     if (value instanceof Blob) blob = value;
@@ -65,23 +93,40 @@ export class AppwriteStorageCache implements CacheAdapter {
     try {
       await this.deps.storage.createFile(this.bucketId, id, blob, opts?.publicRead ? ['role:all'] : undefined);
       cacheLog.set(this.name, key, opts?.ttlMs);
-    } catch (e) {
-      console.warn(`[Cache][${this.name}] Failed set: ${String(e)}`);
+    } catch (e: any) {
+      const msg = String(e ?? '');
+      if (msg.includes('409') || msg.toLowerCase().includes('already')) {
+        // Idempotent: file already exists → treat as success
+        cacheLog.set(this.name, key, opts?.ttlMs);
+      } else {
+        console.warn(`[Cache][${this.name}] Failed set: ${msg}`);
+      }
     }
   }
 
   async delete(key: string): Promise<void> {
-    const id = await this.safeFileId(key);
     try {
+      const id = await this.fileIdWithExt(key);
       await this.deps.storage.deleteFile(this.bucketId, id);
+      cacheLog.del(this.name, key);
+      return;
+    } catch {}
+    try {
+      const idNoExt = await this.fileIdWithoutExt(key);
+      await this.deps.storage.deleteFile(this.bucketId, idNoExt);
       cacheLog.del(this.name, key);
     } catch {}
   }
 
   async has(key: string): Promise<boolean> {
-    const id = await this.safeFileId(key);
     try {
+      const id = await this.fileIdWithExt(key);
       await this.deps.storage.getFile(this.bucketId, id);
+      return true;
+    } catch {}
+    try {
+      const idNoExt = await this.fileIdWithoutExt(key);
+      await this.deps.storage.getFile(this.bucketId, idNoExt);
       return true;
     } catch {
       return false;

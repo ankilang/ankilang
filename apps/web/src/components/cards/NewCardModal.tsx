@@ -15,6 +15,8 @@ import { generateTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
 import { pexelsSearchPhotos, pexelsCurated } from '../../services/pexels'
 import { getCachedImage } from '../../services/image-cache'
+import { createVercelApiClient } from '../../lib/vercel-api-client'
+import { getSessionJWT } from '../../services/appwrite'
 import type { PexelsPhoto } from '../../types/ankilang-vercel-api'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
@@ -620,24 +622,11 @@ export default function NewCardModal({
         console.log('📤 Upload de l\'image dans Appwrite Storage...')
         try {
           // Uploader le blob dans Appwrite via l'API Vercel
-          const api = await import('../lib/vercel-api-client').then(m => m.getApiClient())
-          const apiClient = await api
+          const jwt = await getSessionJWT()
+          if (!jwt) throw new Error('User not authenticated')
+          const apiClient = createVercelApiClient(jwt)
 
-          // Convertir le blob en base64 pour l'upload
-          const reader = new FileReader()
-          const base64Promise = new Promise<string>((resolve, reject) => {
-            reader.onload = () => {
-              const result = reader.result as string
-              // Extraire seulement la partie base64 (sans le préfixe data:image/...)
-              const base64 = result.split(',')[1]
-              resolve(base64 || '')
-            }
-            reader.onerror = reject
-          })
-          reader.readAsDataURL(pendingImageMetadata.blob)
-          const base64Data = await base64Promise
-
-          // Uploader via l'API Vercel qui va gérer le stockage Appwrite avec dossiers virtuels
+          // Uploader via l'API Vercel qui va gérer le stockage Appwrite
           const uploadResult = await apiClient.optimizeImage({
             imageUrl: pendingImageMetadata.photo.src.medium,
             width: 600,
