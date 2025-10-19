@@ -1,201 +1,121 @@
+// ============================================
+// VOTZ SERVICE - VERCEL API
+// ============================================
+// Occitan TTS service using Vercel API
+// - Votz API for Languedocian and Gascon
+
+import { createVercelApiClient, VercelApiError } from '../lib/vercel-api-client'
+import { getSessionJWT } from './appwrite'
 import { CacheManager } from './cache-manager'
+import type { VotzLanguage } from '../types/ankilang-vercel-api'
 
-const PROD = 'https://ankilangvotz.netlify.app/.netlify/functions/votz'
+// Re-export VotzLanguage for convenience
+export type { VotzLanguage }
 
-// Utiliser l'URL de production par défaut (LOCAL disponible via variable d'env si besoin)
-const BASE = import.meta.env.VITE_VOTZ_URL || PROD
+// ============================================
+// API Client Management
+// ============================================
 
-export type VotzLanguage = 'languedoc' | 'gascon'
+let apiClient: ReturnType<typeof createVercelApiClient> | null = null
 
-export type VotzRequest = {
-  text: string
-  language: VotzLanguage
-  mode: 'file' | 'url'
+async function getApiClient() {
+  if (!apiClient) {
+    const jwt = await getSessionJWT()
+    if (!jwt) throw new Error('User not authenticated')
+    apiClient = createVercelApiClient(jwt)
+  }
+  return apiClient
 }
 
-export type VotzResponse = {
-  success: boolean
-  audioUrl?: string
-  error?: string
+// ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Convert base64 string to Blob
+ */
+function base64ToBlob(base64: string, mimeType = 'audio/mpeg'): Blob {
+  const byteCharacters = atob(base64)
+  const byteArray = new Uint8Array(byteCharacters.length)
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteArray[i] = byteCharacters.charCodeAt(i)
+  }
+  return new Blob([byteArray], { type: mimeType })
 }
 
-
+/**
+ * Convert Blob to base64 data URL
+ */
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      resolve(result)
-    }
+    reader.onload = () => resolve(reader.result as string)
     reader.onerror = reject
     reader.readAsDataURL(blob)
   })
 }
 
+// ============================================
+// TTS Functions
+// ============================================
+
 /**
- * Génère une synthèse vocale via Votz pour l'occitan
- * @param text - Texte à synthétiser
- * @param language - Dialecte occitan (languedoc ou gascon)
- * @returns Promise<Blob> - Fichier audio MP3
+ * Generate Occitan TTS and return as Blob
+ * @param text - Text to synthesize
+ * @param language - Occitan dialect (languedoc or gascon)
+ * @returns Promise<Blob> - MP3 audio file
  */
 export async function ttsToBlob(text: string, language: VotzLanguage = 'languedoc'): Promise<Blob> {
   if (!text.trim()) {
     throw new Error('Le texte ne peut pas être vide')
   }
 
-  // Récupérer le JWT Appwrite pour authentifier la requête
-  const { getSessionJWT } = await import('./appwrite')
-  const jwt = await getSessionJWT()
-  
-  if (!jwt) {
-    throw new Error('User not authenticated. Please log in to use TTS.')
-  }
+  const api = await getApiClient()
 
-  // Essayer d'abord l'URL configurée, puis fallback sur PROD
-  const urlsToTry = [
-    BASE,
-    ...(BASE !== PROD ? [PROD] : [])
-  ]
+  try {
+    console.log(`[Votz] Generating TTS: "${text.slice(0, 50)}..." (${language})`)
 
-  for (let i = 0; i < urlsToTry.length; i++) {
-    const url = urlsToTry[i]
-    try {
-      console.log(`🔄 Tentative ${i + 1}/${urlsToTry.length}: ${url}`)
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`
-        },
-        body: JSON.stringify({
-          text: text.trim(),
-          language,
-          mode: 'file'
-        } as VotzRequest)
-      })
+    const result = await api.generateVotzTTS({
+      text: text.trim(),
+      language,
+      mode: 'file',
+    })
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Erreur TTS (${response.status}): ${errorText}`)
-      }
-
-      // En mode 'file', Votz retourne directement le fichier audio en base64
-      const contentType = response.headers.get('content-type') || 'audio/mpeg'
-      const arrayBuffer = await response.arrayBuffer()
-      
-      if (arrayBuffer.byteLength === 0) {
-        throw new Error('Fichier audio vide reçu de Votz')
-      }
-      
-      const blob = new Blob([arrayBuffer], { type: contentType })
-      
-      // Vérifier que c'est bien un fichier audio
-      if (!contentType.startsWith('audio/')) {
-        console.warn(`⚠️ Type MIME inattendu: ${contentType}, mais on continue...`)
-      }
-
-      console.log(`✅ Audio généré avec succès via ${url}:`, { size: blob.size, type: blob.type })
+    // VotzFileResponse returns base64
+    if ('audio' in result) {
+      const blob = base64ToBlob(result.audio)
+      console.log(`[Votz] TTS generated successfully: ${blob.size} bytes`)
       return blob
-      
-    } catch (error) {
-      console.warn(`❌ Échec avec ${url}:`, error)
-      
-      // Si c'est la dernière tentative, lancer l'erreur
-      if (i === urlsToTry.length - 1) {
-        console.error('Erreur lors de la génération TTS:', error)
-        throw new Error(`Impossible de générer l'audio: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
-      }
     }
-  }
 
-  // Cette ligne ne devrait jamais être atteinte
-  throw new Error('Toutes les tentatives ont échoué')
+    // VotzUrlResponse (shouldn't happen with mode: 'file')
+    throw new Error('Expected file mode response from Votz API')
+  } catch (error) {
+    if (error instanceof VercelApiError) {
+      console.error('[Votz] TTS error:', error.detail)
+      throw new Error(`Votz TTS failed: ${error.detail}`)
+    }
+    console.error('[Votz] Error:', error)
+    throw new Error(`Votz TTS failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
 }
 
 /**
- * Génère une synthèse vocale et retourne l'URL temporaire Votz
- * @param text - Texte à synthétiser
- * @param language - Dialecte occitan
- * @returns Promise<string> - URL temporaire Votz pour l'audio
+ * Generate Occitan TTS and return as base64 data URL
+ * @param text - Text to synthesize
+ * @param language - Occitan dialect
+ * @returns Promise<string> - Base64 data URL
  */
 export async function ttsToTempURL(text: string, language: VotzLanguage = 'languedoc'): Promise<string> {
-  if (!text.trim()) {
-    throw new Error('Le texte ne peut pas être vide')
-  }
-
-  // Récupérer le JWT Appwrite pour authentifier la requête
-  const { getSessionJWT } = await import('./appwrite')
-  const jwt = await getSessionJWT()
-  
-  if (!jwt) {
-    throw new Error('User not authenticated. Please log in to use TTS.')
-  }
-
-  // Essayer d'abord l'URL configurée, puis fallback sur PROD
-  const urlsToTry = [
-    BASE,
-    ...(BASE !== PROD ? [PROD] : [])
-  ]
-
-  for (let i = 0; i < urlsToTry.length; i++) {
-    const url = urlsToTry[i]
-    try {
-      console.log(`🔄 Tentative ${i + 1}/${urlsToTry.length}: ${url}`)
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`
-        },
-        body: JSON.stringify({
-          text: text.trim(),
-          language,
-          mode: 'file'
-        } as VotzRequest)
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Erreur TTS (${response.status}): ${errorText}`)
-      }
-
-      // En mode 'file', Votz retourne directement le fichier audio
-      const contentType = response.headers.get('content-type') || 'audio/mpeg'
-      const arrayBuffer = await response.arrayBuffer()
-      
-      if (arrayBuffer.byteLength === 0) {
-        throw new Error('Fichier audio vide reçu de Votz')
-      }
-      
-      // Convertir en blob base64 pour l'export
-      const blob = new Blob([arrayBuffer], { type: contentType })
-      const base64 = await blobToBase64(blob)
-      
-      console.log(`✅ Audio généré avec succès via ${url}:`, { size: blob.size, type: blob.type })
-      return base64
-      
-    } catch (error) {
-      console.warn(`❌ Échec avec ${url}:`, error)
-      
-      // Si c'est la dernière tentative, lancer l'erreur
-      if (i === urlsToTry.length - 1) {
-        console.error('Erreur lors de la génération TTS:', error)
-        throw new Error(`Impossible de générer l'audio: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
-      }
-    }
-  }
-
-  // Cette ligne ne devrait jamais être atteinte
-  throw new Error('Toutes les tentatives ont échoué')
+  const blob = await ttsToBlob(text, language)
+  return blobToBase64(blob)
 }
 
 /**
- * Génère une synthèse vocale et retourne une URL d'objet
- * @param text - Texte à synthétiser
- * @param language - Dialecte occitan
- * @returns Promise<string> - URL d'objet pour l'audio
+ * Generate Occitan TTS and return as object URL
+ * @param text - Text to synthesize
+ * @param language - Occitan dialect
+ * @returns Promise<string> - Object URL
  */
 export async function ttsToObjectURL(text: string, language: VotzLanguage = 'languedoc'): Promise<string> {
   const blob = await ttsToBlob(text, language)
@@ -205,27 +125,35 @@ export async function ttsToObjectURL(text: string, language: VotzLanguage = 'lan
 }
 
 /**
- * Génère une synthèse vocale et la joue immédiatement
- * @param text - Texte à synthétiser
- * @param language - Dialecte occitan
- * @returns Promise<HTMLAudioElement> - Élément audio
+ * Generate Occitan TTS and play it immediately
+ * @param text - Text to synthesize
+ * @param language - Occitan dialect
+ * @returns Promise<HTMLAudioElement> - Audio element
  */
 export async function playTTS(text: string, language: VotzLanguage = 'languedoc'): Promise<HTMLAudioElement> {
   const audioUrl = await ttsToObjectURL(text, language)
   const audio = new Audio(audioUrl)
-  
-  // Nettoyer l'URL après lecture
+
+  // Clean up URL after playback
   audio.addEventListener('ended', () => {
     URL.revokeObjectURL(audioUrl)
   })
-  
+
+  audio.addEventListener('error', () => {
+    URL.revokeObjectURL(audioUrl)
+  })
+
   await audio.play()
   return audio
 }
 
+// ============================================
+// Helper Functions for Occitan Detection
+// ============================================
+
 /**
- * Vérifie si le texte est en occitan (heuristique simple)
- * @param text - Texte à vérifier
+ * Check if text is in Occitan (simple heuristic)
+ * @param text - Text to check
  * @returns boolean
  */
 export function isOccitanText(text: string): boolean {
@@ -233,33 +161,33 @@ export function isOccitanText(text: string): boolean {
     'bonjorn', 'adieu', 'mercé', 'plan', 'aquí', 'aquò', 'que', 'se', 'de', 'lo', 'la', 'los', 'las',
     'un', 'una', 'amb', 'per', 'dins', 'sus', 'jos', 'abans', 'après', 'ara', 'ièr', 'deman'
   ]
-  
+
   const words = text.toLowerCase().split(/\s+/)
-  const occitanWordCount = words.filter(word => 
+  const occitanWordCount = words.filter(word =>
     occitanWords.some(occWord => word.includes(occWord))
   ).length
-  
+
   return occitanWordCount > 0 && (occitanWordCount / words.length) > 0.1
 }
 
 /**
- * Détecte le dialecte probable à partir du texte
- * @param text - Texte occitan
+ * Detect probable dialect from text
+ * @param text - Occitan text
  * @returns VotzLanguage
  */
 export function detectDialect(text: string): VotzLanguage {
   const gasconMarkers = ['que', 'hèr', 'òm', 'ua', 'eth', 'ath']
   const languedocMarkers = ['que', 'ièr', 'òme', 'una', 'lo', 'la']
-  
+
   const lowerText = text.toLowerCase()
-  
-  const gasconScore = gasconMarkers.reduce((score, marker) => 
+
+  const gasconScore = gasconMarkers.reduce((score, marker) =>
     score + (lowerText.includes(marker) ? 1 : 0), 0
   )
-  
-  const languedocScore = languedocMarkers.reduce((score, marker) => 
+
+  const languedocScore = languedocMarkers.reduce((score, marker) =>
     score + (lowerText.includes(marker) ? 1 : 0), 0
   )
-  
+
   return gasconScore > languedocScore ? 'gascon' : 'languedoc'
 }

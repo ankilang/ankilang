@@ -1,6 +1,6 @@
 import { BrowserIDBCache, buildCacheKey } from '@ankilang/shared-cache'
 import { ttsToBlob as votzTtsToBlob } from './votz'
-import { ttsViaAppwrite } from './elevenlabs-appwrite'
+import { generateTTS as elevenlabsGenerateTTS } from './elevenlabs'
 import { metric, time } from './cache/metrics'
 import { FLAGS } from '../config/flags'
 import { CacheManager } from './cache-manager'
@@ -40,7 +40,7 @@ export async function generateTTS({
   text,
   language_code,
   voice_id,
-  save = false,
+  save: _save = false, // Prefix with _ to indicate intentionally unused (for future use)
 }: TTSRequest): Promise<TTSResponse> {
   if (!text?.trim()) {
     throw new Error('Le texte ne peut pas être vide')
@@ -108,32 +108,25 @@ export async function generateTTS({
         provider: 'votz' as const 
       }
     } else {
-      // ElevenLabs → Appwrite uniquement (verrouillé)
-      console.log('🔊 [TTS] Utilisation d\'ElevenLabs via Appwrite Functions')
-      result = await ttsViaAppwrite({
+      // ElevenLabs → Vercel API
+      console.log('🔊 [TTS] Utilisation d\'ElevenLabs via Vercel API')
+      blob = await elevenlabsGenerateTTS({
         text,
-        language_code,
-        voice_id: voice_id ?? '21m00Tcm4TlvDq8ikWAM',
-        save_to_storage: save,
-        output_format: save ? 'mp3_44100_128' : 'mp3_22050_64',
+        voiceId: voice_id ?? '21m00Tcm4TlvDq8ikWAM',
+        modelId: 'eleven_multilingual_v2',
       })
-      
-      if (!isPlayableUrl(result.url)) {
+
+      const url = URL.createObjectURL(blob)
+      CacheManager.trackObjectUrl(url)
+
+      if (!isPlayableUrl(url)) {
         throw new Error('URL audio invalide générée par ElevenLabs')
       }
 
-      // Convertir data: → Blob pour cache local
-      if (result.url.startsWith('data:')) {
-        const resp = await fetch(result.url)
-        blob = await resp.blob()
-      } else {
-        // Si on reçoit une URL http(s), on peut tenter de la récupérer pour mettre en cache local (best-effort)
-        try {
-          const resp = await fetch(result.url)
-          blob = await resp.blob()
-        } catch {
-          blob = null
-        }
+      result = {
+        url,
+        mimeType: 'audio/mpeg',
+        provider: 'elevenlabs' as const
       }
     }
 
