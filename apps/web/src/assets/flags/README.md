@@ -19,16 +19,19 @@ Most flags are sourced from [Twemoji](https://github.com/twitter/twemoji) - Twit
 
 **File:** `oc.svg`
 
-**Description:** Traditional Occitan flag (croix occitane / Occitan cross) adapted to Twemoji style
+**Description:** Official Occitania flag with croix occitane, adapted to Twemoji style
 
 **Design:**
-- Yellow background (#FCDD09)
-- Red cross (#C8102E) with 12 circles (croix occitane pattern)
-- Adapted to match Twemoji visual style (36×36 viewBox, rounded corners)
+- Horizontal red and yellow stripes (official Occitania flag colors)
+- Red background (#DA121A) with yellow stripes (#FCDD09)
+- White circle in center with red croix occitane (Occitan cross)
+- 12 small circles around the cross (traditional pattern)
+- Adapted to match Twemoji visual style (36×36 viewBox, rounded corners rx="4")
 
-**Inspiration:** Based on traditional Occitan cross flag design (public domain)
+**Inspiration:** Based on official Flag of Occitania (https://commons.wikimedia.org/wiki/File:Flag_of_Occitania.svg)
 
 **Created:** 2025-10-19
+**Updated:** 2025-10-19 (switched to official Occitania flag design)
 
 **License:** Public Domain / CC0
 - This specific SVG file was created for the Ankilang project

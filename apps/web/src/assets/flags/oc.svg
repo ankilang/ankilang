@@ -1,40 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
-  <!-- Fond jaune avec coins arrondis (style Twemoji) -->
-  <rect width="36" height="36" fill="#FCDD09" rx="4"/>
+  <!-- Fond avec bandes rouge et jaune (style drapeau officiel d'Occitanie) -->
+  <rect width="36" height="36" fill="#DA121A" rx="4"/>
 
-  <!-- Croix occitane rouge -->
-  <g fill="#C8102E">
-    <!-- Branche verticale centrale -->
-    <rect x="15" y="4" width="6" height="28" rx="0.5"/>
+  <!-- Bandes jaunes -->
+  <rect y="6" width="36" height="4" fill="#FCDD09"/>
+  <rect y="14" width="36" height="4" fill="#FCDD09"/>
+  <rect y="22" width="36" height="4" fill="#FCDD09"/>
+  <rect y="30" width="36" height="4" fill="#FCDD09"/>
 
-    <!-- Branche horizontale centrale -->
-    <rect x="4" y="15" width="28" height="6" rx="0.5"/>
+  <!-- Masque pour les coins arrondis -->
+  <rect width="36" height="36" fill="none" stroke="none" rx="4"/>
 
-    <!-- 4 boules aux extrémités principales -->
-    <circle cx="18" cy="6" r="2.5"/>
-    <circle cx="18" cy="30" r="2.5"/>
-    <circle cx="6" cy="18" r="2.5"/>
-    <circle cx="30" cy="18" r="2.5"/>
+  <!-- Cercle central blanc pour la croix occitane -->
+  <circle cx="18" cy="18" r="9" fill="#FFFFFF"/>
 
-    <!-- 12 petites boules (3 par quadrant) -->
+  <!-- Croix occitane (version simplifiée pour petit format) -->
+  <g fill="#DA121A">
+    <!-- Branche verticale -->
+    <rect x="16.5" y="11" width="3" height="14" rx="0.5"/>
+
+    <!-- Branche horizontale -->
+    <rect x="11" y="16.5" width="14" height="3" rx="0.5"/>
+
+    <!-- 4 cercles aux extrémités -->
+    <circle cx="18" cy="12" r="1.5"/>
+    <circle cx="18" cy="24" r="1.5"/>
+    <circle cx="12" cy="18" r="1.5"/>
+    <circle cx="24" cy="18" r="1.5"/>
+
+    <!-- 12 petits cercles (simplifié pour visibilité) -->
     <!-- Quadrant haut-gauche -->
-    <circle cx="10.5" cy="8.5" r="1.2"/>
-    <circle cx="8.5" cy="10.5" r="1.2"/>
-    <circle cx="12.5" cy="6.5" r="1.2"/>
+    <circle cx="14.5" cy="14" r="0.8"/>
+    <circle cx="13.5" cy="15.5" r="0.8"/>
+    <circle cx="15.5" cy="13" r="0.8"/>
 
     <!-- Quadrant haut-droit -->
-    <circle cx="25.5" cy="8.5" r="1.2"/>
-    <circle cx="27.5" cy="10.5" r="1.2"/>
-    <circle cx="23.5" cy="6.5" r="1.2"/>
+    <circle cx="21.5" cy="14" r="0.8"/>
+    <circle cx="22.5" cy="15.5" r="0.8"/>
+    <circle cx="20.5" cy="13" r="0.8"/>
 
     <!-- Quadrant bas-gauche -->
-    <circle cx="10.5" cy="27.5" r="1.2"/>
-    <circle cx="8.5" cy="25.5" r="1.2"/>
-    <circle cx="12.5" cy="29.5" r="1.2"/>
+    <circle cx="14.5" cy="22" r="0.8"/>
+    <circle cx="13.5" cy="20.5" r="0.8"/>
+    <circle cx="15.5" cy="23" r="0.8"/>
 
     <!-- Quadrant bas-droit -->
-    <circle cx="25.5" cy="27.5" r="1.2"/>
-    <circle cx="27.5" cy="25.5" r="1.2"/>
-    <circle cx="23.5" cy="29.5" r="1.2"/>
+    <circle cx="21.5" cy="22" r="0.8"/>
+    <circle cx="22.5" cy="20.5" r="0.8"/>
+    <circle cx="20.5" cy="23" r="0.8"/>
   </g>
 </svg>
