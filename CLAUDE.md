@@ -164,8 +164,11 @@ This is a **pnpm workspace** monorepo:
 - Cached in multi-tier cache system
 
 **Images** (`apps/web/src/services/pexels.ts`):
-- Pexels API for image search
-- Results cached via `shared-cache` package
+- Unified Pexels service using Vercel API (`ankilang-api-monorepo.vercel.app`)
+- Image search via `/api/pexels` endpoint
+- Image optimization via `/api/pexels-optimize` (Sharp on server, returns base64)
+- Client-side upload to Appwrite Storage for optimized images
+- Curated photos use fallback search ("nature landscape")
 - Image URLs stored in card `imageUrl` field
 
 ### Caching Architecture

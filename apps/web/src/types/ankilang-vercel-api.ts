@@ -103,6 +103,8 @@ export interface PexelsSearchResponse {
   page: number;
   per_page: number;
   photos: PexelsPhoto[];
+  next_page?: string;
+  prev_page?: string;
 }
 
 export type ImageFormat = 'jpeg' | 'webp' | 'png' | 'avif';

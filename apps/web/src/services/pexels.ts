@@ -1,102 +1,211 @@
-const PROD = 'https://ankilangpexels.netlify.app/.netlify/functions/pexels'
+// ============================================
+// PEXELS SERVICE - VERCEL API
+// ============================================
+// Unified Pexels image service using Vercel API
+// - Image search via Pexels API
+// - Image optimization via Sharp
+// - Upload to Appwrite Storage
 
-const BASE = import.meta.env.VITE_PEXELS_URL || PROD
+import { createVercelApiClient, VercelApiError } from '../lib/vercel-api-client'
+import { getSessionJWT } from './appwrite'
+import { Client, Storage, ID } from 'appwrite'
+import type {
+  PexelsSearchResponse,
+} from '../types/ankilang-vercel-api'
 
-type Opts = Record<string, string | number | boolean | undefined>
+// Initialize Appwrite Storage
+const client = new Client()
+  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
 
-function toURL(path: string, opts?: Opts) {
-  const u = new URL((BASE.endsWith('/') ? BASE.slice(0, -1) : BASE) + path, window.location.origin)
-  if (opts) {
-    Object.entries(opts).forEach(([k, v]) => {
-      if (v !== undefined && v !== null) u.searchParams.set(k, String(v))
+const storage = new Storage(client)
+
+// ============================================
+// API Client Management
+// ============================================
+
+let apiClient: ReturnType<typeof createVercelApiClient> | null = null
+
+async function getApiClient() {
+  if (!apiClient) {
+    const jwt = await getSessionJWT()
+    if (!jwt) throw new Error('User not authenticated')
+    apiClient = createVercelApiClient(jwt)
+  }
+  return apiClient
+}
+
+// ============================================
+// Image Search
+// ============================================
+
+/**
+ * Search photos on Pexels
+ */
+export async function pexelsSearchPhotos(
+  query: string,
+  opts: {
+    per_page?: number
+    page?: number
+    orientation?: string
+    size?: string
+    locale?: string
+  } = {}
+): Promise<PexelsSearchResponse> {
+  const api = await getApiClient()
+
+  try {
+    console.log(`[Pexels] Searching: "${query}"`, opts)
+
+    const result = await api.searchPexels({
+      query,
+      perPage: opts.per_page || 15,
+      locale: opts.locale || 'fr-FR',
     })
-  }
-  return u.toString()
-}
 
-async function fetchPexels(path: string, opts?: Opts) {
-  const url = toURL(path, opts)
-
-  const { getSessionJWT } = await import('./appwrite')
-  const jwt = await getSessionJWT()
-
-  if (!jwt) {
-    throw new Error('User not authenticated. Please log in to use Pexels.')
-  }
-
-  const res = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${jwt}`
+    console.log(`[Pexels] Found ${result.total_results} results`)
+    return result
+  } catch (error) {
+    if (error instanceof VercelApiError) {
+      console.error('[Pexels] Search error:', error.detail)
+      throw new Error(`Image search failed: ${error.detail}`)
     }
-  })
-
-  if (!res.ok) {
-    const errorText = await safeText(res)
-    if (res.status === 401) {
-      throw new Error('Pexels authentication failed. Please log in again.')
-    }
-    throw new Error(`Pexels request failed: ${res.status} - ${errorText}`)
+    console.error('[Pexels] Error:', error)
+    throw new Error(`Image search failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
-
-  return res
-}
-
-export async function pexelsSearchPhotos(query: string, opts: Opts = {}) {
-  const res = await fetchPexels('/photos/search', { query, ...opts })
-  return res.json() as Promise<{ page: number; per_page: number; total_results: number; next_page?: string; prev_page?: string; photos: any[] }>
-}
-
-export async function pexelsCurated(opts: Opts = {}) {
-  const res = await fetchPexels('/photos/curated', opts)
-  return res.json() as Promise<{ page: number; per_page: number; total_results: number; next_page?: string; prev_page?: string; photos: any[] }>
-}
-
-export async function pexelsPhoto(id: number | string) {
-  const res = await fetchPexels(`/photos/${id}`)
-  return res.json()
 }
 
 /**
- * Optimise et uploade une image Pexels vers Appwrite Storage
- * @param pexelsUrl - URL de l'image Pexels (medium ou large)
- * @returns Informations sur l'image optimisée et uploadée
+ * Get curated photos (fallback to search with popular keyword)
+ * Note: Vercel API doesn't have a dedicated curated endpoint,
+ * so we use a generic search as fallback
+ */
+export async function pexelsCurated(
+  opts: {
+    per_page?: number
+    page?: number
+    locale?: string
+  } = {}
+): Promise<PexelsSearchResponse> {
+  console.log('[Pexels] Getting curated photos (using fallback search)')
+
+  // Fallback: use a popular generic search term
+  return pexelsSearchPhotos('nature landscape', opts)
+}
+
+/**
+ * Get photo by ID (not implemented in Vercel API)
+ * This function is kept for compatibility but not used in current implementation
+ */
+export async function pexelsPhoto(_id: number | string): Promise<any> {
+  console.warn('[Pexels] Photo detail endpoint not available in Vercel API')
+  throw new Error('Photo detail not implemented. Use search instead.')
+}
+
+// ============================================
+// Image Optimization & Upload
+// ============================================
+
+/**
+ * Convert base64 data URL to Blob
+ */
+function dataURLToBlob(dataURL: string): Blob {
+  const arr = dataURL.split(',')
+  const mimeMatch = arr[0]?.match(/:(.*?);/)
+  const mime = mimeMatch ? mimeMatch[1] : 'image/webp'
+  const bstr = atob(arr[1] || '')
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new Blob([u8arr], { type: mime })
+}
+
+/**
+ * Upload base64 image to Appwrite Storage
+ */
+async function uploadBase64ToAppwrite(
+  base64Data: string
+): Promise<{ fileId: string; fileUrl: string }> {
+  try {
+    // Convert base64 to Blob
+    const blob = dataURLToBlob(base64Data)
+
+    // Create File object
+    const file = new File([blob], 'optimized-image.webp', { type: 'image/webp' })
+
+    console.log(`[Pexels] Uploading to Appwrite Storage (${(blob.size / 1024).toFixed(2)} KB)`)
+
+    // Upload to Appwrite Storage
+    const bucketId = import.meta.env.VITE_APPWRITE_BUCKET_IMAGES || 'images'
+    const uploaded = await storage.createFile(bucketId, ID.unique(), file)
+
+    // Get file URL
+    const fileUrl = storage.getFileView(bucketId, uploaded.$id).toString()
+
+    console.log(`[Pexels] Upload successful: ${uploaded.$id}`)
+
+    return {
+      fileId: uploaded.$id,
+      fileUrl,
+    }
+  } catch (error) {
+    console.error('[Pexels] Upload to Appwrite failed:', error)
+    throw new Error(`Failed to upload image to storage: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+/**
+ * Optimize image using Sharp and upload to Appwrite Storage
+ * @param pexelsUrl - URL of the Pexels image (medium or large)
+ * @returns Information about the optimized and uploaded image
  */
 export async function optimizeAndUploadImage(pexelsUrl: string) {
-  const url = toURL('/optimize', { url: pexelsUrl })
-  
-  // Récupérer le JWT Appwrite pour authentifier la requête
-  const { getSessionJWT } = await import('./appwrite')
-  const jwt = await getSessionJWT()
-  
-  if (!jwt) {
-    throw new Error('User not authenticated. Please log in to upload images.')
-  }
-  
-  const res = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${jwt}`,
-      'Content-Type': 'application/json'
+  const api = await getApiClient()
+
+  try {
+    console.log(`[Pexels] Optimizing image: ${pexelsUrl}`)
+
+    // Step 1: Optimize image via Vercel API
+    const optimized = await api.optimizeImage({
+      imageUrl: pexelsUrl,
+      width: 600,
+      height: 400,
+      quality: 80,
+      format: 'webp',
+    })
+
+    console.log(
+      `[Pexels] Optimization complete: ${optimized.originalSize} → ${optimized.optimizedSize} bytes (${optimized.compression})`
+    )
+
+    // Step 2: Get current user
+    const { account } = await import('./appwrite')
+    const user = await account.get()
+
+    if (!user) {
+      throw new Error('User not authenticated')
     }
-  })
-  
-  if (!res.ok) {
-    const errorText = await res.text()
-    if (res.status === 401) {
-      throw new Error('Authentication failed. Please log in again.')
+
+    // Step 3: Upload to Appwrite Storage
+    const uploaded = await uploadBase64ToAppwrite(optimized.optimizedImage)
+
+    return {
+      success: true,
+      fileId: uploaded.fileId,
+      fileUrl: uploaded.fileUrl,
+      userId: user.$id,
+      originalSize: optimized.originalSize,
+      optimizedSize: optimized.optimizedSize,
+      savings: parseFloat(optimized.compression),
     }
-    throw new Error(`Image optimization failed: ${res.status} - ${errorText}`)
+  } catch (error) {
+    if (error instanceof VercelApiError) {
+      console.error('[Pexels] Optimization error:', error.detail)
+      throw new Error(`Image optimization failed: ${error.detail}`)
+    }
+    console.error('[Pexels] Error:', error)
+    throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
-  
-  return res.json() as Promise<{
-    success: boolean
-    fileId: string
-    fileUrl: string
-    userId: string
-    originalSize: number
-    optimizedSize: number
-    savings: number
-  }>
-}
-async function safeText(res: Response) {
-  try { return await res.text() } catch { return '' }
 }
