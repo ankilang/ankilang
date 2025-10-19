@@ -1,0 +1,782 @@
+================================================================================
+                    DOCUMENTATION TECHNIQUE - ANKILANG API
+================================================================================
+
+Date: 2025-10-18
+URL: https://ankilang-api-monorepo.vercel.app
+Authentification: JWT Appwrite requis pour toutes les APIs
+
+
+================================================================================
+1. DEEPL - TRADUCTION MULTILINGUE
+================================================================================
+
+Description:
+API de traduction professionnelle utilisant DeepL pour des traductions de haute
+qualité entre de nombreuses langues.
+
+Endpoint: POST /api/deepl
+
+Paramètres:
+- text (string, requis): Texte à traduire (max 5000 caractères)
+- sourceLang (string, requis): Code langue source
+- targetLang (string, requis): Code langue cible
+
+Langues disponibles:
+
+Langues sources:
+- AR (arabe), BG (bulgare), CS (tchèque), DA (danois)
+- DE (allemand), EL (grec), EN (anglais), ES (espagnol)
+- ET (estonien), FI (finnois), FR (français), HU (hongrois)
+- ID (indonésien), IT (italien), JA (japonais), KO (coréen)
+- LT (lituanien), LV (letton), NB (norvégien bokmål)
+- NL (néerlandais), PL (polonais), PT (portugais)
+- RO (roumain), RU (russe), SK (slovaque), SL (slovène)
+- SV (suédois), TR (turc), UK (ukrainien), ZH (chinois)
+
+Langues cibles (traduction depuis le français):
+- AR (arabe)
+- BG (bulgare)
+- CS (tchèque)
+- DA (danois)
+- DE (allemand)
+- EL (grec)
+- EN (anglais, non spécifié - utiliser EN-GB ou EN-US recommandé)
+- EN-GB (anglais britannique)
+- EN-US (anglais américain)
+- ES (espagnol)
+- ES-419 (espagnol latino-américain)
+- ET (estonien)
+- FI (finnois)
+- FR (français)
+- HE (hébreu - traduction texte via modèles next-gen uniquement)
+- HU (hongrois)
+- ID (indonésien)
+- IT (italien)
+- JA (japonais)
+- KO (coréen)
+- LT (lituanien)
+- LV (letton)
+- NB (norvégien bokmål)
+- NL (néerlandais)
+- PL (polonais)
+- PT (portugais, non spécifié - utiliser PT-BR ou PT-PT recommandé)
+- PT-BR (portugais brésilien)
+- PT-PT (portugais européen, toutes variantes sauf brésilien)
+- RO (roumain)
+- RU (russe)
+- SK (slovaque)
+- SL (slovène)
+- SV (suédois)
+- TH (thaï - traduction texte via modèles next-gen uniquement)
+- TR (turc)
+- UK (ukrainien)
+- VI (vietnamien - traduction texte via modèles next-gen uniquement)
+- ZH (chinois, non spécifié - utiliser ZH-HANS ou ZH-HANT recommandé)
+- ZH-HANS (chinois simplifié)
+- ZH-HANT (chinois traditionnel)
+
+Notes importantes:
+- Pour l'anglais: préférer EN-GB ou EN-US au lieu de EN
+- Pour le portugais: préférer PT-BR ou PT-PT au lieu de PT
+- Pour le chinois: préférer ZH-HANS ou ZH-HANT au lieu de ZH
+- HE, TH, VI: disponibles uniquement via modèles next-gen (traduction texte)
+
+Exemple de requête:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/deepl \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "text": "Hello world",
+    "sourceLang": "en",
+    "targetLang": "fr"
+  }'
+
+Réponse:
+{
+  "translatedText": "Bonjour le monde",
+  "sourceLang": "en",
+  "targetLang": "fr"
+}
+
+Rate Limit: 30 requêtes par minute
+
+
+================================================================================
+2. REVIRADA - TRADUCTION OCCITAN
+================================================================================
+
+Description:
+API de traduction spécialisée pour l'occitan, utilisant le moteur Apertium.
+Supporte deux dialectes: le languedocien (lengadocian) et le gascon.
+
+Endpoint: POST /api/revirada
+
+Paramètres:
+- text (string, requis): Texte à traduire (max 5000 caractères)
+- direction (string, requis): Direction de traduction
+  * "fr-oc": Français → Occitan
+  * "oc-fr": Occitan → Français
+- dialect (string, optionnel): Dialecte occitan, par défaut "lengadocian"
+  * "lengadocian": Occitan languedocien (oci)
+  * "gascon": Occitan gascon (oci_gascon)
+
+Dialectes:
+1. Languedocien (lengadocian):
+   - Variante standard de l'occitan
+   - Parlée en Languedoc-Roussillon
+   - Code Apertium: "oci"
+
+2. Gascon:
+   - Variante régionale distincte
+   - Parlée en Gascogne et Béarn
+   - Code Apertium: "oci_gascon"
+
+Exemple 1 - Français → Occitan Languedocien:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/revirada \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "text": "Bonjour le monde",
+    "direction": "fr-oc",
+    "dialect": "lengadocian"
+  }'
+
+Réponse:
+{
+  "originalText": "Bonjour le monde",
+  "translatedText": "Bonjorn o pèla",
+  "direction": "fr-oc",
+  "dialect": "lengadocian",
+  "words": 3
+}
+
+Exemple 2 - Occitan Gascon → Français:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/revirada \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "text": "Bonjorn",
+    "direction": "oc-fr",
+    "dialect": "gascon"
+  }'
+
+Réponse:
+{
+  "originalText": "Bonjorn",
+  "translatedText": "Bonjour",
+  "direction": "oc-fr",
+  "dialect": "gascon",
+  "words": 1
+}
+
+Rate Limit: 20 requêtes par minute
+
+
+================================================================================
+3. VOTZ - SYNTHÈSE VOCALE OCCITAN
+================================================================================
+
+Description:
+API de synthèse vocale (TTS) spécialisée pour l'occitan. Permet de générer
+de l'audio en languedocien ou gascon avec deux modes de récupération.
+
+Endpoint: POST /api/votz
+
+Paramètres:
+- text (string, requis): Texte à synthétiser (max 3000 caractères)
+- language (string, optionnel): Langue occitane, par défaut "languedoc"
+  * "languedoc": Occitan languedocien
+  * "gascon": Occitan gascon
+- mode (string, optionnel): Mode de récupération, par défaut "file"
+  * "file": Retourne l'audio encodé en base64
+  * "url": Retourne une URL temporaire vers le fichier audio
+
+Modes de fonctionnement:
+
+1. Mode "file" (par défaut):
+   - Retourne l'audio directement encodé en base64
+   - Idéal pour intégration immédiate dans une application
+   - Format: WAV
+   - Taille incluse dans la réponse
+   - Pas d'expiration
+
+2. Mode "url":
+   - Retourne une URL temporaire hébergée par Votz
+   - Idéal pour lecture dans un navigateur
+   - URL expire après un certain temps
+   - Économise de la bande passante
+
+Exemple 1 - Mode file (retourne audio base64):
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/votz \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "text": "Bonjorn",
+    "language": "languedoc",
+    "mode": "file"
+  }'
+
+Réponse:
+{
+  "audio": "UklGRiSGAABXQVZFZm10IBAA...",
+  "language": "languedoc",
+  "mode": "file",
+  "size": 34340
+}
+
+Pour utiliser l'audio:
+const audioData = response.audio;
+const audioBlob = new Blob(
+  [Uint8Array.from(atob(audioData), c => c.charCodeAt(0))],
+  { type: 'audio/wav' }
+);
+const audioUrl = URL.createObjectURL(audioBlob);
+const audio = new Audio(audioUrl);
+audio.play();
+
+Exemple 2 - Mode url (retourne URL temporaire):
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/votz \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "text": "Bonjorn",
+    "language": "gascon",
+    "mode": "url"
+  }'
+
+Réponse:
+{
+  "url": "https://votz.eu/tmp/audio_abc123.wav",
+  "language": "gascon",
+  "mode": "url"
+}
+
+Pour utiliser l'URL:
+const audio = new Audio(response.url);
+audio.play();
+
+Langues disponibles:
+- "languedoc": Voix occitane languedocienne
+- "gascon": Voix occitane gasconne
+
+Rate Limit: 10 requêtes par minute
+
+Limitations:
+- Texte maximum: 3000 caractères
+- Les URLs en mode "url" expirent après quelques heures
+- Format audio: WAV (non compressé)
+
+
+================================================================================
+4. PEXELS - RECHERCHE D'IMAGES
+================================================================================
+
+Description:
+API de recherche d'images professionnelles gratuites via Pexels. Inclut
+également un endpoint d'optimisation d'images utilisant Sharp.
+
+Endpoint 1: POST /api/pexels (recherche)
+
+Paramètres:
+- query (string, requis): Mot-clé de recherche
+- perPage (number, optionnel): Nombre de résultats, défaut 15, max 80
+- locale (string, optionnel): Langue des résultats, défaut "fr-FR"
+
+Locales disponibles:
+- en-US (anglais américain)
+- fr-FR (français)
+- es-ES (espagnol)
+- de-DE (allemand)
+- it-IT (italien)
+- pt-BR (portugais brésilien)
+- ja-JP (japonais)
+- zh-CN (chinois)
+
+Exemple de requête:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/pexels \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "query": "chat",
+    "perPage": 5,
+    "locale": "fr-FR"
+  }'
+
+Réponse:
+{
+  "total_results": 15847,
+  "page": 1,
+  "per_page": 5,
+  "photos": [
+    {
+      "id": 45201,
+      "width": 6000,
+      "height": 4000,
+      "url": "https://www.pexels.com/photo/...",
+      "photographer": "Jane Doe",
+      "photographer_url": "https://www.pexels.com/@janedoe",
+      "src": {
+        "original": "https://images.pexels.com/photos/45201/original.jpg",
+        "large2x": "https://images.pexels.com/photos/45201/large2x.jpg",
+        "large": "https://images.pexels.com/photos/45201/large.jpg",
+        "medium": "https://images.pexels.com/photos/45201/medium.jpg"
+      },
+      "alt": "Chat tigré assis sur un canapé"
+    }
+  ]
+}
+
+Endpoint 2: POST /api/pexels-optimize (optimisation)
+
+Description:
+Optimise des images en utilisant Sharp (compression, redimensionnement,
+conversion de format).
+
+Paramètres:
+- imageUrl (string, requis): URL de l'image à optimiser
+- width (number, optionnel): Largeur cible en pixels
+- height (number, optionnel): Hauteur cible en pixels
+- quality (number, optionnel): Qualité JPEG/WebP (1-100), défaut 80
+- format (string, optionnel): Format de sortie
+  * "jpeg" (défaut)
+  * "webp"
+  * "png"
+  * "avif"
+
+Exemple de requête:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/pexels-optimize \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "imageUrl": "https://images.pexels.com/photos/45201/large.jpg",
+    "width": 800,
+    "quality": 85,
+    "format": "webp"
+  }'
+
+Réponse:
+{
+  "optimizedImage": "data:image/webp;base64,UklGRiQAAABXRUJQ...",
+  "originalSize": 2458392,
+  "optimizedSize": 145678,
+  "compression": "94.1%",
+  "format": "webp",
+  "dimensions": {
+    "width": 800,
+    "height": 533
+  }
+}
+
+Rate Limits:
+- Pexels search: 50 requêtes par minute
+- Pexels optimize: 30 requêtes par minute
+
+Utilisation de l'image optimisée:
+L'image est retournée en Data URL (base64), utilisable directement:
+<img src="data:image/webp;base64,UklGRiQAAABXRUJQ..." alt="Image optimisée" />
+
+Ou en JavaScript:
+const imgElement = document.createElement('img');
+imgElement.src = response.optimizedImage;
+document.body.appendChild(imgElement);
+
+
+================================================================================
+5. ELEVENLABS - SYNTHÈSE VOCALE MULTILINGUE
+================================================================================
+
+Description:
+API de synthèse vocale (TTS) de haute qualité utilisant l'intelligence
+artificielle. Supporte de nombreuses langues (hors occitan) avec des voix
+ultra-réalistes et personnalisables.
+
+Endpoint: POST /api/elevenlabs
+
+Paramètres:
+- text (string, requis): Texte à synthétiser (max 5000 caractères)
+- voiceId (string, requis): ID de la voix à utiliser
+- modelId (string, optionnel): Modèle de synthèse, défaut "eleven_multilingual_v2"
+  * "eleven_multilingual_v2": Multilingue V2 (recommandé)
+  * "eleven_turbo_v2": Turbo V2 (plus rapide, moins de langues)
+  * "eleven_monolingual_v1": Monolingue V1 (anglais uniquement)
+- stability (number, optionnel): Stabilité de la voix (0.0-1.0), défaut 0.5
+- similarityBoost (number, optionnel): Boost de similarité (0.0-1.0), défaut 0.75
+- style (number, optionnel): Intensité du style (0.0-1.0), défaut 0.0
+- useSpeakerBoost (boolean, optionnel): Amélioration vocale, défaut true
+
+Voix disponibles (exemples populaires):
+- 21m00Tcm4TlvDq8ikWAM: Rachel (femme, anglais américain)
+- AZnzlk1XvdvUeBnXmlld: Domi (femme, anglais américain)
+- EXAVITQu4vr4xnSDxMaL: Bella (femme, anglais américain)
+- ErXwobaYiN019PkySvjV: Antoni (homme, anglais américain)
+- MF3mGyEYCl7XYWbV9V6O: Elli (femme, anglais américain)
+- TxGEqnHWrfWFTfGW9XjX: Josh (homme, anglais américain)
+- VR6AewLTigWG4xSOukaG: Arnold (homme, anglais américain)
+- pNInz6obpgDQGcFmaJgB: Adam (homme, anglais américain)
+- yoZ06aMxZJJ28mfd3POQ: Sam (homme, anglais américain)
+
+Note: Pour obtenir la liste complète des voix disponibles, utilisez l'endpoint
+ElevenLabs: GET https://api.elevenlabs.io/v1/voices
+
+Modèles de synthèse:
+
+1. eleven_multilingual_v2 (recommandé):
+   - Supporte 29 langues
+   - Meilleure qualité
+   - Émotions et intonations naturelles
+   - Langues: EN, FR, DE, ES, IT, PT, PL, TR, RU, NL, CS, AR, ZH, JA, HI, KO...
+
+2. eleven_turbo_v2:
+   - Plus rapide (latence réduite)
+   - Supporte 29 langues
+   - Légèrement moins de qualité
+   - Idéal pour applications temps réel
+
+3. eleven_monolingual_v1:
+   - Anglais uniquement
+   - Très haute qualité
+   - Meilleure expressivité en anglais
+
+Paramètres de contrôle vocal:
+
+1. stability (0.0 - 1.0):
+   - Faible (0.0 - 0.3): Plus variable, expressif, mais moins prévisible
+   - Moyen (0.4 - 0.6): Équilibré (recommandé)
+   - Élevé (0.7 - 1.0): Très stable, uniforme, prévisible
+
+2. similarityBoost (0.0 - 1.0):
+   - Faible (0.0 - 0.4): Voix moins similaire à l'original
+   - Moyen (0.5 - 0.8): Bon équilibre (recommandé)
+   - Élevé (0.9 - 1.0): Maximum de similarité avec la voix originale
+
+3. style (0.0 - 1.0):
+   - 0.0: Neutre, lecture naturelle
+   - 0.5: Style modéré
+   - 1.0: Style très prononcé, exagéré
+
+4. useSpeakerBoost (true/false):
+   - true: Améliore la clarté et la qualité (recommandé)
+   - false: Voix brute sans amélioration
+
+Langues supportées (multilingual_v2):
+- Anglais (en), Français (fr), Allemand (de), Espagnol (es)
+- Italien (it), Portugais (pt), Polonais (pl), Turc (tr)
+- Russe (ru), Néerlandais (nl), Tchèque (cs), Arabe (ar)
+- Chinois (zh), Japonais (ja), Hindi (hi), Coréen (ko)
+- Indonésien (id), Suédois (sv), Danois (da), Finnois (fi)
+- Norvégien (no), Roumain (ro), Ukrainien (uk), Grec (el)
+- Bulgare (bg), Croate (hr), Slovaque (sk), Tamoul (ta)
+- Malais (ms)
+
+Exemple 1 - Synthèse simple:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/elevenlabs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "text": "Bonjour, ceci est un test de synthèse vocale.",
+    "voiceId": "21m00Tcm4TlvDq8ikWAM"
+  }'
+
+Exemple 2 - Synthèse avec paramètres avancés:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/elevenlabs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Origin: https://ankilang.com" \
+  -d '{
+    "text": "Hello, this is a test with custom settings.",
+    "voiceId": "pNInz6obpgDQGcFmaJgB",
+    "modelId": "eleven_multilingual_v2",
+    "stability": 0.65,
+    "similarityBoost": 0.85,
+    "style": 0.3,
+    "useSpeakerBoost": true
+  }'
+
+Réponse:
+{
+  "audio": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2...",
+  "voiceId": "21m00Tcm4TlvDq8ikWAM",
+  "modelId": "eleven_multilingual_v2",
+  "size": 156789
+}
+
+Utilisation de l'audio:
+const audioData = response.audio;
+const audioBlob = new Blob(
+  [Uint8Array.from(atob(audioData), c => c.charCodeAt(0))],
+  { type: 'audio/mpeg' }
+);
+const audioUrl = URL.createObjectURL(audioBlob);
+const audio = new Audio(audioUrl);
+audio.play();
+
+Format audio: MP3 (MPEG)
+
+Rate Limit: 15 requêtes par minute
+
+Recommandations d'usage:
+
+1. Pour la conversation naturelle:
+   - stability: 0.5
+   - similarityBoost: 0.75
+   - style: 0.0
+   - useSpeakerBoost: true
+
+2. Pour la narration expressive:
+   - stability: 0.3
+   - similarityBoost: 0.8
+   - style: 0.4
+   - useSpeakerBoost: true
+
+3. Pour la lecture technique/neutre:
+   - stability: 0.7
+   - similarityBoost: 0.7
+   - style: 0.0
+   - useSpeakerBoost: true
+
+4. Pour le contenu multilingue:
+   - Utiliser eleven_multilingual_v2
+   - Préférer des voix entraînées sur la langue cible
+   - Ajuster stability selon la complexité du texte
+
+
+================================================================================
+AUTHENTIFICATION ET SÉCURITÉ
+================================================================================
+
+Toutes les APIs nécessitent:
+
+1. Header Authorization avec JWT Appwrite:
+   Authorization: Bearer YOUR_JWT_TOKEN
+
+2. Header Origin pour CORS:
+   Origin: https://ankilang.com
+
+3. Content-Type:
+   Content-Type: application/json
+
+Génération du JWT:
+Utilisez les scripts fournis:
+- ./generate-jwt-curl.sh (Bash + curl)
+- node generate-jwt.js (Node.js + SDK Appwrite)
+
+Exemples d'authentification:
+
+# Avec curl:
+curl -X POST https://ankilang-api-monorepo.vercel.app/api/deepl \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc..." \
+  -H "Origin: https://ankilang.com" \
+  -d '{"text": "test", "sourceLang": "en", "targetLang": "fr"}'
+
+# Avec JavaScript (fetch):
+const response = await fetch('https://ankilang-api-monorepo.vercel.app/api/deepl', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${jwtToken}`,
+    'Origin': 'https://ankilang.com'
+  },
+  body: JSON.stringify({
+    text: 'test',
+    sourceLang: 'en',
+    targetLang: 'fr'
+  })
+});
+
+
+================================================================================
+RATE LIMITING
+================================================================================
+
+Chaque API a ses propres limites:
+
+| API              | Requêtes/minute | Window  |
+|------------------|-----------------|---------|
+| DeepL            | 30              | 60s     |
+| Pexels           | 50              | 60s     |
+| Pexels Optimize  | 30              | 60s     |
+| Revirada         | 20              | 60s     |
+| Votz             | 10              | 60s     |
+| ElevenLabs       | 15              | 60s     |
+
+Headers de réponse:
+- X-RateLimit-Limit: Limite maximale
+- X-RateLimit-Remaining: Requêtes restantes
+- X-RateLimit-Reset: Timestamp de réinitialisation
+
+Exemple de réponse 429 (Too Many Requests):
+{
+  "status": 429,
+  "title": "Too Many Requests",
+  "detail": "Rate limit exceeded. Please try again in 45 seconds."
+}
+
+
+================================================================================
+GESTION DES ERREURS
+================================================================================
+
+Format standard des erreurs RFC 7807:
+{
+  "status": 400,
+  "title": "Bad Request",
+  "detail": "Invalid request parameters",
+  "instance": "/api/deepl"
+}
+
+Codes d'erreur courants:
+
+- 400 Bad Request: Paramètres invalides
+- 401 Unauthorized: JWT manquant ou invalide
+- 403 Forbidden: Origine CORS non autorisée
+- 429 Too Many Requests: Rate limit dépassé
+- 500 Internal Server Error: Erreur serveur
+- 502 Bad Gateway: Erreur API externe
+
+Exemples:
+
+1. JWT manquant:
+{
+  "status": 401,
+  "title": "Unauthorized",
+  "detail": "Missing or invalid JWT token"
+}
+
+2. Validation échouée:
+{
+  "status": 400,
+  "title": "Validation Error",
+  "detail": "text: String must contain at most 5000 character(s)"
+}
+
+3. Erreur API externe:
+{
+  "status": 502,
+  "title": "Bad Gateway",
+  "detail": "DeepL API error: 403 Forbidden"
+}
+
+
+================================================================================
+EXEMPLES D'INTÉGRATION
+================================================================================
+
+Exemple complet en JavaScript (Node.js/Browser):
+
+class AnkilangAPI {
+  constructor(baseUrl, jwtToken) {
+    this.baseUrl = baseUrl;
+    this.jwtToken = jwtToken;
+  }
+
+  async request(endpoint, data) {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.jwtToken}`,
+        'Origin': 'https://ankilang.com'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`API Error: ${error.detail}`);
+    }
+
+    return await response.json();
+  }
+
+  // DeepL
+  async translate(text, sourceLang, targetLang) {
+    return this.request('/api/deepl', { text, sourceLang, targetLang });
+  }
+
+  // Revirada
+  async translateOccitan(text, direction, dialect = 'lengadocian') {
+    return this.request('/api/revirada', { text, direction, dialect });
+  }
+
+  // Votz TTS
+  async generateVotzTTS(text, language = 'languedoc', mode = 'file') {
+    return this.request('/api/votz', { text, language, mode });
+  }
+
+  // Pexels
+  async searchImages(query, perPage = 15, locale = 'fr-FR') {
+    return this.request('/api/pexels', { query, perPage, locale });
+  }
+
+  // ElevenLabs
+  async generateElevenlabsTTS(text, voiceId, options = {}) {
+    return this.request('/api/elevenlabs', { text, voiceId, ...options });
+  }
+}
+
+// Usage:
+const api = new AnkilangAPI(
+  'https://ankilang-api-monorepo.vercel.app',
+  'YOUR_JWT_TOKEN'
+);
+
+// Traduire avec DeepL
+const translation = await api.translate('Hello', 'en', 'fr');
+console.log(translation.translatedText); // "Bonjour"
+
+// Traduire en occitan
+const occitan = await api.translateOccitan('Bonjour', 'fr-oc', 'gascon');
+console.log(occitan.translatedText);
+
+// Générer de la voix occitane
+const votzAudio = await api.generateVotzTTS('Bonjorn', 'languedoc', 'file');
+// Jouer l'audio...
+
+// Chercher des images
+const images = await api.searchImages('chat', 5);
+console.log(images.photos);
+
+// Générer de la voix multilingue
+const elevenAudio = await api.generateElevenlabsTTS(
+  'Hello world',
+  '21m00Tcm4TlvDq8ikWAM',
+  { stability: 0.6, similarityBoost: 0.8 }
+);
+// Jouer l'audio...
+
+
+================================================================================
+SUPPORT ET CONTACT
+================================================================================
+
+Documentation complète:
+- README.md: Guide de démarrage
+- CHANGELOG.md: Historique des modifications
+- TEST-RESULTS.md: Résultats des tests
+- VOTZ-API.md: Documentation Votz détaillée
+- REVIRADA-API.md: Documentation Revirada détaillée
+
+Scripts de test:
+- ./test-api.sh: Tester toutes les APIs
+- ./test-tts.sh: Tester les TTS (Votz, ElevenLabs)
+- ./generate-jwt-curl.sh: Générer un JWT avec curl
+- node generate-jwt.js: Générer un JWT avec Node.js
+
+Région: fra1 (Paris, France)
+Runtime: Node.js 20.x
+Architecture: Serverless (Vercel Functions)
+
+
+================================================================================
+FIN DE LA DOCUMENTATION
+================================================================================
