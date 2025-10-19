@@ -93,15 +93,12 @@ export async function testCachePerformance(): Promise<{
   }
   const ttsTime = performance.now() - ttsStart;
 
-  // Test Pexels (nécessite l'import du service)
+  // Test Pexels (now uses Vercel API, no caching needed)
   const pexelsStart = performance.now();
   try {
-    const { getOrPutPexelsImage } = await import('../services/pexels-cache');
-    // Test avec une URL factice
-    await getOrPutPexelsImage({
-      pexelsId: 'test-123',
-      srcUrl: 'https://example.com/test.jpg'
-    });
+    const { pexelsSearchPhotos } = await import('../services/pexels');
+    // Test search
+    await pexelsSearchPhotos('test', { per_page: 1 });
   } catch (error) {
     console.warn('[Cache Test] Pexels test failed:', error);
   }

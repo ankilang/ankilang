@@ -118,10 +118,11 @@ export interface PexelsOptimizeRequest {
 }
 
 export interface PexelsOptimizeResponse {
-  optimizedImage: string; // Data URL base64
+  fileId: string; // Appwrite file ID
+  url: string; // Appwrite file URL
   originalSize: number;
   optimizedSize: number;
-  compression: string;
+  compressionRatio: number; // Percentage saved
   format: string;
   dimensions: {
     width: number;

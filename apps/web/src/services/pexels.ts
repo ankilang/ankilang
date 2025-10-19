@@ -8,17 +8,9 @@
 
 import { createVercelApiClient, VercelApiError } from '../lib/vercel-api-client'
 import { getSessionJWT } from './appwrite'
-import { Client, Storage, ID } from 'appwrite'
 import type {
   PexelsSearchResponse,
 } from '../types/ankilang-vercel-api'
-
-// Initialize Appwrite Storage
-const client = new Client()
-  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
-
-const storage = new Storage(client)
 
 // ============================================
 // API Client Management
@@ -106,55 +98,8 @@ export async function pexelsPhoto(_id: number | string): Promise<any> {
 // Image Optimization & Upload
 // ============================================
 
-/**
- * Convert base64 data URL to Blob
- */
-function dataURLToBlob(dataURL: string): Blob {
-  const arr = dataURL.split(',')
-  const mimeMatch = arr[0]?.match(/:(.*?);/)
-  const mime = mimeMatch ? mimeMatch[1] : 'image/webp'
-  const bstr = atob(arr[1] || '')
-  let n = bstr.length
-  const u8arr = new Uint8Array(n)
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n)
-  }
-  return new Blob([u8arr], { type: mime })
-}
-
-/**
- * Upload base64 image to Appwrite Storage
- */
-async function uploadBase64ToAppwrite(
-  base64Data: string
-): Promise<{ fileId: string; fileUrl: string }> {
-  try {
-    // Convert base64 to Blob
-    const blob = dataURLToBlob(base64Data)
-
-    // Create File object
-    const file = new File([blob], 'optimized-image.webp', { type: 'image/webp' })
-
-    console.log(`[Pexels] Uploading to Appwrite Storage (${(blob.size / 1024).toFixed(2)} KB)`)
-
-    // Upload to Appwrite Storage
-    const bucketId = import.meta.env.VITE_APPWRITE_BUCKET_IMAGES || 'images'
-    const uploaded = await storage.createFile(bucketId, ID.unique(), file)
-
-    // Get file URL
-    const fileUrl = storage.getFileView(bucketId, uploaded.$id).toString()
-
-    console.log(`[Pexels] Upload successful: ${uploaded.$id}`)
-
-    return {
-      fileId: uploaded.$id,
-      fileUrl,
-    }
-  } catch (error) {
-    console.error('[Pexels] Upload to Appwrite failed:', error)
-    throw new Error(`Failed to upload image to storage: ${error instanceof Error ? error.message : 'Unknown error'}`)
-  }
-}
+// Note: The Vercel API now handles upload to Appwrite directly
+// The functions below are kept for reference but no longer used
 
 /**
  * Optimize image using Sharp and upload to Appwrite Storage
@@ -167,8 +112,8 @@ export async function optimizeAndUploadImage(pexelsUrl: string) {
   try {
     console.log(`[Pexels] Optimizing image: ${pexelsUrl}`)
 
-    // Step 1: Optimize image via Vercel API
-    const optimized = await api.optimizeImage({
+    // The Vercel API now handles both optimization AND upload to Appwrite
+    const result = await api.optimizeImage({
       imageUrl: pexelsUrl,
       width: 600,
       height: 400,
@@ -176,11 +121,12 @@ export async function optimizeAndUploadImage(pexelsUrl: string) {
       format: 'webp',
     })
 
+    console.log('[Pexels] Optimization + Upload complete:', result)
     console.log(
-      `[Pexels] Optimization complete: ${optimized.originalSize} → ${optimized.optimizedSize} bytes (${optimized.compression})`
+      `[Pexels] ${result.originalSize} → ${result.optimizedSize} bytes (${result.compressionRatio}% saved)`
     )
 
-    // Step 2: Get current user
+    // Get current user for compatibility
     const { account } = await import('./appwrite')
     const user = await account.get()
 
@@ -188,17 +134,15 @@ export async function optimizeAndUploadImage(pexelsUrl: string) {
       throw new Error('User not authenticated')
     }
 
-    // Step 3: Upload to Appwrite Storage
-    const uploaded = await uploadBase64ToAppwrite(optimized.optimizedImage)
-
+    // Return in the expected format
     return {
       success: true,
-      fileId: uploaded.fileId,
-      fileUrl: uploaded.fileUrl,
+      fileId: result.fileId,
+      fileUrl: result.url,
       userId: user.$id,
-      originalSize: optimized.originalSize,
-      optimizedSize: optimized.optimizedSize,
-      savings: parseFloat(optimized.compression),
+      originalSize: result.originalSize,
+      optimizedSize: result.optimizedSize,
+      savings: result.compressionRatio,
     }
   } catch (error) {
     if (error instanceof VercelApiError) {
