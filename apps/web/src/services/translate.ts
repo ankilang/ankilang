@@ -40,17 +40,22 @@ function shouldUseRevirada(sourceLang: string, targetLang: string): boolean {
 }
 
 /**
- * Normalise les codes langue pour DeepL (UPPERCASE → lowercase)
- * L'API Vercel attend les codes en lowercase ('en', 'fr', etc.)
- * Note: 'en' is deprecated by DeepL, we use 'en-US' by default
+ * Normalise les codes langue pour DeepL
+ * Les codes DeepL sont en UPPERCASE (ex: 'EN-US', 'FR', 'ES')
+ * Les codes Occitan sont en lowercase (ex: 'oc', 'oc-gascon')
+ *
+ * Note: DeepL official spec uses UPPERCASE codes
+ * https://developers.deepl.com/docs/resources/supported-languages
  */
 function normalizeDeepLLang(lang: string): string {
-  const normalized = lang.toLowerCase()
-  // DeepL deprecated 'en', use 'en-US' instead
-  if (normalized === 'en') {
-    return 'en-us'
+  // Occitan codes stay lowercase (handled by Revirada API)
+  if (lang.startsWith('oc')) {
+    return lang.toLowerCase()
   }
-  return normalized
+
+  // DeepL codes should be UPPERCASE as per official spec
+  // Already in correct format from UI (LANGUAGES array uses UPPERCASE)
+  return lang.toUpperCase()
 }
 
 /**

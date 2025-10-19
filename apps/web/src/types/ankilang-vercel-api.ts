@@ -26,19 +26,39 @@ export interface RateLimitHeaders {
 // ============================================
 
 /**
- * DeepL source languages (lowercase as required by Vercel API)
- * Note: API validation schema expects lowercase codes
+ * DeepL source languages (UPPERCASE as per DeepL official specification)
+ * https://developers.deepl.com/docs/resources/supported-languages
+ * Note: Occitan codes are lowercase (Revirada API)
  */
 export type DeepLSourceLang =
-  | 'fr' | 'en' | 'en-us' | 'en-gb' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
+  // Occitan (Revirada)
+  | 'oc' | 'oc-gascon'
+  // DeepL languages (UPPERCASE)
+  | 'AR' | 'BG' | 'CS' | 'DA' | 'DE' | 'EL'
+  | 'EN-GB' | 'EN-US'
+  | 'ES' | 'ES-419'
+  | 'ET' | 'FI' | 'FR' | 'HE' | 'HU' | 'ID' | 'IT' | 'JA' | 'KO'
+  | 'LT' | 'LV' | 'NB' | 'NL' | 'PL'
+  | 'PT-BR' | 'PT-PT'
+  | 'RO' | 'RU' | 'SK' | 'SL' | 'SV' | 'TH' | 'TR' | 'UK' | 'VI'
+  | 'ZH-HANS' | 'ZH-HANT';
 
 /**
- * DeepL target languages (lowercase as required by Vercel API)
- * Note: API validation schema expects lowercase codes
- * Note: 'en' is deprecated by DeepL, use 'en-us' or 'en-gb'
+ * DeepL target languages (UPPERCASE as per DeepL official specification)
+ * Note: Occitan codes are lowercase (Revirada API)
  */
 export type DeepLTargetLang =
-  | 'fr' | 'en-us' | 'en-gb' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
+  // Occitan (Revirada)
+  | 'oc' | 'oc-gascon'
+  // DeepL languages (UPPERCASE)
+  | 'AR' | 'BG' | 'CS' | 'DA' | 'DE' | 'EL'
+  | 'EN-GB' | 'EN-US'
+  | 'ES' | 'ES-419'
+  | 'ET' | 'FI' | 'FR' | 'HE' | 'HU' | 'ID' | 'IT' | 'JA' | 'KO'
+  | 'LT' | 'LV' | 'NB' | 'NL' | 'PL'
+  | 'PT-BR' | 'PT-PT'
+  | 'RO' | 'RU' | 'SK' | 'SL' | 'SV' | 'TH' | 'TR' | 'UK' | 'VI'
+  | 'ZH-HANS' | 'ZH-HANT';
 
 export interface DeepLRequest {
   text: string;
