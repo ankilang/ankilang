@@ -74,8 +74,8 @@ export async function runTranslationTests() {
   await runTest('DeepL: Hello World (EN → FR)', async () => {
     return translate({
       text: 'Hello world',
-      sourceLang: 'en',
-      targetLang: 'fr',
+      sourceLang: 'EN-US',
+      targetLang: 'FR',
     })
   })
 
@@ -83,8 +83,8 @@ export async function runTranslationTests() {
   await runTest('DeepL: Bonjour le monde (FR → EN)', async () => {
     return translate({
       text: 'Bonjour le monde',
-      sourceLang: 'fr',
-      targetLang: 'en',
+      sourceLang: 'FR',
+      targetLang: 'EN-US',
     })
   })
 
@@ -92,8 +92,8 @@ export async function runTranslationTests() {
   await runTest('DeepL: Hola mundo (ES → FR)', async () => {
     return translate({
       text: 'Hola mundo',
-      sourceLang: 'es',
-      targetLang: 'fr',
+      sourceLang: 'ES',
+      targetLang: 'FR',
     })
   })
 
@@ -101,8 +101,8 @@ export async function runTranslationTests() {
   await runTest('DeepL: Guten Tag (DE → FR)', async () => {
     return translate({
       text: 'Guten Tag',
-      sourceLang: 'de',
-      targetLang: 'fr',
+      sourceLang: 'DE',
+      targetLang: 'FR',
     })
   })
 
@@ -110,7 +110,7 @@ export async function runTranslationTests() {
   await runTest('Revirada: Bonjour (FR → OC Languedocien)', async () => {
     return translate({
       text: 'Bonjour',
-      sourceLang: 'fr',
+      sourceLang: 'FR',
       targetLang: 'oc',
     })
   })
@@ -119,7 +119,7 @@ export async function runTranslationTests() {
   await runTest('Revirada: Bonjour (FR → OC Gascon)', async () => {
     return translate({
       text: 'Bonjour',
-      sourceLang: 'fr',
+      sourceLang: 'FR',
       targetLang: 'oc-gascon',
     })
   })
@@ -129,7 +129,7 @@ export async function runTranslationTests() {
     return translate({
       text: 'Bonjorn',
       sourceLang: 'oc',
-      targetLang: 'fr',
+      targetLang: 'FR',
     })
   })
 
@@ -145,7 +145,7 @@ export async function runTranslationTests() {
 
   // Test 10: Direct DeepL Translation
   await runTest('DeepL Direct: Thank you (EN → FR)', async () => {
-    return translateMultilingual('Thank you', 'en', 'fr')
+    return translateMultilingual('Thank you', 'EN-US', 'FR')
   })
 
   // Test 11: Long text (DeepL)
@@ -153,8 +153,8 @@ export async function runTranslationTests() {
     const longText = 'This is a longer text to test the translation service. It contains multiple sentences. We want to ensure that the API can handle longer inputs correctly.'
     return translate({
       text: longText,
-      sourceLang: 'en',
-      targetLang: 'fr',
+      sourceLang: 'EN-US',
+      targetLang: 'FR',
     })
   })
 
@@ -162,8 +162,8 @@ export async function runTranslationTests() {
   await runTest('DeepL: Special chars (EN → FR)', async () => {
     return translate({
       text: 'Hello! How are you? I\'m fine, thank you.',
-      sourceLang: 'en',
-      targetLang: 'fr',
+      sourceLang: 'EN-US',
+      targetLang: 'FR',
     })
   })
 
@@ -232,8 +232,8 @@ export async function quickTestDeepL() {
   console.log('🧪 Quick Test: DeepL EN → FR')
   const result = await translate({
     text: 'Hello world',
-    sourceLang: 'en',
-    targetLang: 'fr',
+    sourceLang: 'EN-US',
+    targetLang: 'FR',
   })
   console.log('✅ Result:', result)
   return result
@@ -243,7 +243,7 @@ export async function quickTestRevirada() {
   console.log('🧪 Quick Test: Revirada FR → OC')
   const result = await translate({
     text: 'Bonjour',
-    sourceLang: 'fr',
+    sourceLang: 'FR',
     targetLang: 'oc',
   })
   console.log('✅ Result:', result)
