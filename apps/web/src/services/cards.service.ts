@@ -6,6 +6,7 @@ import { createAdaptiveCard, getServicesForCategory } from '../plugins/cards';
 
 const databaseService = new DatabaseService();
 const storageService = new StorageService();
+import { isCacheFileId, isCacheUrl } from '../utils/cache-media';
 
 // Type Appwrite pour les cartes (avec métadonnées)
 export interface AppwriteCard extends Card {
@@ -314,11 +315,17 @@ export class CardsService {
       // Nettoyer l'image si elle est stockée dans Appwrite
       if (card.imageUrl && card.imageUrlType === 'appwrite') {
         try {
-          // Extraire l'ID du fichier depuis l'URL Appwrite
-          const imageFileId = this.extractFileIdFromUrl(card.imageUrl);
-          if (imageFileId) {
-            await storageService.deleteFile('flashcard-images', imageFileId);
-            console.log(`🗑️ Image ${imageFileId} supprimée d'Appwrite Storage`);
+          // Ne pas supprimer les médias de cache partagé
+          if (isCacheUrl(card.imageUrl)) {
+            console.log('⏭️ Skip suppression image (cache partagé):', card.imageUrl);
+          } else {
+            const imageFileId = this.extractFileIdFromUrl(card.imageUrl);
+            if (imageFileId && !isCacheFileId(imageFileId)) {
+              await storageService.deleteFile('flashcard-images', imageFileId);
+              console.log(`🗑️ Image ${imageFileId} supprimée d'Appwrite Storage`);
+            } else {
+              console.log('⏭️ Skip suppression image (non Appwrite ou cache)');
+            }
           }
         } catch (error) {
           console.warn(`⚠️ Impossible de supprimer l'image ${card.imageUrl}:`, error);
@@ -328,8 +335,12 @@ export class CardsService {
       // Nettoyer l'audio si il est stocké dans Appwrite
       if (card.audioFileId) {
         try {
-          await storageService.deleteFile('flashcard-images', card.audioFileId);
-          console.log(`🗑️ Audio ${card.audioFileId} supprimé d'Appwrite Storage`);
+          if (isCacheFileId(card.audioFileId)) {
+            console.log('⏭️ Skip suppression audio (cache partagé):', card.audioFileId);
+          } else {
+            await storageService.deleteFile('flashcard-images', card.audioFileId);
+            console.log(`🗑️ Audio ${card.audioFileId} supprimé d'Appwrite Storage`);
+          }
         } catch (error) {
           console.warn(`⚠️ Impossible de supprimer l'audio ${card.audioFileId}:`, error);
         }
@@ -370,4 +381,3 @@ export class CardsService {
 
 // Instance singleton
 export const cardsService = new CardsService();
-
