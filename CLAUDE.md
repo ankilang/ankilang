@@ -122,12 +122,40 @@ This is a **pnpm workspace** monorepo:
 
 **Cloze Support**: Supports multiple cloze deletions per card with optional hints. Cloze numbers extracted via regex `/\{\{c(\d+)::[^}]+\}\}/g`
 
+### Language Support & Localization
+
+**Supported Languages** (`apps/web/src/constants/languages.ts`):
+- **41 languages total**: 39 DeepL languages + 2 Occitan dialects
+- **DeepL languages**: All codes in UPPERCASE (AR, BG, CS, DA, DE, EL, EN-GB, EN-US, ES, ES-419, ET, FI, FR, HE, HU, ID, IT, JA, KO, LT, LV, NB, NL, PL, PT-BR, PT-PT, RO, RU, SK, SL, SV, TH, TR, UK, VI, ZH-HANS, ZH-HANT)
+- **Occitan variants**: lowercase (oc, oc-gascon)
+- Each language has: `code`, `label`, `nativeName`, `flag`, `color` (Tailwind gradient)
+
+**Flag System** (`apps/web/src/components/ui/FlagIcon.tsx`):
+- **38 SVG flags**: 37 from Twemoji (CC-BY 4.0) + 1 custom Occitan flag (Public Domain)
+- **Location**: `apps/web/src/assets/flags/*.svg`
+- **Format**: All flags 36×36 viewBox with rounded corners (rx="4") for visual consistency
+- **Mapping**: `COUNTRY_MAP` handles language code → country code conversions (e.g., ar→sa, cs→cz, ja→jp)
+- **Occitan dialects**: Same base flag (croix occitane) with orange "G" badge overlay for gascon variant
+- **License attribution**: See `apps/web/src/assets/flags/README.md`
+
+**Flag Icon Component**:
+```typescript
+<FlagIcon languageCode="EN-US" size={24} />  // US flag
+<FlagIcon languageCode="oc" size={24} />      // Occitan flag
+<FlagIcon languageCode="oc-gascon" size={24} /> // Occitan flag + "G" badge
+```
+
 ### External Service Integration
 
 **Translation** (`apps/web/src/services/translate.ts`):
-- Planned: Netlify Function endpoint `/.netlify/functions/translate`
-- Providers: Revirada (Occitan), DeepL (other languages)
-- Current: Stub implementation exists but functions not yet deployed
+- **Endpoint**: Vercel API (`ankilang-api-monorepo`)
+- **Providers**: Revirada (Occitan), DeepL (39 languages)
+- **Language code normalization**: UPPERCASE for DeepL, lowercase for Occitan
+- **Auto-routing**: `shouldUseRevirada()` detects if translation involves Occitan
+- **Functions**:
+  - `translate(req)` - Auto-detects provider based on language codes
+  - `translateOccitan(text, direction, dialect)` - Direct Revirada wrapper
+  - `translateMultilingual(text, sourceLang, targetLang)` - Direct DeepL wrapper
 
 **Text-to-Speech** (`apps/web/src/services/tts.ts`):
 - Votz API for Occitan (`apps/web/src/services/votz.ts`)
@@ -261,6 +289,29 @@ const result = await cache.get(key)
 4. Create React Query hook in `apps/web/src/hooks/`
 5. For server-side: Plan Netlify Function in `apps/functions/` (use JWT auth, RFC 7807 errors)
 
+### Add a New Language
+1. **Check DeepL support**: Verify language is supported at https://developers.deepl.com/docs/resources/supported-languages
+2. **Update language list**: Add to `LANGUAGES` array in `apps/web/src/constants/languages.ts`
+   ```typescript
+   { code: 'XX', label: 'Language Name', nativeName: 'Native Name', flag: 'xx', color: 'from-color-400 to-color-500' }
+   ```
+3. **Add flag SVG**:
+   - If country flag: Download from Twemoji (https://github.com/twitter/twemoji)
+   - If regional flag: Create custom SVG matching Twemoji style (36×36 viewBox, rx="4")
+   - Place in `apps/web/src/assets/flags/xx.svg`
+4. **Update flag mapping** (if needed): Add to `COUNTRY_MAP` in `FlagIcon.tsx` if language code ≠ country code
+5. **Update API types**: Add language code to `DeepLSourceLang` and `DeepLTargetLang` in:
+   - `apps/web/src/types/ankilang-vercel-api.ts` (frontend)
+   - `ankilang-api-monorepo/lib/utils/validation.ts` (backend)
+6. **Update normalization**: If special case (like EN → EN-US), update `normalizeDeepLLang()` in `translate.ts`
+7. **Document**: Update `apps/web/src/assets/flags/README.md` if adding custom flag
+
+### Manage Language Variants (like EN-GB/EN-US)
+- **Use distinct codes**: `EN-GB` vs `EN-US` (case-sensitive, UPPERCASE for DeepL)
+- **Distinct flags**: Each variant gets its own flag (`gb.svg` vs `us.svg`)
+- **Mapping**: Add both to `COUNTRY_MAP` if needed
+- **Example**: Portuguese has `PT-BR` (br.svg) and `PT-PT` (pt.svg)
+
 ### Debug Appwrite Issues
 - Check browser console for `[Appwrite]` logs
 - Verify `VITE_APPWRITE_ENDPOINT` and `VITE_APPWRITE_PROJECT_ID` in `.env`
@@ -285,10 +336,28 @@ const result = await cache.get(key)
 - **Caching**: `packages/shared-cache/src/index.ts`
 - **Build Config**: `apps/web/vite.config.ts`
 - **Development Rules**: `.cursorrules`, `.cursor/rules/*.mdc`
+- **Languages & Flags**:
+  - `apps/web/src/constants/languages.ts` - All 41 supported languages with metadata
+  - `apps/web/src/components/ui/FlagIcon.tsx` - Flag rendering component with COUNTRY_MAP
+  - `apps/web/src/assets/flags/` - 38 SVG flag files (37 Twemoji + 1 Occitan custom)
+  - `apps/web/src/assets/flags/README.md` - Flag sources, licenses, and attribution
+- **Translation Services**:
+  - `apps/web/src/services/translate.ts` - Unified translation (DeepL + Revirada auto-routing)
+  - `apps/web/src/types/ankilang-vercel-api.ts` - API type definitions
+  - `ankilang-api-monorepo/lib/utils/validation.ts` - Backend Zod schemas
 
 ## Notes
 
-- **Language Support**: Occitan is free/unlimited with Votz TTS; other languages use ElevenLabs (Pro feature via subscription)
+- **Language Support**:
+  - **41 languages total**: 39 from DeepL API + 2 Occitan dialects (languedocien, gascon)
+  - **Translation**: Automatic routing between DeepL (multilingual) and Revirada (Occitan)
+  - **TTS**: Votz for Occitan (free/unlimited), ElevenLabs for other languages (Pro feature)
+  - **Flags**: All languages have SVG flags (37 Twemoji + 1 custom Occitan croix occitane)
+  - **Occitan distinction**: Gascon variant shows orange "G" badge overlay on flag
+- **API Integration**:
+  - **Translation API**: Deployed on Vercel (`ankilang-api-monorepo`)
+  - **Language codes**: UPPERCASE for DeepL (AR, EN-US, FR, etc.), lowercase for Occitan (oc, oc-gascon)
+  - **Case normalization**: `normalizeDeepLLang()` handles case conversion automatically
 - **Subscription System**: `SubscriptionContext` exists but Pro features not fully implemented
 - **Offline Mode**: Currently partial - export works offline but creation requires Appwrite connection
 - **Testing**: Test infrastructure exists (`vitest` configured) but tests not yet written
