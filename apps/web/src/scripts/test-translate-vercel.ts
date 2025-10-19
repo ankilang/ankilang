@@ -145,7 +145,7 @@ export async function runTranslationTests() {
 
   // Test 10: Direct DeepL Translation
   await runTest('DeepL Direct: Thank you (EN → FR)', async () => {
-    return translateMultilingual('Thank you', 'EN', 'FR')
+    return translateMultilingual('Thank you', 'en', 'fr')
   })
 
   // Test 11: Long text (DeepL)

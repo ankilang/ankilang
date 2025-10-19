@@ -40,10 +40,11 @@ function shouldUseRevirada(sourceLang: string, targetLang: string): boolean {
 }
 
 /**
- * Normalise les codes langue pour DeepL (lowercase → UPPERCASE)
+ * Normalise les codes langue pour DeepL (UPPERCASE → lowercase)
+ * L'API Vercel attend les codes en lowercase ('en', 'fr', etc.)
  */
 function normalizeDeepLLang(lang: string): string {
-  return lang.toUpperCase()
+  return lang.toLowerCase()
 }
 
 /**

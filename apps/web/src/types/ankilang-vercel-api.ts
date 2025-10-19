@@ -25,18 +25,19 @@ export interface RateLimitHeaders {
 // DeepL Types
 // ============================================
 
+/**
+ * DeepL source languages (lowercase as required by Vercel API)
+ * Note: API validation schema expects lowercase codes
+ */
 export type DeepLSourceLang =
-  | 'AR' | 'BG' | 'CS' | 'DA' | 'DE' | 'EL' | 'EN' | 'ES'
-  | 'ET' | 'FI' | 'FR' | 'HU' | 'ID' | 'IT' | 'JA' | 'KO'
-  | 'LT' | 'LV' | 'NB' | 'NL' | 'PL' | 'PT' | 'RO' | 'RU'
-  | 'SK' | 'SL' | 'SV' | 'TR' | 'UK' | 'ZH';
+  | 'fr' | 'en' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
 
+/**
+ * DeepL target languages (lowercase as required by Vercel API)
+ * Note: API validation schema expects lowercase codes
+ */
 export type DeepLTargetLang =
-  | 'AR' | 'BG' | 'CS' | 'DA' | 'DE' | 'EL' | 'EN' | 'EN-GB' | 'EN-US'
-  | 'ES' | 'ES-419' | 'ET' | 'FI' | 'FR' | 'HE' | 'HU' | 'ID' | 'IT'
-  | 'JA' | 'KO' | 'LT' | 'LV' | 'NB' | 'NL' | 'PL' | 'PT' | 'PT-BR'
-  | 'PT-PT' | 'RO' | 'RU' | 'SK' | 'SL' | 'SV' | 'TH' | 'TR' | 'UK'
-  | 'VI' | 'ZH' | 'ZH-HANS' | 'ZH-HANT';
+  | 'fr' | 'en' | 'es' | 'de' | 'it' | 'pt' | 'oc' | 'ca';
 
 export interface DeepLRequest {
   text: string;
