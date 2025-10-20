@@ -72,6 +72,7 @@ export default function NewCardModal({
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPexelsPicker, setShowPexelsPicker] = useState(false)
 
   const online = useOnlineStatus()
   
@@ -105,6 +106,7 @@ export default function NewCardModal({
   })
 
   const watchedValues = watch()
+  const versoHasText = !!((watchedValues as any).verso && (watchedValues as any).verso.trim().length > 0)
   
   // Validation manuelle pour remplacer Zod
   const isFormValid = (() => {
@@ -183,7 +185,9 @@ export default function NewCardModal({
       }
       return pexelsCurated(common)
     },
-    enabled: online && features.canAddImages,
+    // ⚙️ Réduit les appels réseau: n'activer que si la modale est ouverte,
+    // le picker Pexels visible, et l'ajout d'images autorisé
+    enabled: online && features.canAddImages && isOpen && showPexelsPicker,
     staleTime: 1000 * 60 * 5,
   })
 
@@ -854,7 +858,7 @@ export default function NewCardModal({
                                 ) : (
                                   <>
                                     <Languages className="w-4 h-4" />
-                                    Traduire
+                                    {isOccitan ? 'Traduire avec Revirada' : 'Traduire automatiquement'}
                                   </>
                                 )}
                               </motion.button>
@@ -896,98 +900,118 @@ export default function NewCardModal({
                               )}
                               
                             </div>
-
-                            {/* Audio Verso */}
-                            {canAddAudio ? (
-                              <div>
-                                <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                  {isOccitan 
-                                    ? `Audio occitan (${occitanDialect}) (optionnel)`
-                                    : `Audio ${themeLanguage} (optionnel)`
-                                  }
-                                </label>
-                                
-                                {/* Debug: afficher la valeur de versoAudio */}
-                                {process.env.NODE_ENV === 'development' && (
-                                  <div className="text-xs text-gray-500 mb-2">
-                                    Debug: versoAudio = {JSON.stringify((watchedValues as any).versoAudio)}
-                                  </div>
-                                )}
-                                
-                                {(watchedValues as any).versoAudio ? (
-                                    <AudioCard
-                                      audioUrl={(watchedValues as any).versoAudio}
-                                      onPlay={toggleAudioPlayback}
-                                      onDelete={() => removeMedia('versoAudio')}
-                                      isPlaying={audioPlaying}
-                                    />
-                                  ) : (
-                                    <motion.button
-                                      type="button"
-                                      onClick={handleAudioUpload}
-                                      disabled={votzTtsMutation.isPending}
-                                      whileHover={{ scale: 1.02 }}
-                                      whileTap={{ scale: 0.98 }}
-                                      className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors disabled:opacity-50"
-                                    >
-                                      {votzTtsMutation.isPending ? (
-                                        <>
-                                          <motion.div
-                                            animate={{ rotate: 360 }}
-                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                            className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full"
-                                          />
-                                          <span className="font-sans text-sm text-gray-500">Génération audio Votz...</span>
-                                        </>
+                            {/* Zone actions après saisie du Verso: Audio + Image */}
+                            {versoHasText && (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {/* Colonne Audio */}
+                                  {canAddAudio ? (
+                                    <div>
+                                      {(watchedValues as any).versoAudio ? (
+                                        <AudioCard
+                                          audioUrl={(watchedValues as any).versoAudio}
+                                          onPlay={toggleAudioPlayback}
+                                          onDelete={() => removeMedia('versoAudio')}
+                                          isPlaying={audioPlaying}
+                                        />
                                       ) : (
-                                        <>
-                                          <Volume2 className="w-6 h-6 text-gray-400" />
-                                          <span className="font-sans text-sm text-gray-500">
-                                            Générer la prononciation
-                                          </span>
-                                        </>
+                                        <motion.button
+                                          type="button"
+                                          onClick={handleAudioUpload}
+                                          disabled={isGeneratingAudio || votzTtsMutation.isPending || ttsMutation.isPending}
+                                          whileHover={{ scale: 1.02 }}
+                                          whileTap={{ scale: 0.98 }}
+                                          className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-3 hover:border-gray-400 transition-colors disabled:opacity-50"
+                                        >
+                                          {(isGeneratingAudio || votzTtsMutation.isPending || ttsMutation.isPending) ? (
+                                            <div className="flex items-center gap-3">
+                                              {/* Equalizer animation */}
+                                              <div className="flex items-end gap-1 h-5">
+                                                {[0, 0.2, 0.4, 0.6].map((d, i) => (
+                                                  <motion.div
+                                                    key={i}
+                                                    initial={{ scaleY: 0.6 }}
+                                                    animate={{ scaleY: [0.6, 1, 0.6] }}
+                                                    transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut', delay: d }}
+                                                    className="w-1.5 bg-gray-400 rounded"
+                                                    style={{ height: '100%' }}
+                                                  />
+                                                ))}
+                                              </div>
+                                              <span className="font-sans text-sm text-gray-600">Génération audio...</span>
+                                            </div>
+                                          ) : (
+                                            <>
+                                              <Volume2 className="w-6 h-6 text-gray-500" />
+                                              <span className="font-sans text-sm text-gray-600">
+                                                {isOccitan ? 'Ajouter la prononciation avec Votz' : 'Ajouter la prononciation'}
+                                              </span>
+                                            </>
+                                          )}
+                                        </motion.button>
                                       )}
-                                    </motion.button>
-                                  )
-                                }
-                              </div>
-                            ) : (
-                              <PremiumTeaser feature="L'enregistrement audio" onUpgrade={upgradeToPremium}>
-                                <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
-                                  <Volume2 className="w-6 h-6 text-gray-400" />
-                                  <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
-                                </div>
-                              </PremiumTeaser>
-                            )}
+                                    </div>
+                                  ) : (
+                                    <PremiumTeaser feature="L'enregistrement audio" onUpgrade={upgradeToPremium}>
+                                      <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
+                                        <Volume2 className="w-6 h-6 text-gray-400" />
+                                        <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
+                                      </div>
+                                    </PremiumTeaser>
+                                  )}
 
-                            {/* Image Verso */}
-                            <div>
-                              <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                                Image d'illustration (optionnelle)
-                              </label>
-                                                             {features.canAddImages ? (
-                                 (watchedValues as any).versoImage ? (
-                                  <div className="relative w-full h-40 bg-white rounded-xl border border-gray-200 flex items-center justify-center">
-                                    <img 
-                                      src={(watchedValues as any).versoImage}  
-                                      alt="Illustration verso" 
-                                      className="max-w-full max-h-full object-contain"
-                                      width="400"
-                                      height="160"
-                                      loading="lazy"
-                                      decoding="async"
-                                    />
-                                    <motion.button
-                                      type="button"
-                                      onClick={() => removeMedia('versoImage')}
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
-                                      className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </motion.button>
+                                  {/* Colonne Image (Pexels) */}
+                                  <div>
+                                    {features.canAddImages ? (
+                                      (watchedValues as any).versoImage ? (
+                                        <div className="relative w-full h-16 bg-white rounded-xl border border-gray-200 flex items-center justify-between px-3">
+                                          <div className="flex items-center gap-3 overflow-hidden">
+                                            <img 
+                                              src={(watchedValues as any).versoImage}  
+                                              alt="Illustration verso" 
+                                              className="w-12 h-12 object-cover rounded"
+                                              width="48"
+                                              height="48"
+                                              loading="lazy"
+                                              decoding="async"
+                                            />
+                                            <span className="font-sans text-sm text-gray-600 truncate">Image sélectionnée</span>
+                                          </div>
+                                          <motion.button
+                                            type="button"
+                                            onClick={() => removeMedia('versoImage')}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </motion.button>
+                                        </div>
+                                      ) : (
+                                        <motion.button
+                                          type="button"
+                                          onClick={() => setShowPexelsPicker(v => !v)}
+                                          whileHover={{ scale: 1.02 }}
+                                          whileTap={{ scale: 0.98 }}
+                                          className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                                        >
+                                          <ImageIcon className="w-6 h-6 text-gray-500" />
+                                          <span className="font-sans text-sm text-gray-600">Ajouter une image Pexels</span>
+                                        </motion.button>
+                                      )
+                                    ) : (
+                                      <PremiumTeaser feature="L'ajout d'images" onUpgrade={upgradeToPremium}>
+                                        <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
+                                          <ImageIcon className="w-6 h-6 text-gray-400" />
+                                          <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                        </div>
+                                      </PremiumTeaser>
+                                    )}
                                   </div>
-                                ) : (
+                                </div>
+
+                                {/* Pexels Picker (déplié) */}
+                                {features.canAddImages && !((watchedValues as any).versoImage) && showPexelsPicker && (
                                   <div className="space-y-3">
                                     <div className="relative">
                                       <input
@@ -1066,28 +1090,9 @@ export default function NewCardModal({
                                       </div>
                                     )}
                                   </div>
-                                )
-                              ) : (
-                                <PremiumTeaser feature="L'ajout d'images" onUpgrade={upgradeToPremium}>
-                                  <div className="space-y-3">
-                                    <div className="relative">
-                                      <input
-                                        type="text"
-                                        placeholder="Rechercher une image sur Pexels..."
-                                        disabled
-                                        className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-400 font-sans"
-                                      />
-                                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    </div>
-                                    
-                                    <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
-                                      <ImageIcon className="w-8 h-8 text-gray-400" />
-                                      <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                    </div>
-                                  </div>
-                                </PremiumTeaser>
-                              )}
-                            </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </motion.div>

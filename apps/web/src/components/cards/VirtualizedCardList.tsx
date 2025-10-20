@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { Plus, FileText, Tag, Brain, Type, Grid3X3, List } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Card } from '../../types/shared'
@@ -22,6 +22,9 @@ interface VirtualizedCardListProps {
     accent: string
     gradient: string
   }
+  onEndReached?: () => void
+  hasMore?: boolean
+  isLoadingMore?: boolean
 }
 
 export default function VirtualizedCardList({ 
@@ -30,7 +33,10 @@ export default function VirtualizedCardList({
   onEditCard, 
   onDeleteCard, 
   themeName, 
-  themeColors 
+  themeColors,
+  onEndReached,
+  hasMore = false,
+  isLoadingMore = false,
 }: VirtualizedCardListProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   
@@ -41,6 +47,27 @@ export default function VirtualizedCardList({
     totalSize,
     isVirtualized
   } = useVirtualizedCards(cards)
+
+  // Intersection observer pour déclencher le chargement de la page suivante
+  const sentinelId = 'infinite-sentinel'
+  useEffect(() => {
+    if (!onEndReached || !hasMore) return
+    const root = parentRef.current
+    if (!root) return
+    const el = root.querySelector(`#${sentinelId}`)
+    if (!el) return
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (entry.isIntersecting && !isLoadingMore) {
+          onEndReached()
+        }
+      },
+      { root, rootMargin: '200px', threshold: 0 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [onEndReached, hasMore, isLoadingMore, parentRef])
 
   if (cards.length === 0) {
     return (
@@ -164,31 +191,41 @@ export default function VirtualizedCardList({
           }}
         >
           {isVirtualized ? (
-            // 🚀 Rendu virtualisé pour les listes longues
-            virtualCards.map((virtualCard) => (
-              <motion.div
-                key={virtualCard.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualCard.virtualSize}px`,
-                  transform: `translateY(${virtualCard.virtualStart}px)`,
-                }}
-              >
-                <CardItem
-                  card={virtualCard as Card}
-                  viewMode={viewMode}
-                  onEditCard={onEditCard}
-                  onDeleteCard={onDeleteCard}
-                  themeColors={themeColors}
-                />
-              </motion.div>
-            ))
+            // 🚀 Rendu virtualisé pour les listes longues (animations minimisées)
+            virtualCards.map((virtualCard) => {
+              const style = {
+                position: 'absolute' as const,
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${virtualCard.virtualSize}px`,
+                transform: `translateY(${virtualCard.virtualStart}px)`,
+              }
+              return (
+                <div key={virtualCard.id} style={style}>
+                  <CardItem
+                    card={virtualCard as Card}
+                    viewMode={viewMode}
+                    onEditCard={onEditCard}
+                    onDeleteCard={onDeleteCard}
+                    themeColors={themeColors}
+                    animated={false}
+                  />
+                </div>
+              )
+}, (prev, next) => {
+  // Comparateur mémo: rerender seulement si visuel change
+  const a = prev.card
+  const b = next.card
+  const sameCard = a.id === b.id && a.updatedAt === b.updatedAt
+  const sameView = prev.viewMode === next.viewMode
+  const sameAnim = prev.animated === next.animated
+  const sameColors = prev.themeColors?.primary === next.themeColors?.primary
+    && prev.themeColors?.secondary === next.themeColors?.secondary
+    && prev.themeColors?.accent === next.themeColors?.accent
+    && prev.themeColors?.gradient === next.themeColors?.gradient
+  return sameCard && sameView && sameAnim && sameColors
+})
           ) : (
             // Rendu normal pour les listes courtes
             cards.map((card, index) => (
@@ -196,7 +233,7 @@ export default function VirtualizedCardList({
                 key={card.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: Math.min(index * 0.03, 0.3) }}
                 className="mb-4"
               >
                 <CardItem
@@ -205,36 +242,45 @@ export default function VirtualizedCardList({
                   onEditCard={onEditCard}
                   onDeleteCard={onDeleteCard}
                   themeColors={themeColors}
+                  animated={true}
                 />
               </motion.div>
             ))
           )}
         </div>
+        {/* Sentinel pour pagination infinie */}
+        {(hasMore || isLoadingMore) && (
+          <div id={sentinelId} className="w-full py-3 flex items-center justify-center text-sm text-gray-500">
+            {isLoadingMore ? 'Chargement...' : 'Continuer le défilement pour charger plus'}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 // Composant CardItem réutilisable
-function CardItem({ 
+const CardItem = memo(function CardItem({ 
   card, 
   viewMode, 
   onEditCard, 
   onDeleteCard, 
-  themeColors 
+  themeColors,
+  animated = true,
 }: {
   card: Card
   viewMode: 'grid' | 'list'
   onEditCard: (card: Card) => void
   onDeleteCard: (card: Card) => void
   themeColors: any
+  animated?: boolean
 }) {
   const status = getCardStatus(card)
   const statusMessage = getStatusMessage(card, status)
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
+      whileHover={animated ? { scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" } : undefined}
       className={`bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 overflow-hidden ${
         viewMode === 'grid' ? 'p-4' : 'p-6'
       }`}
@@ -312,4 +358,4 @@ function CardItem({
       </div>
     </motion.div>
   )
-}
+});

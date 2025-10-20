@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Download, Settings, Lock, Users, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -7,7 +7,7 @@ import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
 import { ttsSaveAndLink } from '../../../services/elevenlabs-appwrite'
 import { useAuth } from '../../../hooks/useAuth'
-import { useThemeData, useCreateCard, useUpdateCard, useDeleteCard } from '../../../hooks'
+import { useTheme, useCreateCard, useUpdateCard, useDeleteCard, useVirtualizedCardsInfinite } from '../../../hooks'
 import { ErrorBoundary } from '../../../components/error/ErrorBoundary'
 import { ThemeDetailSkeleton } from '../../../components/ui/Skeletons'
 import { LANGUAGES } from '../../../constants/languages'
@@ -26,24 +26,20 @@ export default function ThemeDetail() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
 
-  // 🚀 NOUVEAU: Utilisation des hooks React Query
-  const { 
-    theme, 
-    cards, 
-    isLoading, 
-    error
-  } = useThemeData(id!, user!.$id)
+  // 🚀 Utilisation séparée: thème (simple) + cartes en pagination infinie
+  const themeQuery = useTheme(id!, user!.$id)
+  const cardsInfinite = useVirtualizedCardsInfinite(id!, user!.$id)
 
   // Hooks de mutations avec optimistic updates
   const createCardMutation = useCreateCard()
   const updateCardMutation = useUpdateCard()
   const deleteCardMutation = useDeleteCard()
 
-  const language = LANGUAGES.find(lang => lang.code === theme?.targetLang)
-  const colors = getLanguageColor(theme?.targetLang || 'default')
+  const language = LANGUAGES.find(lang => lang.code === themeQuery.data?.targetLang)
+  const colors = getLanguageColor(themeQuery.data?.targetLang || 'default')
 
   // 🚀 NOUVEAU: Conversion des cartes Appwrite vers le format attendu
-  const formattedCards: Card[] = cards?.map((card: any) => ({
+  const formattedCards: Card[] = (cardsInfinite.cards as any[])?.map((card: any) => ({
     id: card.$id,
     userId: card.userId,
     themeId: card.themeId,
@@ -61,11 +57,11 @@ export default function ThemeDetail() {
   })) || []
 
   // États de chargement et d'erreur
-  if (isLoading) {
+  if (themeQuery.isLoading || cardsInfinite.isLoading) {
     return <ThemeDetailSkeleton />
   }
 
-  if (error || !theme) {
+  if (themeQuery.error || !themeQuery.data) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20 flex items-center justify-center">
         <motion.div 
@@ -77,10 +73,10 @@ export default function ThemeDetail() {
             <FileText className="w-8 h-8 text-white" />
           </div>
           <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">
-            {error instanceof Error ? error.message : 'Thème introuvable'}
+            {themeQuery.error instanceof Error ? themeQuery.error.message : 'Thème introuvable'}
           </h1>
           <p className="font-sans text-dark-charcoal/70 mb-6">
-            {error instanceof Error && (error.message.includes('not found') || error.message.includes('Document not found'))
+            {themeQuery.error instanceof Error && (themeQuery.error.message.includes('not found') || themeQuery.error.message.includes('Document not found'))
               ? 'Le thème que vous recherchez n\'existe pas dans vos thèmes.'
               : 'Une erreur est survenue lors du chargement.'}
           </p>
@@ -97,17 +93,17 @@ export default function ThemeDetail() {
     )
   }
 
-  const handleAddCard = () => {
+  const handleAddCard = useCallback(() => {
     setIsModalOpen(true)
-  }
+  }, [])
 
-  const handleEditCard = (card: Card) => {
+  const handleEditCard = useCallback((card: Card) => {
     setEditingCard(card)
     setIsEditModalOpen(true)
-  }
+  }, [])
 
   // 🚀 NOUVEAU: Gestion optimiste de la suppression de carte
-  const handleDeleteCard = async (card: Card) => {
+  const handleDeleteCard = useCallback(async (card: Card) => {
     if (!user || !id) return
 
     try {
@@ -121,7 +117,7 @@ export default function ThemeDetail() {
       console.error('❌ Erreur lors de la suppression de la carte:', error)
       // L'erreur est déjà gérée par le hook avec rollback automatique
     }
-  }
+  }, [deleteCardMutation, id, user])
 
   // 🚀 NOUVEAU: Gestion optimiste de la création de carte
   const handleCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
@@ -156,7 +152,7 @@ export default function ThemeDetail() {
           const { fileId, fileUrl, mime } = await ttsSaveAndLink({
             cardId: newCard.$id,
             text: textToTts,
-            language: theme?.targetLang || 'en',
+            language: themeQuery.data?.targetLang || 'en',
             voiceId: '21m00Tcm4TlvDq8ikWAM',
             outputFormat: 'mp3_44100_128'
           })
@@ -211,8 +207,8 @@ export default function ThemeDetail() {
   return (
     <ErrorBoundary>
       <PageMeta 
-        title={`${theme.name} — Ankilang`}
-        description={`Thème de flashcards en ${language?.label} avec ${theme.cardCount} cartes.`}
+        title={`${themeQuery.data.name} — Ankilang`}
+        description={`Thème de flashcards en ${language?.label} avec ${themeQuery.data.cardCount} cartes.`}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20">
@@ -251,21 +247,21 @@ export default function ThemeDetail() {
                   {/* Drapeau de la langue */}
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md border border-white/40">
                     <FlagIcon 
-                      languageCode={theme.targetLang}
+                      languageCode={themeQuery.data.targetLang}
                       size={48}
-                      alt={`Drapeau ${language?.label || theme.targetLang}`}
+                      alt={`Drapeau ${language?.label || themeQuery.data.targetLang}`}
                       className="w-10 h-10 sm:w-12 sm:h-12"
                     />
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-charcoal mb-1 sm:mb-2 line-clamp-2">
-                      {theme.name}
+                      {themeQuery.data.name}
                     </h1>
                     <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-dark-charcoal/70">
                       <div className="flex items-center gap-2">
                         <span className="font-sans font-medium">{language?.label}</span>
-                        {theme.targetLang === 'oc' && (
+                        {themeQuery.data.targetLang === 'oc' && (
                           <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">
                             GRATUIT
                           </span>
@@ -274,11 +270,11 @@ export default function ThemeDetail() {
                       <span className="hidden sm:inline">•</span>
                       <div className="flex items-center gap-1">
                         <FileText className="w-4 h-4" style={{ color: colors.accent }} />
-                        <span className="font-sans">{theme.cardCount} cartes</span>
+                        <span className="font-sans">{themeQuery.data.cardCount} cartes</span>
                       </div>
                       <span className="hidden sm:inline">•</span>
                       <div className="flex items-center gap-1">
-                        {theme.shareStatus === 'community' ? (
+                        {themeQuery.data.shareStatus === 'community' ? (
                           <>
                             <Users className="w-4 h-4 text-green-600" />
                             <span className="font-sans text-green-700">Partagé</span>
@@ -299,7 +295,7 @@ export default function ThemeDetail() {
               <div className="flex items-center gap-2 sm:gap-3">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
-                    to={`/app/themes/${theme.$id}/export`}
+                    to={`/app/themes/${themeQuery.data.$id}/export`}
                     className="btn-secondary inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3"
                   >
                     <Download size={16} />
@@ -320,7 +316,7 @@ export default function ThemeDetail() {
 
         <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* Tags du thème */}
-          {theme.tags && theme.tags.length > 0 && (
+          {themeQuery.data.tags && themeQuery.data.tags.length > 0 && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -328,7 +324,7 @@ export default function ThemeDetail() {
               className="mb-6 sm:mb-8"
             >
               <div className="flex flex-wrap gap-2">
-                {theme.tags.map((tag: string, index: number) => (
+                {themeQuery.data.tags.map((tag: string, index: number) => (
                   <motion.span 
                     key={index}
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -354,14 +350,17 @@ export default function ThemeDetail() {
             transition={{ delay: 0.4 }}
             className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 p-6 sm:p-8"
           >
-            <VirtualizedCardList
-              cards={formattedCards}
-              onAddCard={handleAddCard}
-              onEditCard={handleEditCard}
-              onDeleteCard={handleDeleteCard}
-              themeName={theme.name}
-              themeColors={colors}
-            />
+          <VirtualizedCardList
+            cards={formattedCards}
+            onAddCard={handleAddCard}
+            onEditCard={handleEditCard}
+            onDeleteCard={handleDeleteCard}
+            themeName={themeQuery.data.name}
+            themeColors={colors}
+            onEndReached={cardsInfinite.loadMore}
+            hasMore={cardsInfinite.hasMore}
+            isLoadingMore={cardsInfinite.isLoadingMore}
+          />
           </motion.div>
         </main>
 
@@ -372,8 +371,8 @@ export default function ThemeDetail() {
           onSubmit={handleCardSubmit}
           isLoading={createCardMutation.isPending}
           error={createCardMutation.error?.message}
-          themeId={theme.$id}
-          themeLanguage={theme.targetLang}
+          themeId={themeQuery.data.$id}
+          themeLanguage={themeQuery.data.targetLang}
           themeColors={colors}
         />
 

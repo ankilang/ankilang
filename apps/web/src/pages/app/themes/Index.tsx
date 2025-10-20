@@ -1,53 +1,36 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo, useDeferredValue } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Filter, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ThemeCard from '../../../components/themes/ThemeCard'
-import { themesService, type AppwriteTheme } from '../../../services/themes.service'
+import { type AppwriteTheme } from '../../../services/themes.service'
 import { useAuth } from '../../../hooks/useAuth'
 import { LANGUAGES, getLanguageLabel } from '../../../constants/languages'
 import PageMeta from '../../../components/seo/PageMeta'
+import { useThemes, useThemePrefetch } from '../../../hooks'
 
 export default function ThemesIndex() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [themes, setThemes] = useState<AppwriteTheme[]>([])
+  const { data: themesData, isLoading, error, refetch } = useThemes(user?.$id || '')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string>()
-
-  // Charger les thèmes depuis Appwrite
-  useEffect(() => {
-    if (user) {
-      loadThemes()
-    }
-  }, [user])
-
-  const loadThemes = async () => {
-    if (!user) return
-
-    setIsLoading(true)
-    setError(undefined)
-    
-    try {
-      const userThemes = await themesService.getUserThemes(user.$id)
-      setThemes(userThemes)
-    } catch (err) {
-      console.error('Error loading themes:', err)
-      setError('Erreur lors du chargement des thèmes')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const deferredSearch = useDeferredValue(searchTerm)
+  const { handleMouseEnter, handleMouseLeave } = useThemePrefetch()
 
   // Filtrer les thèmes
-  const filteredThemes = themes.filter(theme => {
-    const matchesSearch = theme.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         theme.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    const matchesLanguage = !selectedLanguage || theme.targetLang === selectedLanguage
-    return matchesSearch && matchesLanguage
-  })
+  const filteredThemes = useMemo(() => {
+    const source = themesData || []
+    const s = deferredSearch.trim().toLowerCase()
+    if (!s && !selectedLanguage) return source
+    return source.filter((theme) => {
+      const matchesSearch = !s
+        || theme.name.toLowerCase().includes(s)
+        || theme.tags?.some((tag: string) => tag.toLowerCase().includes(s))
+      const matchesLanguage = !selectedLanguage || theme.targetLang === selectedLanguage
+      return matchesSearch && matchesLanguage
+    })
+  }, [themesData, deferredSearch, selectedLanguage])
 
   const handleEdit = (theme: AppwriteTheme) => {
     navigate(`/app/themes/${theme.$id}?edit=1`)
@@ -57,9 +40,9 @@ export default function ThemesIndex() {
     if (!confirm(`Supprimer le thème « ${theme.name} » ? Cette action est définitive.`)) return
     
     try {
+      const { themesService } = await import('../../../services/themes.service')
       await themesService.deleteTheme(theme.$id, user!.$id)
-      // Recharger la liste
-      await loadThemes()
+      await refetch()
     } catch (err) {
       console.error('Error deleting theme:', err)
       alert('Erreur lors de la suppression du thème')
@@ -97,9 +80,9 @@ export default function ThemesIndex() {
             <FileText className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-xl font-bold text-dark-charcoal mb-2">Erreur</h2>
-          <p className="text-dark-charcoal/70 mb-4">{error}</p>
+          <p className="text-dark-charcoal/70 mb-4">{error instanceof Error ? error.message : 'Erreur lors du chargement des thèmes'}</p>
           <button 
-            onClick={loadThemes} 
+            onClick={() => refetch()} 
             className="btn-primary"
           >
             Réessayer
@@ -160,7 +143,7 @@ export default function ThemesIndex() {
                       transition={{ duration: 0.6, delay: 0.6 }}
                       className="text-lg sm:text-xl lg:text-2xl font-bold text-dark-charcoal font-display"
                     >
-                      {themes.length}
+                      {themesData?.length || 0}
                     </motion.div>
                     <div className="text-xs text-dark-charcoal/70 font-sans">Thèmes</div>
                   </div>
@@ -171,7 +154,7 @@ export default function ThemesIndex() {
                       transition={{ duration: 0.6, delay: 0.7 }}
                       className="text-lg sm:text-xl lg:text-2xl font-bold text-dark-charcoal font-display"
                     >
-                      {themes.reduce((sum, theme) => sum + theme.cardCount, 0)}
+                      {(themesData || []).reduce((sum, theme) => sum + theme.cardCount, 0)}
                     </motion.div>
                     <div className="text-xs text-dark-charcoal/70 font-sans">Cartes</div>
                   </div>
@@ -332,13 +315,18 @@ export default function ThemesIndex() {
               className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 xl:gap-8"
             >
               {filteredThemes.map((theme, index) => (
-                <ThemeCard 
-                  key={theme.$id} 
-                  theme={theme} 
-                  index={index}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
+                <div
+                  key={theme.$id}
+                  onMouseEnter={() => handleMouseEnter(theme.$id)}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <ThemeCard 
+                    theme={theme} 
+                    index={index}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                </div>
               ))}
             </motion.div>
           )}
