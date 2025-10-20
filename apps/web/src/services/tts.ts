@@ -10,14 +10,14 @@ import { FLAGS } from '../config/flags'
 import { CacheManager } from './cache-manager'
 
 // Types pour la nouvelle interface unifiée
-export type TTSRequest = {
+export interface TTSRequest {
   text: string
   language_code: string
   voice_id?: string
   save?: boolean
 }
 
-export type TTSResponse = {
+export interface TTSResponse {
   url: string
   mimeType: string
   provider: 'votz' | 'elevenlabs'

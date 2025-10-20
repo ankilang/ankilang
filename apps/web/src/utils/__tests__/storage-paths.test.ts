@@ -243,10 +243,10 @@ describe('storage-paths', () => {
   })
 
   describe('bidirectional conversion', () => {
-    const testCases: Array<{
+    const testCases: {
       type: StoragePathType
       params: Parameters<typeof buildStoragePath>[1]
-    }> = [
+    }[] = [
       {
         type: 'cache/pexels',
         params: { hash: 'a3f2e1d9c8b7a6f5', extension: 'webp' },

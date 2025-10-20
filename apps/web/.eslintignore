@@ -1,0 +1,26 @@
+# Build outputs
+dist/
+build/
+.vite/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Configuration files
+*.config.js
+*.config.ts
+*.config.cjs
+*.config.mjs
+
+# Scripts
+scripts/
+
+# Public assets
+public/
+
+# Legacy exporter (JavaScript, non TypeScript-compliant)
+src/exporter/
+
+# Type declarations
+*.d.ts

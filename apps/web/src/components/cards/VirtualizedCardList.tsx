@@ -66,7 +66,7 @@ export default function VirtualizedCardList({
       { root, rootMargin: '200px', threshold: 0 }
     )
     obs.observe(el)
-    return () => obs.disconnect()
+    return () => { obs.disconnect(); }
   }, [onEndReached, hasMore, isLoadingMore, parentRef])
 
   if (cards.length === 0) {
@@ -141,7 +141,7 @@ export default function VirtualizedCardList({
           {/* Toggle de vue */}
           <div className="flex items-center bg-gray-100 rounded-xl p-1">
             <button
-              onClick={() => setViewMode('grid')}
+              onClick={() => { setViewMode('grid'); }}
               className={`p-2 rounded-lg transition-all ${
                 viewMode === 'grid'
                   ? 'bg-white shadow-sm text-dark-charcoal'
@@ -151,7 +151,7 @@ export default function VirtualizedCardList({
               <Grid3X3 className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => { setViewMode('list'); }}
               className={`p-2 rounded-lg transition-all ${
                 viewMode === 'list'
                   ? 'bg-white shadow-sm text-dark-charcoal'

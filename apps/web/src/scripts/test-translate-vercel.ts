@@ -189,12 +189,12 @@ export async function runTranslationTests() {
   // Group by provider
   const byProvider = results
     .filter(r => r.success && r.provider)
-    .reduce((acc, r) => {
+    .reduce<Record<string, TestResult[]>>((acc, r) => {
       const provider = r.provider!
       if (!acc[provider]) acc[provider] = []
       acc[provider].push(r)
       return acc
-    }, {} as Record<string, TestResult[]>)
+    }, {})
 
   console.log('\n📈 By Provider:')
   Object.entries(byProvider).forEach(([provider, tests]) => {
