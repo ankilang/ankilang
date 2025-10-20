@@ -34,7 +34,7 @@ export default function ForgotPassword() {
       await new Promise(resolve => setTimeout(resolve, 1000))
       console.log('Forgot password data:', data)
       setSuccess(true)
-    } catch (err) {
+    } catch (_err) {
       setError('Erreur lors de l\'envoi. Veuillez réessayer.')
     } finally {
       setIsLoading(false)

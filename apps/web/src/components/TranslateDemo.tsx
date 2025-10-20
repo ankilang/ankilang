@@ -9,11 +9,11 @@ export default function TranslateDemo() {
   const go = async () => {
     setLoading(true)
     const r = await translate(text, 'fr')
-    if (r.success) {
+    if (r.success && 'result' in r) {
       const item = Array.isArray(r.result) ? (r.result[0] ?? null) : r.result
       setOut(item ? item.translated : '')
     } else {
-      setOut(`Erreur: ${r.error}`)
+      setOut(`Erreur: ${r.success ? 'Unknown error' : r.error}`)
     }
     setLoading(false)
   }

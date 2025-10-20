@@ -111,7 +111,7 @@ export async function ttsViaAppwrite(params: {
   let data: any = {};
   try {
     data = raw ? JSON.parse(String(raw)) : {};
-  } catch (e) {
+  } catch (_e) {
     throw new Error(`Réponse JSON invalide: ${String(raw).slice(0, 200)}`);
   }
   
@@ -248,7 +248,7 @@ export async function ttsPreview({
   let data: any = {};
   try {
     data = raw ? JSON.parse(String(raw)) : {};
-  } catch (e) {
+  } catch (_e) {
     throw new Error(`Réponse JSON invalide: ${String(raw).slice(0, 200)}`);
   }
   
@@ -342,7 +342,7 @@ export async function ttsSaveAndLink({
   let data: any = {};
   try {
     data = raw ? JSON.parse(String(raw)) : {};
-  } catch (e) {
+  } catch (_e) {
     throw new Error(`Réponse JSON invalide: ${String(raw).slice(0, 200)}`);
   }
   

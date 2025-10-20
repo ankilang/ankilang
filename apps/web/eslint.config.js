@@ -19,6 +19,7 @@ export default typescript.config(
       'coverage/**',
       '.vite/**',
       'src/exporter/**', // Exporter legacy en JavaScript
+      'src/scripts/**', // Test/debug scripts
       '**/*.d.ts', // Fichiers de déclaration TypeScript
     ],
   },

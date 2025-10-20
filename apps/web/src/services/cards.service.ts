@@ -154,7 +154,7 @@ export class CardsService {
           // 🔧 PATCH EXPRESS : Remplacer la data URL par une URL courte Appwrite
           if (audioFileId) {
             try {
-              const audioUrlShort = await storageService.getFileView('flashcard-images', audioFileId);
+              const audioUrlShort = storageService.getFileView('flashcard-images', audioFileId);
               // Vérifier que l'URL est courte (< 2048 caractères)
               if (audioUrlShort && audioUrlShort.length <= 2048) {
                 audioUrl = audioUrlShort;
@@ -372,7 +372,7 @@ export class CardsService {
       const pathParts = urlObj.pathname.split('/');
       const fileIdIndex = pathParts.indexOf('files') + 1;
       return fileIdIndex > 0 && fileIdIndex < pathParts.length ? pathParts[fileIdIndex] || null : null;
-    } catch (error) {
+    } catch (_error) {
       console.warn('⚠️ Impossible d\'extraire l\'ID du fichier depuis l\'URL:', url);
       return null;
     }
@@ -381,7 +381,7 @@ export class CardsService {
   // Récupérer l'URL de visualisation d'un fichier audio
   async getAudioViewUrl(fileId: string): Promise<string> {
     try {
-      const url = await storageService.getFileView('flashcard-images', fileId);
+      const url = storageService.getFileView('flashcard-images', fileId);
       return url;
     } catch (error) {
       console.error('[CardsService] Error getting audio view URL:', error);

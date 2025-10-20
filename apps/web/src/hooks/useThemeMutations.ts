@@ -208,7 +208,7 @@ export function useDeleteCard() {
       return { previousCards, queryKey }
     },
     
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       console.error('[useDeleteCard] Error deleting card:', error)
       const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
       if (message.includes('not found')) {

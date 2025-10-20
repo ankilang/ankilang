@@ -636,7 +636,7 @@ export default function NewCardModal({
             finalAudioUrl = persistedAudio.url
           }
         }
-      } catch (e) {
+      } catch (_e) {
         console.warn('⚠️ Persist TTS échoué, conserver l\'URL actuelle')
       }
 

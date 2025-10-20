@@ -21,7 +21,7 @@ export class ThemesService {
   async createTheme(userId: string, themeData: CreateTheme): Promise<AppwriteTheme> {
     try {
       // Filtrer les champs non reconnus par la base de données actuelle
-      const { category, ...legacyData } = themeData;
+      const { category: _category, ...legacyData } = themeData;
       
       const dataWithUserId = {
         ...legacyData,

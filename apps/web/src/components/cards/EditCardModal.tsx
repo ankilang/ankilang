@@ -79,7 +79,8 @@ export default function EditCardModal({
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
   const [currentImageField, setCurrentImageField] = useState<'versoImage' | 'clozeImage' | null>(null)
   // Stocker la dernière photo Pexels sélectionnée pour persistance au submit
-  const [pendingPhoto, setPendingPhoto] = useState<any | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [pendingPhoto, setPendingPhoto] = useState<any>(null)
   
   // États pour la gestion de l'audio
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
@@ -293,7 +294,7 @@ export default function EditCardModal({
         ;(submitData as any).imageUrl = persisted.url
         ;(submitData as any).imageUrlType = 'appwrite'
       }
-    } catch (e) {
+    } catch (_e) {
       console.warn('⚠️ Persist image échoué, conserver URL existante')
     }
     onSubmit(submitData as z.infer<typeof CreateCardSchema>)

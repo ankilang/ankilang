@@ -45,7 +45,7 @@ function normalizeDeepLLang(code?: string | null): string | undefined {
   return map[c] || c.toUpperCase()
 }
 
-export async function translate(text: string | string[], targetLang: string, sourceLang?: string) {
+export async function translate(text: string | string[], targetLang: string, sourceLang?: string): Promise<TranslateResponse> {
   // JWT pour Vercel API
   const { getSessionJWT } = await import('./appwrite')
   const jwt = await getSessionJWT()
@@ -67,12 +67,12 @@ export async function translate(text: string | string[], targetLang: string, sou
       sourceLang: (normalizedSource as any) || (normalizedTarget === 'EN-US' || normalizedTarget === 'EN-GB' ? 'FR' : 'EN-GB'),
     }
     const res: DeepLResponse = await api.translateWithDeepL(req)
-    // Mapper vers l’ancienne forme attendue par le front
+    // Mapper vers l'ancienne forme attendue par le front
     const item: TranslateItem = {
       translated: res.translatedText,
       detectedSourceLang: res.sourceLang,
     }
-    return { success: true, original: text, targetLang: normalizedTarget, result: item } as TranslateResponse
+    return { success: true, original: text, targetLang: normalizedTarget, result: item }
   } catch (e: any) {
     return { success: false, error: e?.message || 'DeepL translation error' }
   }

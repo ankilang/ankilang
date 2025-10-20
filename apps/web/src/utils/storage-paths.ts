@@ -51,7 +51,7 @@ const APPWRITE_CONSTRAINTS = {
   /** Longueur maximale recommandée pour un fileId */
   MAX_FILE_ID_LENGTH: 36,
   /** Pattern regex pour caractères autorisés dans fileId */
-  ALLOWED_CHARS_PATTERN: /^[a-zA-Z0-9._\-\/]+$/,
+  ALLOWED_CHARS_PATTERN: /^[a-zA-Z0-9._\-/]+$/,
 } as const
 
 /**
