@@ -712,7 +712,7 @@ Android: ~10-15 MB
 ### Plan d'Action Recommandé
 
 **Semaine 1**:
-- [x] Flags SVG lazy-load (2-3h)
+- [x] Flags SVG lazy-load (2-3h) → ✅ **COMPLÉTÉ en 1h** (-27 KB, voir `FLAGS_LAZY_LOAD_RESULTS.md`)
 - [ ] Réactiver PWA + corriger régression (4-6h)
 - [ ] Tests & validation
 
@@ -732,16 +732,20 @@ Android: ~10-15 MB
 
 ## 📊 Impact Estimé
 
-| Optimisation | Gain Bundle | Effort | Timing | Priorité |
-|--------------|-------------|--------|--------|----------|
-| Flags Lazy | -20 KB (2%) | 3h | Immédiat | ⭐⭐⭐ Haute |
-| PWA Réactivation | UX++ | 6h | Semaine 1 | ⭐⭐⭐ Haute |
-| Framer → CSS | -30 KB (3%) | 12h | Semaine 2 | ⭐⭐ Moyenne |
-| Framer → Motion One | -70 KB (8%) | 30h | Mois 1+ | ⭐ Basse |
-| Capacitor | Distribution | 40h+ | Future | ⏸️ Différé |
+| Optimisation | Gain Bundle | Effort | Timing | Priorité | Statut |
+|--------------|-------------|--------|--------|----------|--------|
+| Flags Lazy | -27 KB (3%)* | 1h* | Immédiat | ⭐⭐⭐ Haute | ✅ **FAIT** |
+| PWA Réactivation | UX++ | 6h | Semaine 1 | ⭐⭐⭐ Haute | 🔜 Prochain |
+| Framer → CSS | -30 KB (3%) | 12h | Semaine 2 | ⭐⭐ Moyenne | ⏸️ En attente |
+| Framer → Motion One | -70 KB (8%) | 30h | Mois 1+ | ⭐ Basse | ⏸️ En attente |
+| Capacitor | Distribution | 40h+ | Future | ⏸️ Différé | ⏸️ Différé |
 
-**Total Quick Wins**: -20 KB + PWA réactivée en ~9h de travail
-**Total si Framer CSS**: -50 KB en ~21h
-**Total si Framer Migration**: -90 KB en ~39h
+*Résultats meilleurs que prévu: -27 KB vs -20 KB estimé, 1h vs 3h estimées*
 
-**Recommandation**: Focus sur Flags + PWA (Quick Wins, haute valeur)
+**Résultats Réels**:
+- ✅ **Flags Lazy-Load**: -27 KB + on-demand loading en 1h de travail
+- **Total Quick Wins si PWA réactivée**: -27 KB + PWA en ~7h
+- **Total si Framer CSS**: -57 KB en ~19h
+- **Total si Framer Migration**: -97 KB en ~37h
+
+**Recommandation**: PWA réactivation (prochaine priorité haute)

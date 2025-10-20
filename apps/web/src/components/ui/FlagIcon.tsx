@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useState, useEffect } from 'react'
 
 interface FlagIconProps {
   languageCode: string
@@ -7,23 +7,28 @@ interface FlagIconProps {
   alt?: string
 }
 
-const flagModules = import.meta.glob('../../assets/flags/*.svg', {
-  eager: true,
-  import: 'default'
-})
+// In-memory cache for loaded flags
+const flagCache = new Map<string, string>()
 
-const SVG_FLAGS: Record<string, string> = Object.fromEntries(
-  Object.entries(flagModules)
-    .map(([path, url]) => {
-      const match = /\/([\w-]+)\.svg$/.exec(path)
-      const name = match?.[1]
-      if (!name) return null
-      return [name.toLowerCase(), url] as [string, string]
-    })
-    .filter((entry): entry is [string, string] => Array.isArray(entry))
-)
+// Dynamic flag loader with caching
+async function loadFlag(code: string): Promise<string> {
+  // Return cached flag if available
+  if (flagCache.has(code)) {
+    return flagCache.get(code)!
+  }
 
-const DEFAULT_FLAG = SVG_FLAGS.world
+  try {
+    // Dynamic import with Vite
+    const module = await import(`../../assets/flags/${code}.svg`)
+    const flagUrl = module.default
+    flagCache.set(code, flagUrl)
+    return flagUrl
+  } catch (error) {
+    console.warn(`Flag not found: ${code}, using fallback`)
+    // Return empty string to trigger fallback emoji
+    return ''
+  }
+}
 
 const COUNTRY_MAP: Record<string, string> = {
   'en-gb': 'gb',
@@ -70,10 +75,9 @@ const COUNTRY_MAP: Record<string, string> = {
   vi: 'vn'
 }
 
-function getFlagPath(code: string) {
-  const normalized = code.toLowerCase()
-  const mapped = COUNTRY_MAP[normalized] || normalized
-  return SVG_FLAGS[mapped] || DEFAULT_FLAG
+function getCountryCode(languageCode: string): string {
+  const normalized = languageCode.toLowerCase()
+  return COUNTRY_MAP[normalized] || normalized
 }
 
 export default memo(function FlagIcon({
@@ -82,11 +86,39 @@ export default memo(function FlagIcon({
   className = '',
   alt
 }: FlagIconProps) {
-  const flagPath = getFlagPath(languageCode)
+  const [flagUrl, setFlagUrl] = useState<string>('')
+  const [loading, setLoading] = useState(true)
+
   const isGascon = languageCode.toLowerCase() === 'oc-gascon'
   const altText = alt || `Drapeau ${languageCode.toUpperCase()}`
 
-  if (!flagPath) {
+  useEffect(() => {
+    const countryCode = getCountryCode(languageCode)
+
+    loadFlag(countryCode)
+      .then(url => {
+        setFlagUrl(url)
+        setLoading(false)
+      })
+      .catch(() => {
+        setFlagUrl('')
+        setLoading(false)
+      })
+  }, [languageCode])
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div
+        className={`inline-block rounded bg-gray-200 dark:bg-gray-700 animate-pulse ${className}`}
+        style={{ width: size, height: size }}
+        aria-label="Chargement du drapeau..."
+      />
+    )
+  }
+
+  // Fallback if flag not found
+  if (!flagUrl) {
     return (
       <span
         className={`inline-block ${className}`}
@@ -103,7 +135,7 @@ export default memo(function FlagIcon({
   return (
     <div className="relative inline-flex" style={{ width: size, height: size }}>
       <img
-        src={flagPath}
+        src={flagUrl}
         alt={altText}
         width={size}
         height={size}
