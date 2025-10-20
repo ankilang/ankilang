@@ -224,6 +224,82 @@ export default function NewLanding() {
           </div>
         </section>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            
+            {/* Logo et description */}
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-3 mb-4">
+                <AnkilangLogo size="default" animated={false} />
+                <span className="text-xl font-bold">Ankilang</span>
+              </div>
+              <p className="text-slate-300 mb-6 max-w-md">
+                Créez vos flashcards Anki en 2 minutes. Importez vos listes de vocabulaire, 
+                générez traductions et audio, et exportez des paquets .apkg parfaits.
+              </p>
+              <div className="flex gap-4">
+                <a 
+                  href="mailto:support@ankilang.com" 
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  📧 Support
+                </a>
+                <a 
+                  href="https://twitter.com/ankilang" 
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  🐦 Twitter
+                </a>
+              </div>
+            </div>
+
+            {/* Liens rapides */}
+            <div>
+              <h3 className="font-semibold mb-4">Produit</h3>
+              <ul className="space-y-2">
+                <li><a href="/app" className="text-slate-400 hover:text-white transition-colors">Tableau de bord</a></li>
+                <li><a href="/app/themes" className="text-slate-400 hover:text-white transition-colors">Mes thèmes</a></li>
+                <li><a href="/auth/register" className="text-slate-400 hover:text-white transition-colors">S'inscrire</a></li>
+                <li><a href="/auth/login" className="text-slate-400 hover:text-white transition-colors">Se connecter</a></li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2">
+                <li><a href="/help" className="text-slate-400 hover:text-white transition-colors">Centre d'aide</a></li>
+                <li><a href="/contact" className="text-slate-400 hover:text-white transition-colors">Contact</a></li>
+                <li><a href="/privacy" className="text-slate-400 hover:text-white transition-colors">Confidentialité</a></li>
+                <li><a href="/terms" className="text-slate-400 hover:text-white transition-colors">Conditions</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Séparateur */}
+          <div className="border-t border-slate-800 mt-12 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-slate-400 text-sm">
+                © 2024 Ankilang. Tous droits réservés.
+              </p>
+              <div className="flex gap-6 mt-4 md:mt-0">
+                <a href="/privacy" className="text-slate-400 hover:text-white text-sm transition-colors">
+                  Confidentialité
+                </a>
+                <a href="/terms" className="text-slate-400 hover:text-white text-sm transition-colors">
+                  Conditions
+                </a>
+                <a href="/cookies" className="text-slate-400 hover:text-white text-sm transition-colors">
+                  Cookies
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </>
   )
 }
