@@ -269,7 +269,7 @@ describe('storage-paths', () => {
       },
     ]
 
-    it.each(testCases)('should convert $type path bidirectionally', ({ type, params }) => {
+    it.each(testCases)('should convert $type path bidirectionally', ({ type, params }: { type: StoragePathType; params: Parameters<typeof buildStoragePath>[1] }) => {
       const path = buildStoragePath(type, params)
       const parsed = parseStoragePath(path)
 

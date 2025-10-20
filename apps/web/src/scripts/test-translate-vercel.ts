@@ -5,7 +5,6 @@
 // import('./scripts/test-translate-vercel').then(m => m.runTranslationTests())
 
 import { translate, translateOccitan, translateMultilingual } from '../services/translate'
-import type { TranslateRequest } from '../services/translate'
 
 // ============================================
 // Test Results Tracking

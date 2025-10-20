@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { Plus, FileText, Tag, Brain, Type, Grid3X3, List } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Card } from '../../types/shared'
@@ -59,7 +59,7 @@ export default function VirtualizedCardList({
     const obs = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
-        if (entry.isIntersecting && !isLoadingMore) {
+        if (entry?.isIntersecting && !isLoadingMore) {
           onEndReached()
         }
       },
@@ -213,7 +213,7 @@ export default function VirtualizedCardList({
                   />
                 </div>
               )
-}, (prev, next) => {
+}, (prev: { card: Card; viewMode: 'grid' | 'list'; onEditCard: (card: Card) => void; onDeleteCard: (card: Card) => void; themeColors: any; animated: boolean }, next: { card: Card; viewMode: 'grid' | 'list'; onEditCard: (card: Card) => void; onDeleteCard: (card: Card) => void; themeColors: any; animated: boolean }) => {
   // Comparateur mémo: rerender seulement si visuel change
   const a = prev.card
   const b = next.card

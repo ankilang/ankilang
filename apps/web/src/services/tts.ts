@@ -1,8 +1,8 @@
-import { BrowserIDBCache, AppwriteStorageCache, buildCacheKey } from '@ankilang/shared-cache'
-import { Storage, Permission, Role } from 'appwrite'
+import { BrowserIDBCache, buildCacheKey } from '@ankilang/shared-cache'
+// import { Storage, Permission, Role } from 'appwrite'
 import { createVercelApiClient } from '../lib/vercel-api-client'
 import { getSessionJWT } from './appwrite'
-import client from './appwrite'
+// import client from './appwrite'
 import { ttsToBlob as votzTtsToBlob } from './votz'
 import { generateTTS as elevenlabsGenerateTTS } from './elevenlabs'
 import { metric, time } from './cache/metrics'
@@ -29,40 +29,43 @@ const ONE_WEEK = FLAGS.TTS_TTL_DAYS * 24 * 60 * 60 * 1000
 
 // Cache Appwrite Storage pour partage inter-utilisateurs
 // Utilise des dossiers virtuels pour organiser par provider
-// Appwrite deps wrapper to ensure Blob returns and proper File upload
-const storageSdk = new Storage(client)
-const appwriteDeps = {
-  storage: {
-    getFileView: async (bucketId: string, fileId: string) => {
-      const url = storageSdk.getFileView(bucketId, fileId).toString()
-      const res = await fetch(url)
-      if (!res.ok) throw new Error(`getFileView fetch failed: ${res.status}`)
-      return await res.blob()
-    },
-    createFile: async (bucketId: string, fileId: string, blob: Blob, permissions?: string[]) => {
-      const file = new File([blob], fileId, { type: blob.type || 'application/octet-stream' })
-      // Convert legacy 'role:all' permissions to new format
-      const appwritePermissions = permissions?.includes('role:all')
-        ? [Permission.read(Role.any())]
-        : permissions
-      await storageSdk.createFile(bucketId, fileId, file, appwritePermissions)
-    },
-    getFile: (bucketId: string, fileId: string) => storageSdk.getFile(bucketId, fileId),
-    deleteFile: (bucketId: string, fileId: string) => storageSdk.deleteFile(bucketId, fileId),
-  }
-}
+// Unused Appwrite deps wrapper - commented out to avoid unused variable error
+// const storageSdk = new Storage(client)
+// const appwriteDeps = {
+//   storage: {
+//     getFileView: async (bucketId: string, fileId: string) => {
+//       const url = storageSdk.getFileView(bucketId, fileId).toString()
+//       const res = await fetch(url)
+//       if (!res.ok) throw new Error(`getFileView fetch failed: ${res.status}`)
+//       return await res.blob()
+//     },
+//     createFile: async (bucketId: string, fileId: string, blob: Blob, permissions?: string[]) => {
+//       const file = new File([blob], fileId, { type: blob.type || 'application/octet-stream' })
+//       // Convert legacy 'role:all' permissions to new format
+//       const appwritePermissions = permissions?.includes('role:all')
+//         ? [Permission.read(Role.any())]
+//         : permissions
+//       await storageSdk.createFile(bucketId, fileId, file, appwritePermissions)
+//     },
+//     getFile: (bucketId: string, fileId: string) => storageSdk.getFile(bucketId, fileId),
+//     deleteFile: async (bucketId: string, fileId: string) => {
+//       await storageSdk.deleteFile(bucketId, fileId)
+//     },
+//   }
+// }
 
-const votzCache = new AppwriteStorageCache(
-  appwriteDeps,
-  import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
-  'cache/tts/votz'
-)
+// Unused caches - removed to clean up lint errors
+// const votzCache = new AppwriteStorageCache(
+//   appwriteDeps,
+//   import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
+//   'cache/tts/votz'
+// )
 
-const elevenlabsCache = new AppwriteStorageCache(
-  appwriteDeps,
-  import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
-  'cache/tts/elevenlabs'
-)
+// const elevenlabsCache = new AppwriteStorageCache(
+//   appwriteDeps,
+//   import.meta.env.VITE_APPWRITE_BUCKET_ID || 'flashcard-images',
+//   'cache/tts/elevenlabs'
+// )
 
 // Détection de l'occitan
 const isOccitan = (lang: string) => lang === 'oc' || lang === 'oc-gascon'

@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'Lint configuration à venir'",
     "qa:lh": "node scripts/run-lighthouse.mjs",
@@ -62,6 +63,7 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.7",
     "vite-plugin-pwa": "^0.17.4",
+    "vitest": "^3.2.4",
     "workbox-build": "^7.3.0",
     "workbox-window": "^7.3.0"
   },
