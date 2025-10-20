@@ -77,12 +77,17 @@ export default function ThemeDetail() {
         userId: user.$id
       })
       
+      // Si on supprimait la carte actuellement en édition, fermer la modale
+      if (editingCard?.id === card.id) {
+        setIsEditModalOpen(false)
+        setEditingCard(null)
+      }
       console.log('✅ Carte supprimée avec succès (médias inclus)')
     } catch (error) {
       console.error('❌ Erreur lors de la suppression de la carte:', error)
       // L'erreur est déjà gérée par le hook avec rollback automatique
     }
-  }, [deleteCardMutation, id, user])
+  }, [deleteCardMutation, id, user, editingCard?.id])
 
   // 🚀 NOUVEAU: Gestion optimiste de la création de carte
   const handleCardSubmit = async (data: z.infer<typeof CreateCardSchema>) => {
@@ -165,6 +170,12 @@ export default function ThemeDetail() {
       console.log('✅ Carte mise à jour avec succès dans Appwrite')
     } catch (err) {
       console.error('❌ Erreur lors de la modification de la carte:', err)
+      // Si la carte n'existe plus (404), fermer la modale et nettoyer l'état
+      const message = (err instanceof Error ? err.message : String(err)).toLowerCase()
+      if (message.includes('not found')) {
+        setIsEditModalOpen(false)
+        setEditingCard(null)
+      }
       // L'erreur est déjà gérée par le hook avec rollback automatique
     }
   }

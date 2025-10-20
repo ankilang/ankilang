@@ -246,7 +246,18 @@ export class CardsService {
   async deleteCard(cardId: string, userId: string): Promise<void> {
     try {
       // Récupérer la carte pour nettoyer les fichiers associés
-      const card = await this.getCardById(cardId, userId);
+      let card: AppwriteCard | null = null
+      try {
+        card = await this.getCardById(cardId, userId)
+      } catch (err: any) {
+        const msg = (err?.message || '').toString().toLowerCase()
+        if (msg.includes('not found')) {
+          // Déjà supprimée côté serveur: considérer l'opération comme réussie
+          console.warn(`[CardsService] deleteCard: carte ${cardId} déjà supprimée (404)`)
+          return
+        }
+        throw err
+      }
       
       // Nettoyer les fichiers Appwrite associés
       await this.cleanupCardFiles(card);

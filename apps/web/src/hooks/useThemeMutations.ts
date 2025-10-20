@@ -148,9 +148,19 @@ export function useUpdateCard() {
       return { previousCards, queryKey }
     },
     
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       console.error('[useUpdateCard] Error updating card:', error)
-      
+      const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
+      if (message.includes('not found')) {
+        // Si la carte n'existe plus, la retirer du cache pour garder une UI cohérente
+        if (context?.queryKey) {
+          queryClient.setQueryData(context.queryKey, (old: AppwriteCard[] | undefined) => 
+            old?.filter((c) => c.$id !== variables.cardId) || []
+          )
+        }
+        return
+      }
+      // Autres erreurs: rollback
       if (context?.previousCards) {
         queryClient.setQueryData(context.queryKey, context.previousCards)
       }
@@ -198,9 +208,15 @@ export function useDeleteCard() {
       return { previousCards, queryKey }
     },
     
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       console.error('[useDeleteCard] Error deleting card:', error)
-      
+      const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
+      if (message.includes('not found')) {
+        // Déjà supprimée côté serveur: conserver la suppression optimiste
+        console.info('[useDeleteCard] 404 détecté: suppression déjà effectuée côté serveur, pas de rollback')
+        return
+      }
+      // Autres erreurs: rollback
       if (context?.previousCards) {
         queryClient.setQueryData(context.queryKey, context.previousCards)
       }
