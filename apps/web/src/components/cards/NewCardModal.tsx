@@ -13,11 +13,10 @@ import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS, persistTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
-import { pexelsSearchPhotos, pexelsCurated, pexelsOptimizePreview, pexelsOptimizePersist } from '../../services/pexels'
+import { pexelsSearchPhotos, pexelsCurated, pexelsOptimizePersist } from '../../services/pexels'
 import type { PexelsPhoto } from '../../types/ankilang-vercel-api'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
-import { base64ToObjectUrl } from '../../lib/base64-utils'
 
 // Type pour le formulaire (sans validation Zod)
 interface CardFormData {
@@ -68,7 +67,9 @@ export default function NewCardModal({
   const [isTranslating, setIsTranslating] = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
-  const [isOptimizingImage, setIsOptimizingImage] = useState(false)
+  // Note: isOptimizingImage n'est plus utilisé avec la nouvelle approche (preview direct)
+  // mais gardé pour compatibilité UI
+  const [isOptimizingImage] = useState(false)
   const [pendingPhoto, setPendingPhoto] = useState<PexelsPhoto | null>(null)
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
@@ -193,44 +194,31 @@ export default function NewCardModal({
   })
 
   const handlePickImage = async (photo: PexelsPhoto) => {
-    setIsOptimizingImage(true)
+    // Stratégie simplifiée:
+    // 1. Preview: utiliser directement l'URL Pexels (rapide, CDN, déjà optimisée)
+    // 2. Persist: au moment du submit, appeler pexelsOptimizePersist qui fait:
+    //    - Téléchargement de l'image
+    //    - Optimisation avec Sharp
+    //    - Upload vers Appwrite Storage
+    //    - Retour de l'URL Appwrite finale
+
     try {
-      console.log('🖼️ Preview image Pexels (sans upload)...')
-      const preview = await pexelsOptimizePreview({
-        imageUrl: photo.src?.medium || photo.src?.large || photo.src?.original,
-        width: 600,
-        height: 400,
-        quality: 80,
-        format: 'webp'
-      })
+      console.log('🖼️ Sélection image Pexels pour preview...')
 
-      // Convertir base64 en Object URL (évite les problèmes de taille avec fetch sur data URLs)
-      const url = base64ToObjectUrl(preview.optimizedImage)
-      setPreviewObjectUrl(url)
-      setPendingPhoto(photo)
+      // Utiliser directement l'URL Pexels (medium = bonne qualité, pas trop lourd)
+      const previewUrl = photo.src?.medium || photo.src?.large || photo.src?.original
+
+      setPendingPhoto(photo) // Garder la ref pour l'upload final lors du submit
       if (selectedType === 'basic') {
-        setValue('versoImage', url)
-        setValue('versoImageType', 'external')
+        setValue('versoImage', previewUrl)
+        setValue('versoImageType', 'external') // Marqué comme external = à persister
       } else {
-        setValue('clozeImage', url)
+        setValue('clozeImage', previewUrl)
         setValue('clozeImageType', 'external')
       }
+      setShowPexelsPicker(false)
     } catch (error) {
-      console.error('❌ Erreur lors du chargement de l\'image:', error)
-
-      // Fallback: utiliser l'URL Pexels directe en cas d'erreur
-      console.log('⚠️ Fallback: utilisation de l\'URL Pexels directe')
-      const fallbackUrl = photo.src?.large || photo.src?.medium || photo.src?.original
-      if (selectedType === 'basic') {
-        setValue('versoImage', fallbackUrl)
-        setValue('versoImageType', 'external')
-      } else {
-        setValue('clozeImage', fallbackUrl)
-        setValue('clozeImageType', 'external')
-      }
-      setPendingPhoto(null)
-    } finally {
-      setIsOptimizingImage(false)
+      console.error('❌ Erreur lors de la sélection:', error)
     }
   }
 

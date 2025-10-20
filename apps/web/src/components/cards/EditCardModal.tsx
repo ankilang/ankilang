@@ -8,10 +8,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { CreateCardSchema } from '../../types/shared'
 import type { Card } from '../../types/shared'
-import { pexelsSearchPhotos, pexelsOptimizePreview, pexelsOptimizePersist } from '../../services/pexels'
+import { pexelsSearchPhotos, pexelsOptimizePersist } from '../../services/pexels'
 import AudioPlayer from './AudioPlayer'
 import { generateTTS } from '../../services/tts'
-import { base64ToObjectUrl } from '../../lib/base64-utils'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
@@ -77,7 +76,8 @@ export default function EditCardModal({
   const [imageQuery, setImageQuery] = useState('')
   const [imageResults, setImageResults] = useState<any[]>([])
   const [isLoadingImages, setIsLoadingImages] = useState(false)
-  const [isOptimizingImage, setIsOptimizingImage] = useState(false)
+  // Note: isOptimizingImage n'est plus utilisé avec la nouvelle approche (preview direct)
+  const [isOptimizingImage] = useState(false)
   const [currentImageField, setCurrentImageField] = useState<'versoImage' | 'clozeImage' | null>(null)
   // Stocker la dernière photo Pexels sélectionnée pour persistance au submit
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -176,29 +176,19 @@ export default function EditCardModal({
   const handleSelectImage = async (image: any) => {
     if (!currentImageField) return
 
-    setIsOptimizingImage(true)
     try {
-      const preview = await pexelsOptimizePreview({
-        imageUrl: image.src?.medium || image.src?.large || image.src?.original,
-        width: 600,
-        height: 400,
-        quality: 80,
-        format: 'webp'
-      })
+      console.log('🖼️ Sélection image Pexels pour preview...')
 
-      // Convertir base64 en Object URL (évite les problèmes de taille avec fetch sur data URLs)
-      const url = base64ToObjectUrl(preview.optimizedImage)
-      // Preview via Object URL (pas d'upload Appwrite à ce stade)
-      setValue(currentImageField, url)
+      // Utiliser directement l'URL Pexels (medium = bonne qualité, rapide)
+      // L'optimisation + upload se fera au submit via pexelsOptimizePersist
+      const previewUrl = image.src?.medium || image.src?.large || image.src?.original
+
+      setValue(currentImageField, previewUrl)
       setValue(`${currentImageField}Type` as any, 'external')
-      setPendingPhoto(image)
+      setPendingPhoto(image) // Garder ref pour upload final
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération de l\'image:', error)
-      // Fallback: utiliser l'URL Pexels directe
-      setValue(currentImageField, image.src.medium)
-      setValue(`${currentImageField}Type` as any, 'external')
+      console.error('❌ Erreur lors de la sélection de l\'image:', error)
     } finally {
-      setIsOptimizingImage(false)
       setShowImageSelector(false)
       setCurrentImageField(null)
     }
