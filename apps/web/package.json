@@ -18,7 +18,12 @@
     "test:pwa": "node scripts/test-pwa.mjs",
     "validate:pwa": "node scripts/validate-pwa.mjs",
     "checklist:pwa": "node scripts/pwa-checklist.mjs",
-    "deploy:pwa": "node scripts/deploy-pwa.mjs"
+    "deploy:pwa": "node scripts/deploy-pwa.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "audit:lighthouse": "node scripts/lighthouse-audit.mjs",
+    "audit:all": "pnpm audit:lighthouse && pnpm test:e2e"
   },
   "dependencies": {
     "@ankilang/shared": "workspace:*",
@@ -26,6 +31,8 @@
     "@fontsource/inter": "^5.2.6",
     "@fontsource/playfair-display": "^5.2.6",
     "@hookform/resolvers": "^3.3.2",
+    "@sentry/react": "^10.20.0",
+    "@sentry/tracing": "^7.120.4",
     "@tanstack/react-query": "^5.8.4",
     "@tanstack/react-virtual": "^3.13.12",
     "appwrite": "latest",
@@ -46,6 +53,7 @@
     "sql.js": "^1.13.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "web-vitals": "^5.1.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

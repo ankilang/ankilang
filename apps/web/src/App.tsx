@@ -5,10 +5,29 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext'
 import { ErrorBoundary } from './components/error/ErrorBoundary'
 import InstallPrompt from './components/ui/InstallPrompt'
 import UpdatePrompt from './components/ui/UpdatePrompt'
+import Analytics from './components/Analytics'
+import { initSentry } from './lib/sentry'
+import { initWebVitals } from './lib/web-vitals'
+import { initPerformanceOptimizations, measurePerformance } from './lib/performance'
 import { RootRoutes } from './routes/RootRoutes'
 
 
 function App() {
+  // Initialisation du monitoring et des optimisations
+  useEffect(() => {
+    // Initialiser Sentry
+    initSentry()
+    
+    // Initialiser Web Vitals
+    initWebVitals()
+    
+    // Initialiser les optimisations de performance
+    initPerformanceOptimizations()
+    
+    // Mesurer les performances
+    measurePerformance()
+  }, [])
+
   // ✅ PREFETCH SOPHISTIQUÉ PRÉSERVÉ - Logique de prefetch des sections utilisées fréquemment
   useEffect(() => {
     const conn = (navigator as any).connection as {
@@ -41,6 +60,8 @@ function App() {
       <AuthProvider>
         <SubscriptionProvider>
           <PWAProvider>
+            {/* Analytics respectueux de la vie privée */}
+            <Analytics domain="ankilang.com" enabled={process.env.NODE_ENV === 'production'} />
             {/* Barre d'installation PWA */}
             <InstallPrompt />
             {/* Notification de mise à jour PWA */}
