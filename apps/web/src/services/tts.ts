@@ -1,7 +1,5 @@
 import { BrowserIDBCache, buildCacheKey } from '@ankilang/shared-cache'
 // import { Storage, Permission, Role } from 'appwrite'
-import { createVercelApiClient } from '../lib/vercel-api-client'
-import { getSessionJWT } from './appwrite'
 // import client from './appwrite'
 import { ttsToBlob as votzTtsToBlob } from './votz'
 import { generateTTS as elevenlabsGenerateTTS } from './elevenlabs'
@@ -273,13 +271,16 @@ export async function persistTTS({
 }): Promise<{ url: string }> {
   const oc = isOccitan(language_code)
   if (oc) {
-    const jwt = await getSessionJWT()
-    if (!jwt) throw new Error('User not authenticated')
-    const client = createVercelApiClient(jwt)
-    const res: any = await client.generateVotzTTS({ text, language: 'languedoc', mode: 'file', upload: true } as any)
-    if (res?.url) return { url: res.url }
-    throw new Error('Persist Votz TTS failed')
+    // Use Votz for Occitan
+    const { persistVotzTTS } = await import('./votz')
+    const persisted = await persistVotzTTS({
+      text,
+      language: language_code === 'oc-gascon' ? 'gascon' : 'languedoc'
+    })
+    return { url: persisted.url }
   }
+
+  // Use ElevenLabs for other languages
   const { persistElevenlabsTTS } = await import('./elevenlabs')
   const persisted = await persistElevenlabsTTS({ text, voiceId: voice_id ?? '21m00Tcm4TlvDq8ikWAM' })
   return { url: persisted.url }

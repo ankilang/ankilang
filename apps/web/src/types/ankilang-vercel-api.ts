@@ -164,6 +164,8 @@ export interface VotzRequest {
   text: string;
   language?: VotzLanguage;
   mode?: VotzMode;
+  upload?: boolean; // false = preview (base64), true = upload to Appwrite (URL)
+  filename?: string; // Optional custom filename for Appwrite Storage
 }
 
 export interface VotzFileResponse {
@@ -174,9 +176,8 @@ export interface VotzFileResponse {
 }
 
 export interface VotzUrlResponse {
-  url: string;
-  language: VotzLanguage;
-  mode: 'url';
+  fileId: string; // Appwrite Storage file ID
+  url: string; // Appwrite Storage file URL
 }
 
 export type VotzResponse = VotzFileResponse | VotzUrlResponse;

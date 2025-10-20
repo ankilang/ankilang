@@ -60,7 +60,7 @@ function blobToBase64(blob: Blob): Promise<string> {
 // ============================================
 
 /**
- * Generate Occitan TTS and return as Blob
+ * Generate Occitan TTS and return as Blob (preview mode)
  * @param text - Text to synthesize
  * @param language - Occitan dialect (languedoc or gascon)
  * @returns Promise<Blob> - MP3 audio file
@@ -73,23 +73,24 @@ export async function ttsToBlob(text: string, language: VotzLanguage = 'languedo
   const api = await getApiClient()
 
   try {
-    console.log(`[Votz] Generating TTS: "${text.slice(0, 50)}..." (${language})`)
+    console.log(`[Votz] Generating TTS (preview): "${text.slice(0, 50)}..." (${language})`)
 
     const result = await api.generateVotzTTS({
       text: text.trim(),
       language,
       mode: 'file',
+      upload: false, // Preview mode: return base64
     })
 
-    // VotzFileResponse returns base64
-    if ('audio' in result) {
+    // VotzFileResponse returns base64 audio
+    if ('audio' in result && result.mode === 'file') {
       const blob = base64ToBlob(result.audio)
       console.log(`[Votz] TTS generated successfully: ${blob.size} bytes`)
       return blob
     }
 
-    // VotzUrlResponse (shouldn't happen with mode: 'file')
-    throw new Error('Expected file mode response from Votz API')
+    // Unexpected response format
+    throw new Error(`Expected VotzFileResponse, got: ${JSON.stringify(result).slice(0, 200)}`)
   } catch (error) {
     if (error instanceof VercelApiError) {
       console.error('[Votz] TTS error:', error.detail)
@@ -145,6 +146,37 @@ export async function playTTS(text: string, language: VotzLanguage = 'languedoc'
 
   await audio.play()
   return audio
+}
+
+/**
+ * Persist Votz TTS (upload=true) and return Appwrite URL
+ * @param request - Votz TTS request
+ * @returns Promise<{ fileId: string; url: string }> - Appwrite Storage reference
+ */
+export async function persistVotzTTS(request: {
+  text: string;
+  language?: VotzLanguage;
+  fileId?: string
+}): Promise<{ fileId: string; url: string }> {
+  const api = await getApiClient()
+
+  console.log(`[Votz] Persisting TTS: "${request.text.slice(0, 50)}..." (${request.language || 'languedoc'})`)
+
+  const result = await api.generateVotzTTS({
+    text: request.text.trim(),
+    language: request.language || 'languedoc',
+    mode: 'file',
+    upload: true, // Upload to Appwrite Storage
+    filename: request.fileId,
+  })
+
+  // VotzUrlResponse returns fileId and url
+  if ('url' in result && 'fileId' in result) {
+    console.log(`[Votz] TTS persisted successfully: ${result.fileId}`)
+    return { fileId: result.fileId, url: result.url }
+  }
+
+  throw new Error('Persist Votz TTS failed: missing url/fileId in response')
 }
 
 // ============================================
