@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: true, // 🚨 DÉSACTIVÉ TEMPORAIREMENT POUR RÉSOUDRE LA RÉGRESSION
+      disable: false, // ✅ PWA réactivée (regression corrigée)
       registerType: 'autoUpdate', // ✅ SW se met à jour automatiquement
       injectRegister: 'auto',
       manifest: false, // Utilise le manifest externe
@@ -21,9 +21,9 @@ export default defineConfig({
           /^\/assets\/.*\.wasm$/,       // ✅ Protection fichiers WASM
           /^\/manifest\.webmanifest(\?.*)?$/,   // ✅ Protection manifest avec query params
         ],
-        // ✅ FORCER la mise à jour du Service Worker
-        cacheId: `ankilang-${Date.now()}`, // Version unique basée sur timestamp pour forcer la mise à jour
-        navigationPreload: false, // ✅ Désactiver temporairement pour éviter les conflits
+        // ✅ Cache ID fixe pour éviter les conflits
+        cacheId: 'ankilang-v1', // Version statique, incrémente manuellement si besoin de purge cache
+        navigationPreload: true, // ✅ Réactivé pour meilleures perfs
         cleanupOutdatedCaches: true, // ✅ Nettoie les anciens caches
         skipWaiting: true, // ✅ Prend effet immédiatement
         clientsClaim: true, // ✅ Contrôle toutes les pages ouvertes
