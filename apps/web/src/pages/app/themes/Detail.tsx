@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import VirtualizedCardList from '../../../components/cards/VirtualizedCardList'
 import NewCardModal from '../../../components/cards/NewCardModal'
 import EditCardModal from '../../../components/cards/EditCardModal'
-import { ttsSaveAndLink } from '../../../services/elevenlabs-appwrite'
+import { persistTTS } from '../../../services/tts'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTheme, useCreateCard, useUpdateCard, useDeleteCard, useVirtualizedCardsInfinite } from '../../../hooks'
 import { ErrorBoundary } from '../../../components/error/ErrorBoundary'
@@ -118,15 +118,19 @@ export default function ThemeDetail() {
       const textToTts = data.type === 'basic' ? data.backText : data.clozeTextTarget
       if (textToTts?.trim() && !data.audioUrl) {
         try {
-          console.log('🎵 Génération audio TTS pour la nouvelle carte...')
-          const { fileId, fileUrl, mime } = await ttsSaveAndLink({
-            cardId: newCard.$id,
+          console.log('🎵 Génération audio TTS (persist via Vercel API) ...')
+          const { url } = await persistTTS({
             text: textToTts,
-            language: themeQuery.data?.targetLang || 'en',
-            voiceId: '21m00Tcm4TlvDq8ikWAM',
-            outputFormat: 'mp3_44100_128'
+            language_code: themeQuery.data?.targetLang || 'en',
+            voice_id: '21m00Tcm4TlvDq8ikWAM'
           })
-          console.log('✅ Audio TTS sauvegardé:', { fileId, fileUrl, mime })
+          // Mettre à jour la carte avec l'URL audio Appwrite renvoyée
+          await updateCardMutation.mutateAsync({
+            cardId: newCard.$id,
+            userId: user.$id,
+            updates: { audioUrl: url }
+          })
+          console.log('✅ Audio TTS sauvegardé et lié à la carte')
         } catch (error) {
           console.error('❌ Erreur lors de la génération audio TTS:', error)
           // Continue sans audio si erreur

@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { Suspense, lazy } from 'react'
 
 // Layouts
@@ -61,7 +62,9 @@ const PageLoadingFallback = ({ type }: { type: 'auth' | 'app' | 'legal' }) => {
  * Évite les conflits de wildcard et 404 intempestives.
  */
 export const RootRoutes = () => (
-  <Routes>
+  <>
+    <RouteAnalytics />
+    <Routes>
     {/* Public */}
     <Route path="/" element={<PublicLayout />}>
       <Route index element={<Suspense fallback={<PageLoadingFallback type="app" />}><Landing /></Suspense>} />
@@ -178,5 +181,18 @@ export const RootRoutes = () => (
 
     {/* Catch-all global */}
     <Route path="*" element={<Suspense fallback={<PageLoadingFallback type="app" />}><NotFound /></Suspense>} />
-  </Routes>
+    </Routes>
+  </>
 )
+
+// Suivi des pages pour les SPA (Plausible)
+function RouteAnalytics() {
+  const location = useLocation()
+  useEffect(() => {
+    try {
+      // @ts-ignore
+      window?.plausible && window.plausible('pageview')
+    } catch {}
+  }, [location.pathname, location.search])
+  return null
+}
