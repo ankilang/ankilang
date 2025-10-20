@@ -15,7 +15,7 @@ export const account = new Account(client);
 
 /**
  * Récupère le JWT de la session Appwrite actuelle
- * Utilisé pour authentifier les requêtes vers les fonctions Netlify
+ * Utilisé pour authentifier les requêtes vers l'API Vercel sécurisée
  */
 export async function getSessionJWT(): Promise<string | null> {
   try {

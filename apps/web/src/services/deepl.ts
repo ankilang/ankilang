@@ -1,11 +1,10 @@
+import { createVercelApiClient } from '../lib/vercel-api-client'
+import type { DeepLRequest, DeepLResponse } from '../types/ankilang-vercel-api'
+
 export interface TranslateItem { translated: string; detectedSourceLang?: string; billedCharacters?: number }
 export type TranslateResponse =
   | { success: true; original: string | string[]; targetLang: string; result: TranslateItem | TranslateItem[] }
   | { success: false; error: string }
-
-const PROD = 'https://ankilangdeepl.netlify.app/.netlify/functions/translate'
-
-const BASE_URL = import.meta.env.VITE_TRANSLATE_URL || PROD
 
 function normalizeDeepLLang(code?: string | null): string | undefined {
   if (!code) return undefined
@@ -47,32 +46,34 @@ function normalizeDeepLLang(code?: string | null): string | undefined {
 }
 
 export async function translate(text: string | string[], targetLang: string, sourceLang?: string) {
-  // Récupérer le JWT Appwrite pour authentifier la requête
+  // JWT pour Vercel API
   const { getSessionJWT } = await import('./appwrite')
   const jwt = await getSessionJWT()
-  
-  if (!jwt) {
-    throw new Error('User not authenticated. Please log in to use translation.')
-  }
-  
+  if (!jwt) throw new Error('User not authenticated. Please log in to use translation.')
+
+  const api = createVercelApiClient(jwt)
+
+  // Normalisation des codes langues (DeepL attend UPPERCASE/variants spécifiques)
   const normalizedTarget = normalizeDeepLLang(targetLang)!
   const normalizedSource = normalizeDeepLLang(sourceLang ?? undefined)
-  const res = await fetch(BASE_URL, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${jwt}`
-    },
-    body: JSON.stringify({ text, targetLang: normalizedTarget, sourceLang: normalizedSource ?? null }),
-  })
-  
-  if (!res.ok) {
-    const errorText = await res.text()
-    if (res.status === 401) {
-      throw new Error('Authentication failed. Please log in again.')
+
+  // La Vercel API prend un champ text: string — on concatène prudemment si un tableau est fourni
+  const textStr = Array.isArray(text) ? text.join('\n') : text
+
+  try {
+    const req: DeepLRequest = {
+      text: textStr,
+      targetLang: normalizedTarget as any,
+      sourceLang: (normalizedSource as any) || (normalizedTarget === 'EN-US' || normalizedTarget === 'EN-GB' ? 'FR' : 'EN-GB'),
     }
-    throw new Error(`Translation failed: ${res.status} - ${errorText}`)
+    const res: DeepLResponse = await api.translateWithDeepL(req)
+    // Mapper vers l’ancienne forme attendue par le front
+    const item: TranslateItem = {
+      translated: res.translatedText,
+      detectedSourceLang: res.sourceLang,
+    }
+    return { success: true, original: text, targetLang: normalizedTarget, result: item } as TranslateResponse
+  } catch (e: any) {
+    return { success: false, error: e?.message || 'DeepL translation error' }
   }
-  
-  return (await res.json()) as TranslateResponse
 }

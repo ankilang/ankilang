@@ -175,7 +175,7 @@ export default function NewCardModal({
     return () => { clearTimeout(t); }
   }, [imageInput])
 
-  // Recherche d'images via Netlify Function (Pexels)
+  // Recherche d'images via Vercel API (Pexels)
   const imagesQuery = useQuery({
     queryKey: ['pexels', imageQuery, imagePage],
     queryFn: () => {
@@ -232,11 +232,11 @@ export default function NewCardModal({
     }
   }
 
-  // Traduction via Netlify Function (fallback sur mock si indisponible)
+  // Traduction via Vercel API (fallback sur mock si indisponible)
 
   const deeplMutation = useMutation({
     mutationFn: async (text: string) => {
-      // Utilise la fonction Deepl (Netlify) avec payload (text,targetLang)
+      // Utilise la fonction DeepL (Vercel API) avec payload (text,targetLang)
       const target = themeLanguage === 'no' ? 'nb' : themeLanguage
       const res: DeeplResponse = await deeplTranslate(text, target, 'fr')
       return res

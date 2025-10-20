@@ -1,3 +1,6 @@
+import { createVercelApiClient } from '../lib/vercel-api-client'
+import type { ReviradaRequest as VReviRequest, ReviradaResponse as VReviResponse } from '../types/ankilang-vercel-api'
+
 export interface ReviradaRequest {
   text: string | string[]
   sourceLang: 'fra' | 'oci' | 'oci_gascon'
@@ -9,37 +12,28 @@ export type ReviradaResponse =
   | { success: true; translated: string | string[]; languagePair?: string; words?: number; translationTime?: number }
   | { success: false; error: string }
 
-const PROD = 'https://ankilangrevirada.netlify.app/.netlify/functions/revirada'
-
-const BASE_URL = import.meta.env.VITE_REVI_URL || PROD
-
 export async function reviradaTranslate(req: ReviradaRequest) {
-  // Récupérer le JWT Appwrite pour authentifier la requête
   const { getSessionJWT } = await import('./appwrite')
   const jwt = await getSessionJWT()
-  
-  if (!jwt) {
-    throw new Error('User not authenticated. Please log in to use translation.')
+  if (!jwt) throw new Error('User not authenticated. Please log in to use translation.')
+
+  const api = createVercelApiClient(jwt)
+
+  // Mapper notre contrat (source/target) vers le format Vercel (direction + dialect)
+  const isFrToOc = req.sourceLang === 'fra' && (req.targetLang === 'oci' || req.targetLang === 'oci_gascon')
+  const isOcToFr = (req.sourceLang === 'oci' || req.sourceLang === 'oci_gascon') && req.targetLang === 'fra'
+  const direction: VReviRequest['direction'] = isFrToOc ? 'fr-oc' : isOcToFr ? 'oc-fr' : 'fr-oc'
+  const dialect: VReviRequest['dialect'] | undefined = req.targetLang === 'oci_gascon' || req.sourceLang === 'oci_gascon' ? 'gascon' : 'lengadocian'
+
+  const textStr = Array.isArray(req.text) ? req.text.join('\n') : req.text
+
+  try {
+    const vr: VReviRequest = { text: textStr, direction, dialect }
+    const res: VReviResponse = await api.translateWithRevirada(vr)
+    return { success: true, translated: res.translatedText, languagePair: res.direction, words: res.words } as ReviradaResponse
+  } catch (e: any) {
+    return { success: false, error: e?.message || 'Revirada translation error' }
   }
-  
-  const res = await fetch(BASE_URL, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${jwt}`
-    },
-    body: JSON.stringify({ ...req, contentType: req.contentType ?? 'txt' })
-  })
-  
-  if (!res.ok) {
-    const errorText = await res.text()
-    if (res.status === 401) {
-      throw new Error('Authentication failed. Please log in again.')
-    }
-    throw new Error(`Translation failed: ${res.status} - ${errorText}`)
-  }
-  
-  return (await res.json()) as ReviradaResponse
 }
 
 export function toReviCode(lang: string): 'fra' | 'oci' | 'oci_gascon' {
@@ -50,4 +44,3 @@ export function toReviCode(lang: string): 'fra' | 'oci' | 'oci_gascon' {
   // Default safe fallback
   return 'oci'
 }
-
