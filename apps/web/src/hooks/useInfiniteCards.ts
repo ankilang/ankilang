@@ -8,7 +8,7 @@ import { queryKeys } from './queryKeys'
  */
 export function useInfiniteCards(themeId: string, userId: string) {
   return useInfiniteQuery({
-    queryKey: queryKeys.cards(themeId),
+    queryKey: queryKeys.cardsInfinite(themeId),
     initialPageParam: 0,
     queryFn: async ({ pageParam = 0 }: { pageParam: number }) => {
       const limit = 50 // Taille de page optimisée pour la virtualisation
@@ -28,8 +28,10 @@ export function useInfiniteCards(themeId: string, userId: string) {
         nextOffset: offset + limit
       }
     },
-    getNextPageParam: (lastPage: any, allPages: any[]) => {
-      return lastPage.hasMore ? allPages.length : undefined
+    getNextPageParam: (lastPage: any, allPages?: any[]) => {
+      // Sécuriser l'état initial: tant qu'aucune page n'est chargée, ne pas paginer
+      if (!lastPage) return undefined
+      return lastPage.hasMore ? (allPages ? allPages.length : 1) : undefined
     },
     enabled: Boolean(themeId && userId),
     staleTime: 5 * 60 * 1000, // 5 minutes

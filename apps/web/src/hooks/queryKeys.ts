@@ -10,6 +10,7 @@ export const queryKeys = {
   
   // Cartes
   cards: (themeId: string) => ['cards', themeId] as const,
+  cardsInfinite: (themeId: string) => ['cardsInfinite', themeId] as const,
   card: (cardId: string) => ['card', cardId] as const,
   
   // Données combinées

@@ -56,42 +56,7 @@ export default function ThemeDetail() {
     updatedAt: card.$updatedAt
   })) || []
 
-  // États de chargement et d'erreur
-  if (themeQuery.isLoading || cardsInfinite.isLoading) {
-    return <ThemeDetailSkeleton />
-  }
-
-  if (themeQuery.error || !themeQuery.data) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20 flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/20"
-        >
-          <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-rose rounded-full flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">
-            {themeQuery.error instanceof Error ? themeQuery.error.message : 'Thème introuvable'}
-          </h1>
-          <p className="font-sans text-dark-charcoal/70 mb-6">
-            {themeQuery.error instanceof Error && (themeQuery.error.message.includes('not found') || themeQuery.error.message.includes('Document not found'))
-              ? 'Le thème que vous recherchez n\'existe pas dans vos thèmes.'
-              : 'Une erreur est survenue lors du chargement.'}
-          </p>
-          <motion.button
-            onClick={() => navigate('/app/themes')}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn-primary"
-          >
-            Retour aux thèmes
-          </motion.button>
-        </motion.div>
-      </div>
-    )
-  }
+  // États de chargement et d'erreur (déplacés après tous les hooks pour respecter l'ordre des hooks)
 
   const handleAddCard = useCallback(() => {
     setIsModalOpen(true)
@@ -202,6 +167,43 @@ export default function ThemeDetail() {
       console.error('❌ Erreur lors de la modification de la carte:', err)
       // L'erreur est déjà gérée par le hook avec rollback automatique
     }
+  }
+
+  // Affichages conditionnels après déclaration de tous les hooks
+  if (themeQuery.isLoading || cardsInfinite.isLoading) {
+    return <ThemeDetailSkeleton />
+  }
+
+  if (themeQuery.error || !themeQuery.data) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pastel-purple/20 via-pastel-green/10 to-pastel-rose/20 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/20"
+        >
+          <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-pastel-rose rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="font-display text-2xl font-bold text-dark-charcoal mb-4">
+            {themeQuery.error instanceof Error ? themeQuery.error.message : 'Thème introuvable'}
+          </h1>
+          <p className="font-sans text-dark-charcoal/70 mb-6">
+            {themeQuery.error instanceof Error && (themeQuery.error.message.includes('not found') || themeQuery.error.message.includes('Document not found'))
+              ? 'Le thème que vous recherchez n\'existe pas dans vos thèmes.'
+              : 'Une erreur est survenue lors du chargement.'}
+          </p>
+          <motion.button
+            onClick={() => navigate('/app/themes')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="btn-primary"
+          >
+            Retour aux thèmes
+          </motion.button>
+        </motion.div>
+      </div>
+    )
   }
 
   return (
