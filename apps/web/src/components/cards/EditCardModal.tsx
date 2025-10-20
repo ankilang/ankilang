@@ -11,6 +11,7 @@ import type { Card } from '../../types/shared'
 import { pexelsSearchPhotos, pexelsOptimizePreview, pexelsOptimizePersist } from '../../services/pexels'
 import AudioPlayer from './AudioPlayer'
 import { generateTTS } from '../../services/tts'
+import { base64ToObjectUrl } from '../../lib/base64-utils'
 
 const basicCardSchema = z.object({
   type: z.literal('basic'),
@@ -184,8 +185,9 @@ export default function EditCardModal({
         quality: 80,
         format: 'webp'
       })
-      const blob = await fetch(preview.optimizedImage).then(r => r.blob())
-      const url = URL.createObjectURL(blob)
+
+      // Convertir base64 en Object URL (évite les problèmes de taille avec fetch sur data URLs)
+      const url = base64ToObjectUrl(preview.optimizedImage)
       // Preview via Object URL (pas d'upload Appwrite à ce stade)
       setValue(currentImageField, url)
       setValue(`${currentImageField}Type` as any, 'external')

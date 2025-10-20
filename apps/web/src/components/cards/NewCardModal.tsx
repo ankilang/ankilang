@@ -17,6 +17,7 @@ import { pexelsSearchPhotos, pexelsCurated, pexelsOptimizePreview, pexelsOptimiz
 import type { PexelsPhoto } from '../../types/ankilang-vercel-api'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
+import { base64ToObjectUrl } from '../../lib/base64-utils'
 
 // Type pour le formulaire (sans validation Zod)
 interface CardFormData {
@@ -202,8 +203,9 @@ export default function NewCardModal({
         quality: 80,
         format: 'webp'
       })
-      const blob = await fetch(preview.optimizedImage).then(r => r.blob())
-      const url = URL.createObjectURL(blob)
+
+      // Convertir base64 en Object URL (évite les problèmes de taille avec fetch sur data URLs)
+      const url = base64ToObjectUrl(preview.optimizedImage)
       setPreviewObjectUrl(url)
       setPendingPhoto(photo)
       if (selectedType === 'basic') {
