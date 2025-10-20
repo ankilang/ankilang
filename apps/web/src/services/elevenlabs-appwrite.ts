@@ -27,7 +27,7 @@ function toISO639_1(lang?: string): string | undefined {
   if (!lang) return undefined;
   const parts = lang.toLowerCase().split('-');
   const two = parts[0];
-  return two && two.length === 2 ? two : undefined;
+  return two?.length === 2 ? two : undefined;
 }
 
 /**
@@ -412,8 +412,8 @@ export async function playTTS(text: string, language: string, voice?: string): P
   
   const audio = new Audio(url);
   
-  audio.addEventListener('ended', () => URL.revokeObjectURL(url));
-  audio.addEventListener('error', () => URL.revokeObjectURL(url));
+  audio.addEventListener('ended', () => { URL.revokeObjectURL(url); });
+  audio.addEventListener('error', () => { URL.revokeObjectURL(url); });
   
   return audio;
 }

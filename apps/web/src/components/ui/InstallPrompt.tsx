@@ -23,7 +23,7 @@ export default function InstallPrompt({ className = '' }: InstallPromptProps) {
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
-    const isAndroidDevice = /android/.test(userAgent);
+    const isAndroidDevice = userAgent.includes('android');
     const isMobile = /mobile|android|iphone|ipad|ipod|blackberry|windows phone/.test(userAgent);
     
     // Ne s'afficher que sur mobile
@@ -61,7 +61,7 @@ export default function InstallPrompt({ className = '' }: InstallPromptProps) {
         setIsVisible(true);
       }, 3000); // Délai de 3 secondes
 
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); };
     }
 
     // Pas de cleanup nécessaire pour les autres cas

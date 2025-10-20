@@ -150,7 +150,7 @@ export default function ThemeForm({
             id="name"
             type="text"
             {...register('name')}
-            onFocus={() => setCurrentStep(1)}
+            onFocus={() => { setCurrentStep(1); }}
             className="input-field text-lg sm:text-base md:text-lg"
             placeholder="Ex: Vocabulaire de base, Expressions courantes..."
             aria-describedby={errors.name ? 'name-error' : undefined}
@@ -195,7 +195,7 @@ export default function ThemeForm({
               
               setCurrentStep(2)
             }}
-            onFocus={() => setCurrentStep(2)}
+            onFocus={() => { setCurrentStep(2); }}
             error={errors.category?.message}
             preselectedCategory={preselectedCategory}
           />
@@ -224,7 +224,7 @@ export default function ThemeForm({
                        setValue('targetLang', value)
                        setCurrentStep(3)
                      }}
-                     onFocus={() => setCurrentStep(3)}
+                     onFocus={() => { setCurrentStep(3); }}
                      error={errors.targetLang?.message}
                    />
                  )}
@@ -257,7 +257,7 @@ export default function ThemeForm({
                     name="ocDialect"
                     className="sr-only"
                     checked={ocDialect === 'oc'}
-                    onChange={() => setOcDialect('oc')}
+                    onChange={() => { setOcDialect('oc'); }}
                   />
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-red-500 flex items-center justify-center text-white font-bold">
@@ -282,7 +282,7 @@ export default function ThemeForm({
                     name="ocDialect"
                     className="sr-only"
                     checked={ocDialect === 'oc-gascon'}
-                    onChange={() => setOcDialect('oc-gascon')}
+                    onChange={() => { setOcDialect('oc-gascon'); }}
                   />
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-red-500 flex items-center justify-center text-white font-bold">
@@ -361,7 +361,7 @@ export default function ThemeForm({
               id="tags"
               type="text"
               {...register('tags')}
-              onFocus={() => setCurrentStep(3)}
+              onFocus={() => { setCurrentStep(3); }}
               className="input-field"
               placeholder="Ex: vocabulaire, débutant, grammaire, voyage..."
             />

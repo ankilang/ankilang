@@ -10,7 +10,7 @@ import CacheClearButton from '../../../components/cache/CacheClearButton'
 import { CacheJanitorPanel } from '../../../components/cache/CacheJanitorPanel'
 
 function getInitials(name?: string | null) {
-  if (!name || !name.trim()) return 'A'
+  if (!name?.trim()) return 'A'
   const parts = name.trim().split(/\s+/)
   const initials = [parts[0]?.[0], parts[1]?.[0]].filter(Boolean).join('')
   return initials.toUpperCase() || name.slice(0, 2).toUpperCase()
@@ -65,7 +65,7 @@ export default function AccountIndex() {
 
       <header className="container mx-auto px-4 sm:px-6 pt-10 pb-6 text-center">
         <button
-          onClick={() => navigate('/app')}
+          onClick={() => { navigate('/app'); }}
           className="inline-flex items-center gap-2 text-sm text-dark-charcoal/70 transition-colors hover:text-dark-charcoal"
         >
           <span aria-hidden>←</span>
@@ -151,7 +151,7 @@ export default function AccountIndex() {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); }}
                     className="mt-1 w-full rounded-lg border border-pastel-purple/30 bg-white px-3 py-2 text-dark-charcoal shadow-sm focus:border-pastel-purple focus:outline-none focus:ring-2 focus:ring-pastel-purple/40"
                     required
                   />
@@ -161,7 +161,7 @@ export default function AccountIndex() {
                   <input
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); }}
                     className="mt-1 w-full rounded-lg border border-pastel-purple/30 bg-white px-3 py-2 text-dark-charcoal shadow-sm focus:border-pastel-purple focus:outline-none focus:ring-2 focus:ring-pastel-purple/40"
                     required
                   />

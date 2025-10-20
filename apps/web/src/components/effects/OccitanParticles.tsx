@@ -35,8 +35,8 @@ const OccitanParticles = ({ children }: OccitanParticlesProps) => {
   return (
     <span 
       className="relative inline-block"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => { setIsHovered(true); }}
+      onMouseLeave={() => { setIsHovered(false); }}
     >
       {children}
       {particles}

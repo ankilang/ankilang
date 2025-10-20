@@ -43,8 +43,8 @@ export function usePWA() {
 
   // Gérer l'état en ligne/hors ligne
   useEffect(() => {
-    const handleOnline = () => setState(prev => ({ ...prev, isOnline: true }));
-    const handleOffline = () => setState(prev => ({ ...prev, isOnline: false }));
+    const handleOnline = () => { setState(prev => ({ ...prev, isOnline: true })); };
+    const handleOffline = () => { setState(prev => ({ ...prev, isOnline: false })); };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);

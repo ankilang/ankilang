@@ -1,4 +1,4 @@
-export type ImageResult = {
+export interface ImageResult {
   id: string
   src: string
   alt?: string
@@ -6,7 +6,7 @@ export type ImageResult = {
   height?: number
 }
 
-export type ImageSearchResponse = {
+export interface ImageSearchResponse {
   results: ImageResult[]
   total?: number
   nextPage?: number | null

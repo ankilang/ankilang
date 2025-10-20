@@ -367,7 +367,7 @@ export default function EditCardModal({
                     <div className="grid grid-cols-2 gap-3">
                       <motion.button
                         type="button"
-                        onClick={() => handleTypeChange('basic')}
+                        onClick={() => { handleTypeChange('basic'); }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className={`p-4 rounded-2xl border-2 transition-all duration-200 ${
@@ -391,7 +391,7 @@ export default function EditCardModal({
 
                       <motion.button
                         type="button"
-                        onClick={() => handleTypeChange('cloze')}
+                        onClick={() => { handleTypeChange('cloze'); }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className={`p-4 rounded-2xl border-2 transition-all duration-200 ${
@@ -506,7 +506,7 @@ export default function EditCardModal({
                                 
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveImage('versoImage')}
+                                  onClick={() => { handleRemoveImage('versoImage'); }}
                                   className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
                                 >
                                   <X size={12} />
@@ -519,7 +519,7 @@ export default function EditCardModal({
                           <div className="flex gap-2">
                             <button
                               type="button"
-                              onClick={() => handleOpenImageSelector('versoImage')}
+                              onClick={() => { handleOpenImageSelector('versoImage'); }}
                               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                             >
                               <Search size={16} />
@@ -529,7 +529,7 @@ export default function EditCardModal({
                             {watch('versoImage') && (
                               <button
                                 type="button"
-                                onClick={() => handleRemoveImage('versoImage')}
+                                onClick={() => { handleRemoveImage('versoImage'); }}
                                 className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                               >
                                 <Trash2 size={16} />
@@ -639,7 +639,7 @@ export default function EditCardModal({
                                 />
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveImage('clozeImage')}
+                                  onClick={() => { handleRemoveImage('clozeImage'); }}
                                   className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
                                 >
                                   <X size={12} />
@@ -652,7 +652,7 @@ export default function EditCardModal({
                           <div className="flex gap-2">
                             <button
                               type="button"
-                              onClick={() => handleOpenImageSelector('clozeImage')}
+                              onClick={() => { handleOpenImageSelector('clozeImage'); }}
                               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                             >
                               <Search size={16} />
@@ -662,7 +662,7 @@ export default function EditCardModal({
                             {watch('clozeImage') && (
                               <button
                                 type="button"
-                                onClick={() => handleRemoveImage('clozeImage')}
+                                onClick={() => { handleRemoveImage('clozeImage'); }}
                                 className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                               >
                                 <Trash2 size={16} />
@@ -733,7 +733,7 @@ export default function EditCardModal({
                         </h3>
                         <button
                           type="button"
-                          onClick={() => setShowImageSelector(false)}
+                          onClick={() => { setShowImageSelector(false); }}
                           className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
                         >
                           <X size={16} />
@@ -745,7 +745,7 @@ export default function EditCardModal({
                         <input
                           type="text"
                           value={imageQuery}
-                          onChange={(e) => setImageQuery(e.target.value)}
+                          onChange={(e) => { setImageQuery(e.target.value); }}
                           placeholder="Rechercher une image..."
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                           onKeyPress={(e) => e.key === 'Enter' && handleSearchImages()}

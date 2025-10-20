@@ -20,7 +20,7 @@ export default function TranslateDemo() {
 
   return (
     <div style={{ display: 'grid', gap: 12, maxWidth: 520 }}>
-      <textarea rows={3} value={text} onChange={e => setText(e.target.value)} />
+      <textarea rows={3} value={text} onChange={e => { setText(e.target.value); }} />
       <button onClick={go} disabled={loading}>{loading ? 'Traduction…' : 'Traduire'}</button>
       <pre>{out}</pre>
     </div>

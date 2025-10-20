@@ -9,13 +9,13 @@ import { createVercelApiClient, VercelApiError } from '../lib/vercel-api-client'
 import { getSessionJWT } from './appwrite'
 import type { DeepLSourceLang, DeepLTargetLang } from '../types/ankilang-vercel-api'
 
-export type TranslateRequest = {
+export interface TranslateRequest {
   sourceLang: string
   targetLang: string
   text: string
 }
 
-export type TranslateResponse = {
+export interface TranslateResponse {
   translatedText: string
   provider?: 'revirada' | 'deepl'
 }

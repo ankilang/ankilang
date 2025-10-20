@@ -44,8 +44,8 @@ export class CardsService {
   async getCardsByThemeIdPaginated(
     themeId: string, 
     userId: string, 
-    limit: number = 50, 
-    offset: number = 0
+    limit = 50, 
+    offset = 0
   ): Promise<{ documents: AppwriteCard[]; total: number }> {
     try {
       const response = await databaseService.list<AppwriteCard>(

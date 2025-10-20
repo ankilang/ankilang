@@ -46,7 +46,7 @@ export default function CategorySelector({
           <motion.button
             key={category.id}
             type="button"
-            onClick={() => handleCategorySelect(category.id)}
+            onClick={() => { handleCategorySelect(category.id); }}
             onFocus={onFocus}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

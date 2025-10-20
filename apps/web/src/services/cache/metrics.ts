@@ -5,7 +5,7 @@ import { FLAGS } from '@/config/flags'
 const sessionId = nanoid(6)
 
 // Stockage des métriques en mémoire (pour agrégation)
-const metricsBuffer: Array<{ event: string; data: Record<string, unknown>; timestamp: number }> = []
+const metricsBuffer: { event: string; data: Record<string, unknown>; timestamp: number }[] = []
 
 /**
  * Enregistre une métrique avec enrichissement automatique
@@ -78,7 +78,7 @@ export function timeSync<T>(label: string, fn: () => T): T {
 /**
  * Compteur simple pour les événements
  */
-export function counter(event: string, increment: number = 1): void {
+export function counter(event: string, increment = 1): void {
   metric(event, { count: increment })
 }
 
@@ -111,7 +111,7 @@ export class Timer {
 /**
  * Obtient les métriques récentes (pour debugging)
  */
-export function getRecentMetrics(limit: number = 50): Array<{ event: string; data: Record<string, unknown>; timestamp: number }> {
+export function getRecentMetrics(limit = 50): { event: string; data: Record<string, unknown>; timestamp: number }[] {
   return metricsBuffer.slice(-limit)
 }
 

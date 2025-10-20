@@ -83,7 +83,7 @@ const FlagEmoji: React.FC<FlagEmojiProps> = ({ flag, className = '', fallback = 
         alt={`Drapeau ${isoCode}`}
         className={`inline-block ${className}`}
         style={{ width: '1em', height: '0.75em', objectFit: 'cover' }}
-        onError={() => setUseFallback(false)}
+        onError={() => { setUseFallback(false); }}
       />
     )
   }

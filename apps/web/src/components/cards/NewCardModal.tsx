@@ -19,7 +19,7 @@ import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { reviradaTranslate, toReviCode } from '../../services/revirada'
 
 // Type pour le formulaire (sans validation Zod)
-type CardFormData = {
+interface CardFormData {
   type: 'basic' | 'cloze'
   recto?: string
   verso?: string
@@ -172,7 +172,7 @@ export default function NewCardModal({
       setImagePage(1)
       setImageQuery(q)
     }, 500)
-    return () => clearTimeout(t)
+    return () => { clearTimeout(t); }
   }, [imageInput])
 
   // Recherche d'images via Netlify Function (Pexels)
@@ -726,7 +726,7 @@ export default function NewCardModal({
                     <div className="grid grid-cols-2 gap-3">
                       <motion.button
                         type="button"
-                        onClick={() => handleTypeChange('basic')}
+                        onClick={() => { handleTypeChange('basic'); }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className={`p-4 rounded-2xl border-2 transition-all duration-200 ${
@@ -750,7 +750,7 @@ export default function NewCardModal({
 
                       <motion.button
                         type="button"
-                        onClick={() => handleTypeChange('cloze')}
+                        onClick={() => { handleTypeChange('cloze'); }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className={`p-4 rounded-2xl border-2 transition-all duration-200 ${
@@ -911,7 +911,7 @@ export default function NewCardModal({
                                         <AudioCard
                                           audioUrl={(watchedValues as any).versoAudio}
                                           onPlay={toggleAudioPlayback}
-                                          onDelete={() => removeMedia('versoAudio')}
+                                          onDelete={() => { removeMedia('versoAudio'); }}
                                           isPlaying={audioPlaying}
                                         />
                                       ) : (
@@ -979,7 +979,7 @@ export default function NewCardModal({
                                           </div>
                                           <motion.button
                                             type="button"
-                                            onClick={() => removeMedia('versoImage')}
+                                            onClick={() => { removeMedia('versoImage'); }}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                             className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow"
@@ -990,7 +990,7 @@ export default function NewCardModal({
                                       ) : (
                                         <motion.button
                                           type="button"
-                                          onClick={() => setShowPexelsPicker(v => !v)}
+                                          onClick={() => { setShowPexelsPicker(v => !v); }}
                                           whileHover={{ scale: 1.02 }}
                                           whileTap={{ scale: 0.98 }}
                                           className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 hover:border-gray-400 transition-colors"
@@ -1017,7 +1017,7 @@ export default function NewCardModal({
                                       <input
                                         type="text"
                                         value={imageInput}
-                                        onChange={(e) => setImageInput(e.target.value)}
+                                        onChange={(e) => { setImageInput(e.target.value); }}
                                         placeholder="Rechercher une image sur Pexels..."
                                         className="w-full px-4 py-2.5 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans text-sm"
                                       />
@@ -1074,7 +1074,7 @@ export default function NewCardModal({
                                           type="button"
                                           className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm disabled:opacity-50"
                                           disabled={imagesQuery.data.page <= 1}
-                                          onClick={() => setImagePage(p => Math.max(1, p - 1))}
+                                          onClick={() => { setImagePage(p => Math.max(1, p - 1)); }}
                                         >
                                           Précédent
                                         </button>
@@ -1083,7 +1083,7 @@ export default function NewCardModal({
                                           type="button"
                                           className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm disabled:opacity-50"
                                           disabled={!imagesQuery.data.next_page}
-                                          onClick={() => setImagePage(p => p + 1)}
+                                          onClick={() => { setImagePage(p => p + 1); }}
                                         >
                                           Suivant
                                         </button>
@@ -1125,7 +1125,7 @@ export default function NewCardModal({
                                   <input
                                     type="text"
                                     value={clozeHint}
-                                    onChange={(e) => setClozeHint(e.target.value)}
+                                    onChange={(e) => { setClozeHint(e.target.value); }}
                                     placeholder="Indice (optionnel)"
                                     className="px-2 py-1 border border-gray-200 rounded-md text-xs"
                                   />
@@ -1165,7 +1165,7 @@ export default function NewCardModal({
                                     <input
                                       type="checkbox"
                                       checked={showClozeAnswers}
-                                      onChange={(e) => setShowClozeAnswers(e.target.checked)}
+                                      onChange={(e) => { setShowClozeAnswers(e.target.checked); }}
                                     />
                                     Afficher les réponses
                                   </label>
@@ -1205,7 +1205,7 @@ export default function NewCardModal({
                                     />
                                     <motion.button
                                       type="button"
-                                      onClick={() => removeMedia('clozeImage')}
+                                      onClick={() => { removeMedia('clozeImage'); }}
                                       whileHover={{ scale: 1.1 }}
                                       whileTap={{ scale: 0.9 }}
                                       className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
@@ -1219,7 +1219,7 @@ export default function NewCardModal({
                                       <input
                                         type="text"
                                         value={imageInput}
-                                        onChange={(e) => setImageInput(e.target.value)}
+                                        onChange={(e) => { setImageInput(e.target.value); }}
                                         placeholder="Rechercher une image sur Pexels..."
                                         className="w-full px-4 py-2.5 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans text-sm"
                                       />

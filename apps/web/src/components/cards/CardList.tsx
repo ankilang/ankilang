@@ -474,7 +474,7 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
           className="flex items-center justify-center gap-4 mt-8"
         >
           <motion.button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            onClick={() => { setCurrentPage(Math.max(1, currentPage - 1)); }}
             disabled={currentPage === 1}
             whileHover={{ scale: currentPage > 1 ? 1.05 : 1 }}
             whileTap={{ scale: currentPage > 1 ? 0.95 : 1 }}
@@ -490,7 +490,7 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
               return (
                 <motion.button
                   key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
+                  onClick={() => { setCurrentPage(pageNum); }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className={`w-8 h-8 rounded-lg font-sans text-sm transition-all duration-200 ${
@@ -520,7 +520,7 @@ export default function CardList({ cards, onAddCard, onEditCard, onDeleteCard, t
       </div>
           
           <motion.button
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            onClick={() => { setCurrentPage(Math.min(totalPages, currentPage + 1)); }}
             disabled={currentPage === totalPages}
             whileHover={{ scale: currentPage < totalPages ? 1.05 : 1 }}
             whileTap={{ scale: currentPage < totalPages ? 0.95 : 1 }}

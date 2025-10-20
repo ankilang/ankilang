@@ -43,9 +43,9 @@ export default function AppLayout() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const handler = () => setIsMobileViewport(window.innerWidth < 768)
+    const handler = () => { setIsMobileViewport(window.innerWidth < 768); }
     window.addEventListener('resize', handler)
-    return () => window.removeEventListener('resize', handler)
+    return () => { window.removeEventListener('resize', handler); }
   }, [])
 
   const hasBottomNav = (isInstalled || isMobileViewport) && isTabBarVisible
@@ -268,7 +268,7 @@ export default function AppLayout() {
       {/* Modal de confirmation de déconnexion */}
       <ConfirmModal
         open={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
+        onClose={() => { setShowLogoutModal(false); }}
         onConfirm={() => {
           handleLogout()
           setShowLogoutModal(false)

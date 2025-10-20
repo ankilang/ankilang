@@ -14,7 +14,7 @@ const EasterEgg = ({ children }: EasterEggProps) => {
     
     if (clickCount === 4) {
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+      setTimeout(() => { setShowConfetti(false); }, 3000);
       setClickCount(0);
     }
   };

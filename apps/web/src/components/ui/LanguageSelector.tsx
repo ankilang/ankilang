@@ -65,7 +65,7 @@ export default function LanguageSelector({
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
+      return () => { document.removeEventListener('mousedown', handleClickOutside); }
     }
     
     return undefined
@@ -100,7 +100,7 @@ export default function LanguageSelector({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); }}
             placeholder="Rechercher une langue (code, nom, natif)"
             className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans"
             aria-label="Rechercher une langue"
@@ -128,7 +128,7 @@ export default function LanguageSelector({
                 type="radio"
                 value={language.code}
                 checked={value === language.code}
-                onChange={() => onChange(language.code)}
+                onChange={() => { onChange(language.code); }}
                 onFocus={onFocus}
                 className="sr-only"
               />
@@ -241,7 +241,7 @@ export default function LanguageSelector({
                   ref={searchRef}
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => { setSearchQuery(e.target.value); }}
                   placeholder="Rechercher une langue..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 font-sans text-sm"
                 />
@@ -255,7 +255,7 @@ export default function LanguageSelector({
                   <motion.button
                     key={language.code}
                     type="button"
-                    onClick={() => handleLanguageSelect(language.code)}
+                    onClick={() => { handleLanguageSelect(language.code); }}
                     className={`w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 transition-colors ${
                       value === language.code ? 'bg-purple-50' : ''
                     }`}

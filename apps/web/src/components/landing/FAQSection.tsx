@@ -72,7 +72,7 @@ const FAQSection = () => {
             >
               <button 
                 className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-200"
-                onClick={() => toggleItem(item.id)}
+                onClick={() => { toggleItem(item.id); }}
               >
                 <h3 className="text-lg font-sans-medium text-dark-charcoal dark:text-white">
                   {item.question}

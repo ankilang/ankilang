@@ -189,7 +189,7 @@ export function parseStoragePath(fileId: string): StoragePathMetadata {
   }
 
   // Extraire l'extension
-  const extensionMatch = lastPart.match(/\.([^.]+)$/)
+  const extensionMatch = /\.([^.]+)$/.exec(lastPart)
   const extension = extensionMatch?.[1] || ''
 
   // Extraire le nom de fichier sans extension

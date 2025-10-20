@@ -15,7 +15,7 @@ const PricingSection = () => {
         <span className={!isAnnual ? "active" : ""}>Mensuel</span>
         <div 
           className="toggle-switch" 
-          onClick={() => setIsAnnual(!isAnnual)}
+          onClick={() => { setIsAnnual(!isAnnual); }}
         >
           <motion.div 
             className="toggle-handle" 

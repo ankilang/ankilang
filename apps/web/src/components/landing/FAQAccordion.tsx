@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { BentoTile } from './Bento'
 
-type FAQItem = {
+interface FAQItem {
   id: string
   question: string
   answer: string
 }
 
-type FAQAccordionProps = {
+interface FAQAccordionProps {
   items?: FAQItem[]
   title?: string
 }
@@ -91,7 +91,7 @@ export default function FAQAccordion({ items, title }: FAQAccordionProps) {
                 aria-expanded={isOpen}
                 aria-controls={`faq-panel-${item.id}`}
                 id={`faq-button-${item.id}`}
-                onClick={() => toggleItem(item.id)}
+                onClick={() => { toggleItem(item.id); }}
               >
                 <span className="font-medium text-gray-900 pr-4">
                   {item.question}

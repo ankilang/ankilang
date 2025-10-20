@@ -9,7 +9,7 @@ import { OtherCardAdapter } from './other'
  * Gère la logique conditionnelle selon la catégorie de thème
  */
 class CardAdapterRegistry {
-  private adapters: Map<ThemeCategory, CardAdapter> = new Map()
+  private adapters = new Map<ThemeCategory, CardAdapter>()
 
   constructor() {
     // Initialisation des adapters

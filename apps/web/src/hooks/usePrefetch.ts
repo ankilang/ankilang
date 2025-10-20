@@ -109,7 +109,7 @@ export function useThemePrefetch() {
       prefetchThemeData(themeId, user.$id)
     }, 200) // 200ms de délai
 
-    return () => clearTimeout(timeoutId)
+    return () => { clearTimeout(timeoutId); }
   }, [prefetchThemeData, user?.$id])
 
   const handleMouseLeave = useCallback(() => {

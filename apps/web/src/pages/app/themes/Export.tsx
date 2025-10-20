@@ -140,7 +140,7 @@ export default function ThemeExport() {
           <p className="text-gray-600 mb-6">
             {loadError || 'Le thème que vous recherchez n\'existe pas.'}
           </p>
-          <button onClick={() => navigate('/app/themes')} className="btn-primary">
+          <button onClick={() => { navigate('/app/themes'); }} className="btn-primary">
             Retour aux thèmes
           </button>
         </div>
@@ -185,7 +185,7 @@ export default function ThemeExport() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => navigate(`/app/themes/${theme.$id}`)}
+                  onClick={() => { navigate(`/app/themes/${theme.$id}`); }}
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   <ArrowLeft size={20} />
@@ -336,7 +336,7 @@ export default function ThemeExport() {
                     Le(s) fichier(s) .apkg ont été générés et téléchargés.
                   </p>
                   <button
-                    onClick={() => setExportSuccess(false)}
+                    onClick={() => { setExportSuccess(false); }}
                     className="btn-primary"
                   >
                     Exporter à nouveau
@@ -365,7 +365,7 @@ export default function ThemeExport() {
                     </button>
                     
                     <button
-                      onClick={() => navigate(`/app/themes/${theme.$id}`)}
+                      onClick={() => { navigate(`/app/themes/${theme.$id}`); }}
                       className="btn-secondary"
                     >
                       Retour au thème

@@ -70,7 +70,7 @@ export function useRotatingAnimation({
     }
 
     mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
+    return () => { mediaQuery.removeEventListener('change', handleChange); }
   }, [])
 
   // Cleanup des timers

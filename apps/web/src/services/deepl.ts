@@ -1,4 +1,4 @@
-export type TranslateItem = { translated: string; detectedSourceLang?: string; billedCharacters?: number }
+export interface TranslateItem { translated: string; detectedSourceLang?: string; billedCharacters?: number }
 export type TranslateResponse =
   | { success: true; original: string | string[]; targetLang: string; result: TranslateItem | TranslateItem[] }
   | { success: false; error: string }

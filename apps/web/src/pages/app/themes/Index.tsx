@@ -199,7 +199,7 @@ export default function ThemesIndex() {
                     id="search"
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); }}
                     placeholder="Rechercher par nom ou tags..."
                     className="input-field pl-10 sm:pl-12 text-sm sm:text-base lg:text-lg"
                   />
@@ -217,7 +217,7 @@ export default function ThemesIndex() {
                     whileFocus={{ scale: 1.02 }}
                     id="language"
                     value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    onChange={(e) => { setSelectedLanguage(e.target.value); }}
                     className="input-field pl-10 sm:pl-12 text-sm sm:text-base lg:text-lg"
                   >
                     <option value="">Toutes les langues</option>

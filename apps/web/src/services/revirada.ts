@@ -1,4 +1,4 @@
-export type ReviradaRequest = {
+export interface ReviradaRequest {
   text: string | string[]
   sourceLang: 'fra' | 'oci' | 'oci_gascon'
   targetLang: 'fra' | 'oci' | 'oci_gascon'

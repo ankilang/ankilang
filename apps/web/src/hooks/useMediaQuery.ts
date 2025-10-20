@@ -18,16 +18,16 @@ export function useMediaQuery(query: string): boolean {
     const media = window.matchMedia(query)
     
     // Écouter les changements de taille d'écran
-    const listener = () => setMatches(media.matches)
+    const listener = () => { setMatches(media.matches); }
     
     // Support moderne
     if (media.addEventListener) {
       media.addEventListener('change', listener)
-      return () => media.removeEventListener('change', listener)
+      return () => { media.removeEventListener('change', listener); }
     } 
     // Support legacy
     media.addListener(listener)
-    return () => media.removeListener(listener)
+    return () => { media.removeListener(listener); }
   }, [query]) // Supprimer 'matches' des dépendances
 
   return matches

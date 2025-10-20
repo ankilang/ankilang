@@ -28,8 +28,8 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -8, scale: 1.02 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
+      onHoverStart={() => { setIsHovered(true); }}
+      onHoverEnd={() => { setIsHovered(false); }}
       className="group relative"
     >
       {/* Effet de particules au survol */}
@@ -159,7 +159,7 @@ export default function ThemeCard({ theme, index, onEdit, onDelete }: ThemeCardP
                   setIsMenuOpen(!isMenuOpen)
                 }}
                 onBlur={() => {
-                  setTimeout(() => setIsMenuOpen(false), 150)
+                  setTimeout(() => { setIsMenuOpen(false); }, 150)
                 }}
               >
                 <MoreVertical className="w-4 h-4 text-dark-charcoal" />

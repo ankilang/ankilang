@@ -89,8 +89,8 @@ export class CacheManager {
   /**
    * Obtient des informations sur l'utilisation du cache
    */
-  static async getCacheInfo(): Promise<{ stores: Array<{ name: string; storeName: string; size: number }> }> {
-    const stores: Array<{ name: string; storeName: string; size: number }> = []
+  static async getCacheInfo(): Promise<{ stores: { name: string; storeName: string; size: number }[] }> {
+    const stores: { name: string; storeName: string; size: number }[] = []
 
     for (const store of this.CACHE_STORES) {
       try {
@@ -117,7 +117,7 @@ export class CacheManager {
   /**
    * Vide un cache spécifique
    */
-  static async clearSpecificCache(storeName: string, dbName: string = 'ankilang'): Promise<boolean> {
+  static async clearSpecificCache(storeName: string, dbName = 'ankilang'): Promise<boolean> {
     try {
       const instance = localforage.createInstance({ name: dbName, storeName })
       await instance.clear()

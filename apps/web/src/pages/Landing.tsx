@@ -49,7 +49,7 @@ export default function NewLanding() {
     }
 
     window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+    return () => { window.removeEventListener('mousemove', handleMouseMove); }
   }, [mouseX, mouseY])
 
   return (
@@ -167,7 +167,7 @@ export default function NewLanding() {
               {/* Menu mobile */}
               <div className="lg:hidden">
                 <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  onClick={() => { setIsMenuOpen(!isMenuOpen); }}
                   className="text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +195,7 @@ export default function NewLanding() {
                       key={item.name}
                       href={item.href}
                       className="text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => { setIsMenuOpen(false); }}
                     >
                       {item.name}
                     </a>
@@ -204,14 +204,14 @@ export default function NewLanding() {
                     <a
                       href="/auth/login"
                       className="text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => { setIsMenuOpen(false); }}
                     >
                       Se connecter
                     </a>
                     <a
                       href="/auth/register"
                       className="bg-gradient-to-r from-violet-600 to-violet-700 text-white px-4 py-2 rounded-lg font-medium text-center"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => { setIsMenuOpen(false); }}
                     >
                       S'inscrire gratuitement
                     </a>

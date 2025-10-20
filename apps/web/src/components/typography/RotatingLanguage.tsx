@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useRotatingAnimation } from '../../hooks/useRotatingAnimation'
 
-type Props = {
+interface Props {
   items: React.ReactNode[]
   /** Libellé large pour réserver la largeur et éviter les sauts de mise en page (CLS) */
   reserveLabel: string
@@ -102,9 +102,9 @@ export default function RotatingLanguage({
     measureHeight()
 
     // Re-mesurer si la fenêtre change de taille
-    const handleResize = () => measureHeight()
+    const handleResize = () => { measureHeight(); }
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => { window.removeEventListener('resize', handleResize); }
   }, [items])
 
   // Si pas d'items ou un seul item, affichage statique

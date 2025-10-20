@@ -10,7 +10,7 @@ interface FlagIconProps {
 const flagModules = import.meta.glob('../../assets/flags/*.svg', {
   eager: true,
   import: 'default'
-}) as Record<string, string>
+})
 
 const SVG_FLAGS: Record<string, string> = Object.fromEntries(
   Object.entries(flagModules)

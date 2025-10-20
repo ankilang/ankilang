@@ -72,7 +72,7 @@ export default function NewTheme() {
           <div className="container mx-auto px-4 py-4 sm:py-6">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate('/app/themes')}
+                onClick={() => { navigate('/app/themes'); }}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 aria-label="Retour aux thèmes"
               >

@@ -39,7 +39,7 @@ export default function ThemeDetail() {
   const colors = getLanguageColor(themeQuery.data?.targetLang || 'default')
 
   // 🚀 NOUVEAU: Conversion des cartes Appwrite vers le format attendu
-  const formattedCards: Card[] = (cardsInfinite.cards as any[])?.map((card: any) => ({
+  const formattedCards: Card[] = (cardsInfinite.cards)?.map((card: any) => ({
     id: card.$id,
     userId: card.userId,
     themeId: card.themeId,
@@ -205,7 +205,7 @@ export default function ThemeDetail() {
               : 'Une erreur est survenue lors du chargement.'}
           </p>
           <motion.button
-            onClick={() => navigate('/app/themes')}
+            onClick={() => { navigate('/app/themes'); }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="btn-primary"
@@ -248,7 +248,7 @@ export default function ThemeDetail() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 <motion.button
-                  onClick={() => navigate('/app/themes')}
+                  onClick={() => { navigate('/app/themes'); }}
                   whileHover={{ scale: 1.1, x: -2 }}
                   whileTap={{ scale: 0.9 }}
                   className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-white/20 text-dark-charcoal hover:bg-white transition-colors"
@@ -380,7 +380,7 @@ export default function ThemeDetail() {
         {/* Modale d'ajout de carte */}
         <NewCardModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => { setIsModalOpen(false); }}
           onSubmit={handleCardSubmit}
           isLoading={createCardMutation.isPending}
           error={createCardMutation.error?.message}

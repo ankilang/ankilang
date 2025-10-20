@@ -5,9 +5,9 @@
 
 export async function testServiceWorkerDenylist(): Promise<{
   success: boolean;
-  results: Array<{ url: string; intercepted: boolean; source: string }>;
+  results: { url: string; intercepted: boolean; source: string }[];
 }> {
-  const results: Array<{ url: string; intercepted: boolean; source: string }> = [];
+  const results: { url: string; intercepted: boolean; source: string }[] = [];
   
   // URLs critiques à tester
   const criticalUrls = [

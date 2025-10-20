@@ -58,7 +58,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     const storedPlan = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
     if (storedPlan === 'premium' || storedPlan === 'free') {
-      setPlan(storedPlan as 'free' | 'premium')
+      setPlan(storedPlan)
     } else {
       setPlan('premium')
       if (typeof window !== 'undefined') {

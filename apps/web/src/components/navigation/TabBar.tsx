@@ -149,7 +149,7 @@ function TabBar() {
       setIsMobileViewport(window.innerWidth < 768)
     }
     window.addEventListener('resize', handler)
-    return () => window.removeEventListener('resize', handler)
+    return () => { window.removeEventListener('resize', handler); }
   }, [])
 
   const shouldRender = isInstalled || isMobileViewport
@@ -215,7 +215,7 @@ function TabBar() {
               key={item.id}
               item={item}
               isActive={isTabActive(item.id)}
-              onClick={() => navigateToTab(item.id)}
+              onClick={() => { navigateToTab(item.id); }}
               isCompact={isCompact}
             />
           ))}

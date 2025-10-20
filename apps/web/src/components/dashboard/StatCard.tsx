@@ -22,10 +22,10 @@ export default function StatCard({ number, label, color, delay = 0 }: StatCardPr
         });
       }, 50);
       
-      return () => clearInterval(interval);
+      return () => { clearInterval(interval); };
     }, delay);
     
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [number, delay]);
   
   const colorClasses = {

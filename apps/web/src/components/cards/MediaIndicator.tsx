@@ -28,7 +28,7 @@ export default function MediaIndicator({
       setIsPlaying(true)
       onAudioClick()
       // Simuler la fin de lecture après 3 secondes
-      setTimeout(() => setIsPlaying(false), 3000)
+      setTimeout(() => { setIsPlaying(false); }, 3000)
     }
   }
 

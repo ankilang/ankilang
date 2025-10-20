@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-type BentoGridProps = {
+interface BentoGridProps {
   children: ReactNode
   className?: string
 }
@@ -13,7 +13,7 @@ export function BentoGrid({ children, className = '' }: BentoGridProps) {
   )
 }
 
-type BentoTileProps = {
+interface BentoTileProps {
   children: ReactNode
   className?: string
   colSpan?: number
@@ -84,7 +84,7 @@ export function BentoTile({
 // VARIANTES BENTO - Tuiles spécialisées
 // =========================================================
 
-type StatementTileProps = {
+interface StatementTileProps {
   title: string
   subtitle?: string
   children: ReactNode
@@ -129,7 +129,7 @@ export function StatementTile({
   )
 }
 
-type DataTileProps = {
+interface DataTileProps {
   metric: string
   label: string
   icon?: ReactNode
@@ -172,7 +172,7 @@ export function DataTile({
   )
 }
 
-type FeatureTileProps = {
+interface FeatureTileProps {
   icon: ReactNode
   title: string
   description: string
@@ -213,7 +213,7 @@ export function FeatureTile({
   )
 }
 
-type IllustrationPlaceholderProps = {
+interface IllustrationPlaceholderProps {
   ratio?: '4/3' | '16/9' | 'square'
   className?: string
   children?: ReactNode
