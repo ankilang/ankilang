@@ -7,6 +7,7 @@
     "dev": "pnpm --filter=@ankilang/web dev",
     "build": "pnpm --filter=@ankilang/web build",
     "build:all": "pnpm -r build",
+    "build:vercel": "pnpm install --frozen-lockfile && pnpm -C apps/web build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "lint": "pnpm --filter=@ankilang/web lint",
