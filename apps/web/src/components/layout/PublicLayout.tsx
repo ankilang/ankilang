@@ -4,11 +4,12 @@ import AnkilangLogo from '../ui/AnkilangLogo'
 export default function PublicLayout() {
   const location = useLocation()
   const isLandingPage = location.pathname === '/'
+  const isAbonnementPage = location.pathname === '/abonnement'
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header conditionnel - pas affiché sur la landing page */}
-      {!isLandingPage && (
+      {/* Header conditionnel - pas affiché sur la landing page ni la page abonnement */}
+      {!isLandingPage && !isAbonnementPage && (
         <header className="bg-white shadow-sm border-b">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
