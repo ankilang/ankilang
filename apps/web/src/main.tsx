@@ -93,6 +93,14 @@ if ('serviceWorker' in navigator) {
 // On s'assure de le désinstaller proprement et de purger ses caches.
 async function cleanupLegacyServiceWorkers() {
   if (!('serviceWorker' in navigator)) return
+
+  // ✅ GARDE: Éviter le rechargement en boucle
+  const SW_CLEANUP_KEY = 'sw_cleanup_done'
+  if (sessionStorage.getItem(SW_CLEANUP_KEY)) {
+    console.log('🔒 [SW] Nettoyage déjà effectué pour cette session')
+    return
+  }
+
   try {
     const regs = await navigator.serviceWorker.getRegistrations()
     if (regs.length > 0) {
@@ -103,7 +111,8 @@ async function cleanupLegacyServiceWorkers() {
         const toDelete = keys.filter((k) => k.startsWith('workbox') || k.startsWith('ankilang'))
         await Promise.all(toDelete.map((k) => caches.delete(k)))
       }
-      // Après désinstallation, demander au navigateur d'oublier le contrôleur courant
+      // Marquer le nettoyage comme effectué AVANT le reload
+      sessionStorage.setItem(SW_CLEANUP_KEY, 'true')
       console.log('✅ [SW] Anciens SW désinstallés — rechargement pour détacher le contrôleur')
       // Recharger une seule fois pour sortir du contrôle du SW orphelin
       window.location.reload()
