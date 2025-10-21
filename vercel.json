@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run build:vercel",
+  "buildCommand": "pnpm --filter=@ankilang/shared build && pnpm --filter=@ankilang/shared-cache build && pnpm --filter=@ankilang/web build",
   "outputDirectory": "apps/web/dist",
   "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile",

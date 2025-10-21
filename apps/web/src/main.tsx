@@ -75,8 +75,8 @@ loadFonts();
 import './index.css'
 
 // Cache migration et configuration
-import { migrateLegacyCache } from './services/cache/migrate-legacy.ts'
-import { logFlags, validateFlags } from './config/flags.ts'
+import { migrateLegacyCache } from '@/services/cache/migrate-legacy'
+import { logFlags, validateFlags } from '@/config/flags'
 
 // ✅ Bootstrap anti-cache PWA
 if ('serviceWorker' in navigator) {
