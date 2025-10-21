@@ -70,7 +70,7 @@ export default function NewLanding() {
             {/* Navigation Desktop */}
             <nav className="hidden lg:flex items-center gap-8">
               <a
-                href="#pricing"
+                href="/abonnement"
                 className="text-slate-700 hover:text-violet-600 transition-colors duration-200"
               >
                 Tarifs
