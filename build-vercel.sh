@@ -3,6 +3,11 @@ set -e  # Exit on error
 
 echo "🚀 Vercel Build Script - Ankilang Monorepo"
 echo "=========================================="
+echo "📍 Working directory: $(pwd)"
+echo "📁 Listing critical files..."
+ls -la apps/web/src/services/appwrite.ts || echo "❌ appwrite.ts NOT FOUND"
+ls -la apps/web/src/services/cache/migrate-legacy.ts || echo "❌ migrate-legacy.ts NOT FOUND"
+echo "=========================================="
 
 # Étape 1 : Build des packages partagés
 echo "📦 Step 1/3: Building @ankilang/shared..."
