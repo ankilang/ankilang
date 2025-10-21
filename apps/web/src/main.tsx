@@ -75,7 +75,7 @@ loadFonts();
 import './index.css'
 
 // Cache migration et configuration
-import { migrateLegacyCache } from './services/cache/migrate-legacy.ts'
+// import { migrateLegacyCache } from './services/cache/migrate-legacy.ts'
 import { logFlags, validateFlags } from '@/config/flags'
 
 // ✅ Bootstrap anti-cache PWA
@@ -128,14 +128,15 @@ async function initializeCache() {
     // Logger la configuration (dev seulement)
     logFlags()
 
-    // Migrer les anciens caches
-    const { moved, errors: migrationErrors } = await migrateLegacyCache()
-    if (moved > 0) {
-      console.info(`[Cache][init] Migration terminée: ${moved} fichiers migrés`)
-    }
-    if (migrationErrors > 0) {
-      console.warn(`[Cache][init] ${migrationErrors} erreurs lors de la migration`)
-    }
+    // Migrer les anciens caches (temporairement désactivé pour Vercel)
+    // const { moved, errors: migrationErrors } = await migrateLegacyCache()
+    // if (moved > 0) {
+    //   console.info(`[Cache][init] Migration terminée: ${moved} fichiers migrés`)
+    // }
+    // if (migrationErrors > 0) {
+    //   console.warn(`[Cache][init] ${migrationErrors} erreurs lors de la migration`)
+    // }
+    console.info('[Cache][init] Migration legacy temporairement désactivée pour Vercel')
   } catch (error) {
     console.error('[Cache][init] Erreur lors de l\'initialisation:', error)
   }

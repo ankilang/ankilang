@@ -1,5 +1,5 @@
 import { BrowserIDBCache } from '@ankilang/shared-cache'
-import { FLAGS } from '@/config/flags'
+import { FLAGS } from '../../config/flags'
 
 const idb = new BrowserIDBCache('ankilang', 'binary-cache')
 
