@@ -3,6 +3,36 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
+
+// Initialisation Sentry et web-vitals
+import { initSentry, useSentry } from './lib/sentry'
+import { initWebVitals, setMetricCallback } from './lib/web-vitals'
+
+// Initialiser Sentry
+initSentry()
+
+// Connecter Sentry à web-vitals
+const sentry = useSentry()
+setMetricCallback((metric) => {
+  sentry.addBreadcrumb({
+    message: `Web Vital: ${metric.name}`,
+    category: 'performance',
+    level: metric.rating === 'poor' ? 'error' : 'info',
+    data: {
+      value: metric.value,
+      rating: metric.rating,
+      delta: metric.delta,
+    },
+  })
+
+  // Alert si performance critique
+  if (metric.rating === 'poor') {
+    sentry.captureMessage(`Poor ${metric.name}: ${metric.value}ms`, 'warning')
+  }
+})
+
+// Initialiser web-vitals
+initWebVitals()
 // ✅ Optimisation des performances : chargement conditionnel des polices
 async function loadFonts() {
   // Vérifier la connexion réseau pour optimiser le chargement

@@ -28,12 +28,17 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
   return 'poor'
 }
 
+// Système de callback pour découpler Sentry
+type MetricCallback = (metric: WebVitalMetric) => void
+
+let metricCallback: MetricCallback | null = null
+
+export function setMetricCallback(callback: MetricCallback) {
+  metricCallback = callback
+}
+
 // Fonction pour tracker une métrique
 function trackMetric(metric: WebVitalMetric) {
-  // Import dynamique pour éviter les erreurs de SSR
-  const { captureMessage, addBreadcrumb } = typeof window !== 'undefined' ? 
-    require('./sentry').useSentry() : { captureMessage: () => {}, addBreadcrumb: () => {} }
-  
   // Log pour le développement
   if (import.meta.env.NODE_ENV === 'development') {
     console.log(`📊 Web Vital: ${metric.name}`, {
@@ -43,22 +48,8 @@ function trackMetric(metric: WebVitalMetric) {
     })
   }
 
-  // Breadcrumb pour Sentry
-  addBreadcrumb({
-    message: `Web Vital: ${metric.name}`,
-    category: 'performance',
-    level: metric.rating === 'poor' ? 'error' : 'info',
-    data: {
-      value: metric.value,
-      rating: metric.rating,
-      delta: metric.delta,
-    },
-  })
-
-  // Alert si performance critique
-  if (metric.rating === 'poor') {
-    captureMessage(`Poor ${metric.name}: ${metric.value}ms`, 'warning')
-  }
+  // Callback optionnel (pour Sentry ou autres trackers)
+  metricCallback?.(metric)
 }
 
 // Fonction pour initialiser le monitoring simplifié
@@ -143,11 +134,15 @@ export function measurePerformance<T>(
           console.log(`⏱️ Performance: ${name}`, `${duration.toFixed(2)}ms`)
         }
         
-        // Envoyer à Sentry si lent
-        if (duration > 1000) {
-          const { captureMessage } = typeof window !== 'undefined' ? 
-            require('./sentry').useSentry().captureMessage : () => {}
-          captureMessage(`Slow operation: ${name} (${duration.toFixed(2)}ms)`, 'warning')
+        // Envoyer via callback si lent
+        if (duration > 1000 && metricCallback) {
+          metricCallback({
+            name: `Slow: ${name}`,
+            value: duration,
+            delta: 0,
+            id: 'performance',
+            rating: 'poor'
+          })
         }
       })
     } else {
@@ -164,12 +159,16 @@ export function measurePerformance<T>(
     const end = performance.now()
     const duration = end - start
     
-    const { captureException } = typeof window !== 'undefined' ? 
-      require('./sentry').useSentry() : { captureException: () => {} }
-    captureException(error as Error, {
-      operation: name,
-      duration,
-    })
+    // Envoyer l'erreur via callback
+    if (metricCallback) {
+      metricCallback({
+        name: `Error: ${name}`,
+        value: duration,
+        delta: 0,
+        id: 'error',
+        rating: 'poor'
+      })
+    }
     
     throw error
   }
