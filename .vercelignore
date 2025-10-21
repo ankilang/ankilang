@@ -9,7 +9,7 @@ Thumbs.db
 
 # Ignorer les autres apps du monorepo
 apps/functions
-services
+/services
 infra
 docs
 

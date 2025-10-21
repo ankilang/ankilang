@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:vercel": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter=@ankilang/shared build && pnpm --filter=@ankilang/shared-cache build && pnpm --filter=@ankilang/web build",
     "preview": "vite preview",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
