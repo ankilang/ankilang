@@ -11,7 +11,7 @@ const TAB_CONFIGS: TabConfig[] = [
   { id: 'dashboard', path: '/app', rootPath: '/app' },
   { id: 'themes', path: '/app/themes', rootPath: '/app/themes' },
   { id: 'tips', path: '/app/tips', rootPath: '/app/tips' },
-  { id: 'workshop', path: '/app/workshop', rootPath: '/app/workshop' },
+  // { id: 'workshop', path: '/app/workshop', rootPath: '/app/workshop' }, // Supprimé
   { id: 'library', path: '/app/library', rootPath: '/app/library' },
   { id: 'account', path: '/app/account', rootPath: '/app/account' }
 ]

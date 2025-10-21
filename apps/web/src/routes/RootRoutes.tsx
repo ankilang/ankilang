@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { Suspense, lazy } from 'react'
+import { FEATURES } from '../config/features'
 
 // Layouts
 import PublicLayout from '../components/layout/PublicLayout'
@@ -27,7 +28,6 @@ const Privacy = lazy(() => import('../pages/legal/Privacy'))
 
 // Protégées
 import ProtectedRoute from '../components/auth/ProtectedRoute'
-import ProOnly from '../components/auth/ProOnly'
 // Pages protégées (lazy)
 const Dashboard = lazy(() => import('../pages/app/Dashboard'))
 const ThemesIndex = lazy(() => import('../pages/app/themes/Index'))
@@ -35,7 +35,7 @@ const NewTheme = lazy(() => import('../pages/app/themes/New'))
 const ThemeDetail = lazy(() => import('../pages/app/themes/Detail'))
 const ThemeExport = lazy(() => import('../pages/app/themes/Export'))
 const BaseTips = lazy(() => import('../pages/app/resources/BaseTips'))
-const FlashcardWorkshop = lazy(() => import('../pages/app/resources/FlashcardWorkshop'))
+// const FlashcardWorkshop = lazy(() => import('../pages/app/resources/FlashcardWorkshop')) // Supprimé
 const ProLibrary = lazy(() => import('../pages/app/resources/ProLibrary'))
 const AccountIndex = lazy(() => import('../pages/app/account/Index'))
 const AudioTest = lazy(() => import('../pages/test/AudioTest'))
@@ -69,7 +69,12 @@ export const RootRoutes = () => (
     {/* Public */}
     <Route path="/" element={<PublicLayout />}>
       <Route index element={<Suspense fallback={<PageLoadingFallback type="app" />}><Landing /></Suspense>} />
-      <Route path="abonnement" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Abonnement /></Suspense>} />
+      
+      {/* Route abonnement conditionnelle */}
+      {FEATURES.PRICING_PAGE_ENABLED && (
+        <Route path="abonnement" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Abonnement /></Suspense>} />
+      )}
+      
       <Route path="occitan" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Occitan /></Suspense>} />
       <Route path="offline" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Offline /></Suspense>} />
       {/* Ne pas mettre de catch-all ici pour ne pas intercepter /app */}
@@ -149,18 +154,10 @@ export const RootRoutes = () => (
           <BaseTips />
         </Suspense>
       } />
-      <Route path="workshop" element={
-        <Suspense fallback={<PageLoadingFallback type="app" />}>
-          <ProOnly>
-            <FlashcardWorkshop />
-          </ProOnly>
-        </Suspense>
-      } />
+      {/* Route workshop supprimée */}
       <Route path="library" element={
         <Suspense fallback={<PageLoadingFallback type="app" />}>
-          <ProOnly>
-            <ProLibrary />
-          </ProOnly>
+          <ProLibrary />
         </Suspense>
       } />
 

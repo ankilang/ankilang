@@ -5,6 +5,7 @@ import PageMeta from '../components/seo/PageMeta'
 import SectionTitle from '../components/landing/SectionTitle'
 import FAQAccordion from '../components/landing/FAQAccordion'
 import AnkilangLogo from '../components/ui/AnkilangLogo'
+import { FEATURES } from '../config/features'
 
 export default function Abonnement() {
   const [isAnnual, setIsAnnual] = useState(true)
@@ -106,12 +107,14 @@ export default function Abonnement() {
 
             {/* Navigation Desktop */}
             <nav className="hidden lg:flex items-center gap-8">
-              <a
-                href="/abonnement"
-                className="text-violet-600 font-semibold transition-colors duration-200"
-              >
-                Tarifs
-              </a>
+              {FEATURES.PRICING_PAGE_ENABLED && (
+                <a
+                  href="/abonnement"
+                  className="text-violet-600 font-semibold transition-colors duration-200"
+                >
+                  Tarifs
+                </a>
+              )}
               <a
                 href="/#mission"
                 className="text-slate-700 hover:text-violet-600 transition-colors duration-200"

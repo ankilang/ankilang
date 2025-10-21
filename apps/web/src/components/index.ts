@@ -44,7 +44,7 @@ export { AnkiExporter } from './AnkiExporter'
 export { AudioPreviewButton } from './AudioPreviewButton'
 export { default as OccitanParticles } from './effects/OccitanParticles'
 export { default as LegalContent } from './legal/LegalContent'
-export { default as PremiumTeaser } from './PremiumTeaser'
+// export { default as PremiumTeaser } from './PremiumTeaser' // @deprecated
 export { AudioPreviewTest } from './test/AudioPreviewTest'
 export { default as TranslateDemo } from './TranslateDemo'
 

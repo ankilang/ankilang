@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom'
 import { User, Menu, X, LogOut } from 'lucide-react'
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion' // Plus utilisé
 import AnkilangLogo from '../ui/AnkilangLogo'
 import SafeArea from '../ui/SafeArea'
 import { usePWAContext } from '../../contexts/PWAContext'
-import { useSubscription, TESTER_ID } from '../../contexts/SubscriptionContext'
+// Plus de distinction de plan
 import { useAuth } from '../../hooks/useAuth'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import TabBar from '../navigation/TabBar'
@@ -15,10 +15,10 @@ export default function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { isInstalled } = usePWAContext()
-  const { plan, toggleTestMode } = useSubscription()
-  const { user, logout } = useAuth()
+  // Plus de distinction de plan - toutes les features sont accessibles
+  const { logout } = useAuth()
   const navigate = useNavigate()
-  const isPro = plan !== 'free'
+  // Plus de distinction de plan
   const { isVisible: isTabBarVisible } = useTabBarVisibility()
   const [isMobileViewport, setIsMobileViewport] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
@@ -95,20 +95,9 @@ export default function AppLayout() {
                 >
                   Conseils de base
                 </NavLink>
-                {isPro && (
+                {true && (
                   <>
-                    <NavLink
-                      to="/app/workshop"
-                      className={({ isActive }) =>
-                        `text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'text-blue-600'
-                            : 'text-gray-600 hover:text-gray-900'
-                        }`
-                      }
-                    >
-                      Atelier flashcards
-                    </NavLink>
+                    {/* Lien Workshop supprimé */}
                     <NavLink
                       to="/app/library"
                       className={({ isActive }) =>
@@ -128,22 +117,7 @@ export default function AppLayout() {
 
             {/* Actions utilisateur */}
             <div className="flex items-center gap-4">
-              {/* Bouton de test pour basculer entre modes gratuit/premium */}
-              {(process.env.NODE_ENV === 'development' || user?.$id === TESTER_ID) && (
-                <motion.button
-                  onClick={toggleTestMode}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    plan !== 'free'
-                      ? 'bg-green-100 text-green-700 border border-green-200' 
-                      : 'bg-red-100 text-red-700 border border-red-200'
-                  }`}
-                  title={`Actuellement en mode ${plan !== 'free' ? 'Premium' : 'Gratuit'} - Cliquer pour basculer`}
-                >
-                  {plan !== 'free' ? '👑 Premium' : '🔒 Gratuit'}
-                </motion.button>
-              )}
+              {/* Plus de distinction de plan */}
 
               <Link
                 to="/app/account"
@@ -203,19 +177,9 @@ export default function AppLayout() {
                 >
                   Conseils de base
                 </NavLink>
-                {isPro && (
+                {true && (
                   <>
-                    <NavLink
-                      to="/app/workshop"
-                      onClick={closeMobileMenu}
-                      className={({ isActive }) =>
-                        isActive
-                          ? 'text-blue-600 font-medium py-2'
-                          : 'text-gray-600 hover:text-gray-900 py-2'
-                      }
-                    >
-                      Atelier flashcards
-                    </NavLink>
+                    {/* Lien Workshop supprimé */}
                     <NavLink
                       to="/app/library"
                       onClick={closeMobileMenu}

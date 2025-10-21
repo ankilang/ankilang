@@ -1,3 +1,7 @@
+/**
+ * @deprecated Ce composant n'est plus utilisé depuis la suppression du système Premium.
+ * Conservé temporairement pour référence historique.
+ */
 import { motion } from 'framer-motion'
 import { Crown, Sparkles } from 'lucide-react'
 

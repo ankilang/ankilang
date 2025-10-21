@@ -31,7 +31,7 @@ export const ROUTES = {
 
   // Ressources et bibliothèque
   TIPS: '/app/tips',
-  WORKSHOP: '/app/workshop',     // Pro uniquement
+  // WORKSHOP: '/app/workshop',     // Supprimé
   LIBRARY: '/app/library',       // Pro uniquement
 
   // Gestion du compte
@@ -93,7 +93,7 @@ export function requiresAuth(route: RouteKeys): boolean {
  * @returns true si la route nécessite un abonnement Pro
  */
 export function requiresPro(route: RouteKeys): boolean {
-  return route === 'WORKSHOP' || route === 'LIBRARY'
+  return route === 'LIBRARY'  // WORKSHOP supprimé
 }
 
 /**

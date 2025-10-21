@@ -9,7 +9,6 @@ import {
 import { AudioCard } from './AudioCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSubscription } from '../../contexts/SubscriptionContext'
-import PremiumTeaser from '../PremiumTeaser'
 import { translate as deeplTranslate, type TranslateResponse as DeeplResponse } from '../../services/deepl'
 import { generateTTS, persistTTS } from '../../services/tts'
 import { ttsToTempURL, type VotzLanguage } from '../../services/votz'
@@ -79,7 +78,7 @@ export default function NewCardModal({
   const online = useOnlineStatus()
   
   // Subscription context
-  const { features, upgradeToPremium } = useSubscription()
+  const { features } = useSubscription()
   
   const isOccitan = themeLanguage === 'oc' || themeLanguage === 'oc-gascon'
   const occitanDialect: VotzLanguage = themeLanguage === 'oc-gascon' ? 'gascon' : 'languedoc'
@@ -237,7 +236,7 @@ export default function NewCardModal({
     if (selectedType !== 'basic') return
     const rectoText = getValues('recto')
     if (!rectoText?.trim()) return
-    if (!canTranslate) { upgradeToPremium(); return }
+    if (!canTranslate) return
     if (!online) return
 
     setIsTranslating(true)
@@ -315,10 +314,7 @@ export default function NewCardModal({
   })
 
   const handleAudioUpload = async () => {
-    if (!canAddAudio) {
-      upgradeToPremium()
-      return
-    }
+    if (!canAddAudio) return
     if (!online) return
     const text = getValues('verso') || getValues('recto') || ''
     if (!text.trim()) return
@@ -855,7 +851,7 @@ export default function NewCardModal({
                             ) : (
                               <motion.button
                                 type="button"
-                                onClick={upgradeToPremium}
+                                onClick={handleTranslate}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg"
@@ -942,12 +938,10 @@ export default function NewCardModal({
                                       )}
                                     </div>
                                   ) : (
-                                    <PremiumTeaser feature="L'enregistrement audio" onUpgrade={upgradeToPremium}>
-                                      <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
-                                        <Volume2 className="w-6 h-6 text-gray-400" />
-                                        <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
-                                      </div>
-                                    </PremiumTeaser>
+                                    <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
+                                      <Volume2 className="w-6 h-6 text-gray-400" />
+                                      <span className="font-sans text-sm text-gray-500">Enregistrer la prononciation</span>
+                                    </div>
                                   )}
 
                                   {/* Colonne Image (Pexels) */}
@@ -990,12 +984,10 @@ export default function NewCardModal({
                                         </motion.button>
                                       )
                                     ) : (
-                                      <PremiumTeaser feature="L'ajout d'images" onUpgrade={upgradeToPremium}>
-                                        <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
-                                          <ImageIcon className="w-6 h-6 text-gray-400" />
-                                          <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                        </div>
-                                      </PremiumTeaser>
+                                      <div className="w-full h-16 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2">
+                                        <ImageIcon className="w-6 h-6 text-gray-400" />
+                                        <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
@@ -1262,12 +1254,10 @@ export default function NewCardModal({
                                   </div>
                                 )
                               ) : (
-                                <PremiumTeaser feature="L'ajout d'images" onUpgrade={upgradeToPremium}>
-                                  <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
-                                    <ImageIcon className="w-8 h-8 text-gray-400" />
-                                    <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
-                                  </div>
-                                </PremiumTeaser>
+                                <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                  <ImageIcon className="w-8 h-8 text-gray-400" />
+                                  <span className="font-sans text-sm text-gray-500">Ajouter une image</span>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -1295,19 +1285,17 @@ export default function NewCardModal({
                           />
                         </div>
                       ) : (
-                        <PremiumTeaser feature="Les champs avancés" onUpgrade={upgradeToPremium}>
-                          <div>
-                            <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
-                              Contexte, mnémotechnique, exemple...
-                            </label>
-                            <textarea
-                              disabled
-                              rows={2}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-400 resize-none"
-                              placeholder="Informations complémentaires (Premium)"
-                            />
-                          </div>
-                        </PremiumTeaser>
+                        <div>
+                          <label className="block font-sans text-sm font-medium text-dark-charcoal mb-2">
+                            Contexte, mnémotechnique, exemple...
+                          </label>
+                          <textarea
+                            {...register('extra')}
+                            rows={2}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pastel-purple transition-colors font-sans resize-none"
+                            placeholder="Informations complémentaires pour aider à la mémorisation"
+                          />
+                        </div>
                       )}
 
                       <div>

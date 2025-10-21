@@ -6,6 +6,7 @@ import AnkilangLogo from '../components/ui/AnkilangLogo'
 import { useToast } from '../components/Toast'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { useLoading } from '../components/LoadingSpinner'
+import { FEATURES } from '../config/features'
 
 export default function NewLanding() {
   const { success } = useToast()
@@ -69,12 +70,14 @@ export default function NewLanding() {
 
             {/* Navigation Desktop */}
             <nav className="hidden lg:flex items-center gap-8">
-              <a
-                href="/abonnement"
-                className="text-slate-700 hover:text-violet-600 transition-colors duration-200"
-              >
-                Tarifs
-              </a>
+              {FEATURES.PRICING_PAGE_ENABLED && (
+                <a
+                  href="/abonnement"
+                  className="text-slate-700 hover:text-violet-600 transition-colors duration-200"
+                >
+                  Tarifs
+                </a>
+              )}
               <a
                 href="/occitan"
                 className="text-slate-700 hover:text-violet-600 transition-colors duration-200"

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Languages, Volume2, Download, Check } from 'lucide-react'
 import PageMeta from '../components/seo/PageMeta'
 import AnkilangLogo from '../components/ui/AnkilangLogo'
+import { FEATURES } from '../config/features'
 
 export default function Occitan() {
   return (
@@ -34,12 +35,14 @@ export default function Occitan() {
 
             {/* Navigation Desktop */}
             <nav className="hidden lg:flex items-center gap-8">
-              <a
-                href="/abonnement"
-                className="text-slate-700 hover:text-violet-600 transition-colors duration-200"
-              >
-                Tarifs
-              </a>
+              {FEATURES.PRICING_PAGE_ENABLED && (
+                <a
+                  href="/abonnement"
+                  className="text-slate-700 hover:text-violet-600 transition-colors duration-200"
+                >
+                  Tarifs
+                </a>
+              )}
               <a
                 href="/occitan"
                 className="text-violet-600 font-semibold transition-colors duration-200"

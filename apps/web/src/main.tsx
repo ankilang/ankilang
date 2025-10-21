@@ -18,11 +18,6 @@ setMetricCallback((metric) => {
     message: `Web Vital: ${metric.name}`,
     category: 'performance',
     level: metric.rating === 'poor' ? 'error' : 'info',
-    data: {
-      value: metric.value,
-      rating: metric.rating,
-      delta: metric.delta,
-    },
   })
 
   // Alert si performance critique

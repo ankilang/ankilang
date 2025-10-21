@@ -4,7 +4,7 @@ import { LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import PageMeta from '../../../components/seo/PageMeta'
 import { useAuth } from '../../../hooks/useAuth'
-import { TESTER_ID, useSubscription } from '../../../contexts/SubscriptionContext'
+// import { useSubscription } from '../../../contexts/SubscriptionContext' // Plus utilisé
 import { AppwriteException } from 'appwrite'
 import CacheClearButton from '../../../components/cache/CacheClearButton'
 import { CacheJanitorPanel } from '../../../components/cache/CacheJanitorPanel'
@@ -19,7 +19,7 @@ function getInitials(name?: string | null) {
 export default function AccountIndex() {
   const navigate = useNavigate()
   const { user, logout, updateEmail } = useAuth()
-  const { plan, upgradeToPremium, toggleTestMode } = useSubscription()
+  // Plus de distinction de plan
 
   const [email, setEmail] = useState(user?.email ?? '')
   const [password, setPassword] = useState('')
@@ -75,7 +75,7 @@ export default function AccountIndex() {
           Mon profil
         </h1>
         <p className="mt-2 text-dark-charcoal/70">
-          Informations essentielles de votre compte et accès rapide à Ankilang Pro.
+          Gérez les informations essentielles de votre compte.
         </p>
       </header>
 
@@ -97,19 +97,7 @@ export default function AccountIndex() {
               <p className="mt-1 text-sm text-dark-charcoal/70">{user?.email}</p>
             </div>
 
-            <div className="w-full rounded-xl border border-pastel-purple/40 bg-pastel-purple/10 px-4 py-3 text-sm text-dark-charcoal">
-              <span className="font-semibold">Plan actuel :</span>{' '}
-              {plan === 'premium' ? 'Premium' : 'Free'}
-            </div>
-
             <div className="flex w-full flex-col gap-3">
-              <button
-                onClick={upgradeToPremium}
-                className="w-full rounded-xl bg-gradient-to-r from-pastel-purple to-pastel-rose px-4 py-3 font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-pastel-purple"
-              >
-                Passer en version Pro
-              </button>
-
               <button
                 onClick={handleLogout}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-300"
@@ -118,16 +106,6 @@ export default function AccountIndex() {
                 Se déconnecter
               </button>
             </div>
-
-            {user?.$id === TESTER_ID && (
-              <button
-                type="button"
-                onClick={toggleTestMode}
-                className="w-full rounded-xl border border-pastel-purple/40 bg-white px-4 py-2 text-sm font-medium text-pastel-purple transition-colors hover:bg-pastel-purple/10"
-              >
-                Basculer vers le mode {plan !== 'free' ? 'gratuit' : 'premium'} (test)
-              </button>
-            )}
 
             <CacheClearButton className="mt-4" />
 

@@ -1,11 +1,11 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { Home, User, Layers3, Lightbulb, Sparkles, Library } from 'lucide-react'
+import { Home, User, Layers3, Lightbulb, Library } from 'lucide-react'
 import { usePWAContext } from '../../contexts/PWAContext'
 import { useTabNavigation } from '../../hooks/useTabNavigation'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useTabBarVisibility } from '../../hooks/useTabBarVisibility'
 import FAB from './FAB'
-import { useSubscription } from '../../contexts/SubscriptionContext'
+// Plus de distinction de plan
 
 interface TabItem {
   id: string
@@ -34,13 +34,7 @@ const TAB_ITEMS: TabItem[] = [
     icon: Lightbulb,
     ariaLabel: 'Consulter les conseils de base'
   },
-  {
-    id: 'workshop',
-    label: 'Atelier',
-    icon: Sparkles,
-    ariaLabel: 'Accéder à l’atelier flashcards',
-    proOnly: true
-  },
+  // Workshop supprimé
   {
     id: 'library',
     label: 'Bibliothèque',
@@ -133,8 +127,7 @@ TabButton.displayName = 'TabButton'
 
 function TabBar() {
   const { isInstalled } = usePWAContext()
-  const { plan } = useSubscription()
-  const isPro = plan !== 'free'
+  // Plus de distinction de plan - toutes les features sont accessibles
   const { isTabActive, navigateToTab } = useTabNavigation()
   const isOnline = useOnlineStatus()
   const { isVisible, isCompact, isKeyboardOpen } = useTabBarVisibility()
@@ -210,7 +203,7 @@ function TabBar() {
         )}
         
         <div className="flex items-center justify-around h-full px-2">
-          {TAB_ITEMS.filter(item => (item.proOnly ? isPro : true)).map((item) => (
+          {TAB_ITEMS.map((item) => (
             <TabButton
               key={item.id}
               item={item}

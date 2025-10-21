@@ -1,3 +1,7 @@
+/**
+ * @deprecated Ce composant n'est plus utilisé - la page Workshop a été supprimée.
+ * Conservé temporairement pour référence historique.
+ */
 import { motion } from 'framer-motion'
 import PageMeta from '../../../components/seo/PageMeta'
 
