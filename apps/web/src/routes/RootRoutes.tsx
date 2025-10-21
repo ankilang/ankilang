@@ -10,7 +10,6 @@ import AppLayout from '../components/layout/AppLayout'
 
 // Pages publiques (lazy)
 const Landing = lazy(() => import('../pages/Landing'))
-const Abonnement = lazy(() => import('../pages/Abonnement'))
 const Offline = lazy(() => import('../pages/Offline'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
@@ -68,7 +67,6 @@ export const RootRoutes = () => (
     {/* Public */}
     <Route path="/" element={<PublicLayout />}>
       <Route index element={<Suspense fallback={<PageLoadingFallback type="app" />}><Landing /></Suspense>} />
-      <Route path="abonnement" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Abonnement /></Suspense>} />
       <Route path="offline" element={<Suspense fallback={<PageLoadingFallback type="app" />}><Offline /></Suspense>} />
       {/* Ne pas mettre de catch-all ici pour ne pas intercepter /app */}
     </Route>

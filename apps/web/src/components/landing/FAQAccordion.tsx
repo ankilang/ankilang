@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { BentoTile } from './Bento'
 
 interface FAQItem {
   id: string
@@ -85,7 +84,7 @@ export default function FAQAccordion({ items, title }: FAQAccordionProps) {
           const isOpen = openItems.has(item.id)
           
           return (
-            <BentoTile key={item.id} className="p-4 sm:p-6">
+            <div key={item.id} className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6">
               <button
                 className="w-full text-left py-3 sm:py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg flex items-center justify-between"
                 aria-expanded={isOpen}
@@ -115,7 +114,7 @@ export default function FAQAccordion({ items, title }: FAQAccordionProps) {
                   {item.answer}
                 </div>
               </div>
-            </BentoTile>
+            </div>
           )
         })}
       </div>
