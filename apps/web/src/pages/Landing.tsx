@@ -76,7 +76,7 @@ export default function NewLanding() {
                 Tarifs
               </a>
               <a
-                href="#mission"
+                href="/occitan"
                 className="text-slate-700 hover:text-violet-600 transition-colors duration-200"
               >
                 Occitan
@@ -185,42 +185,50 @@ export default function NewLanding() {
           </div>
         </section>
 
-        {/* SECTION 3: TRUST & MISSION */}
-        <section id="mission" className="py-20 sm:py-32 bg-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-                <SectionTitle>Clair, simple et juste.</SectionTitle>
-            </div>
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-              {/* Colonne 1: Mission Occitan */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.6 }}
+        {/* SECTION 3: CTA VERS MISSION OCCITAN */}
+        <section className="py-20 sm:py-24 bg-violet-600">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                L'occitan, gratuit à vie
+              </h2>
+              <p className="text-lg text-violet-100 mb-8 max-w-2xl mx-auto">
+                Ankilang est né en Occitanie. Toutes les fonctionnalités Pro pour 
+                l'occitan sont gratuites, pour toujours. C'est notre engagement.
+              </p>
+              <a
+                href="/occitan"
+                className="inline-block bg-white text-violet-600 px-8 py-3 rounded-lg font-semibold hover:bg-slate-50 transition-colors duration-200"
               >
-                <h3 className="text-2xl font-bold text-slate-900">Notre engagement pour l'Occitan</h3>
-                <p className="mt-4 text-lg text-slate-600">
-                  Ankilang est né en Occitanie. Nous croyons que la technologie doit aussi servir à la préservation et à la diffusion des langues régionales. C'est pourquoi toutes les fonctionnalités pour l'occitan sont, et resteront, **gratuites pour toujours**.
-                </p>
-              </motion.div>
+                Découvrir notre mission →
+              </a>
+            </motion.div>
+          </div>
+        </section>
 
-              {/* Colonne 2: FAQ Réduite */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.6 }}
-              >
-                <h3 className="text-2xl font-bold text-slate-900 mb-6">Questions fréquentes</h3>
-                {/* Tu dois réutiliser ton composant FAQAccordion ici mais en lui passant seulement ces 3 questions */}
-                <FAQAccordion items={[
-                  { id: 'anki', question: "Ankilang remplace l'application Anki ?", answer: "Non, Ankilang est un outil de préparation. Il génère des paquets de cartes (.apkg) parfaitement formatés que vous importez ensuite dans l'application Anki (Desktop ou Mobile) pour les étudier." },
-                  { id: 'essai', question: "Comment fonctionne l'essai gratuit de 14 jours ?", answer: "Vous avez accès à toutes les fonctionnalités Pro pendant 14 jours, sans entrer de carte de crédit. À la fin de l'essai, vous pouvez choisir un abonnement ou continuer avec le plan gratuit pour l'occitan." },
-                  { id: 'langues', question: "Quelles sont les langues supportées ?", answer: "Le plan Pro supporte plus de 30 langues pour la traduction et la synthèse vocale, dont l'anglais, l'espagnol, l'allemand, le japonais, et bien d'autres. La liste complète est disponible sur notre page tarifs." }
-                ]} />
-              </motion.div>
+        {/* SECTION 4: FAQ */}
+        <section className="py-20 sm:py-32 bg-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <SectionTitle>Questions fréquentes</SectionTitle>
             </div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6 }}
+            >
+              <FAQAccordion items={[
+                { id: 'anki', question: "Ankilang remplace l'application Anki ?", answer: "Non, Ankilang est un outil de préparation. Il génère des paquets de cartes (.apkg) parfaitement formatés que vous importez ensuite dans l'application Anki (Desktop ou Mobile) pour les étudier." },
+                { id: 'essai', question: "Comment fonctionne l'essai gratuit de 14 jours ?", answer: "Vous avez accès à toutes les fonctionnalités Pro pendant 14 jours, sans entrer de carte de crédit. À la fin de l'essai, vous pouvez choisir un abonnement ou continuer avec le plan gratuit pour l'occitan." },
+                { id: 'langues', question: "Quelles sont les langues supportées ?", answer: "Le plan Pro supporte plus de 30 langues pour la traduction et la synthèse vocale, dont l'anglais, l'espagnol, l'allemand, le japonais, et bien d'autres. La liste complète est disponible sur notre page tarifs." }
+              ]} />
+            </motion.div>
           </div>
         </section>
       </main>

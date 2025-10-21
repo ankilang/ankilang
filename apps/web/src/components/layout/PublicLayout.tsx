@@ -5,11 +5,12 @@ export default function PublicLayout() {
   const location = useLocation()
   const isLandingPage = location.pathname === '/'
   const isAbonnementPage = location.pathname === '/abonnement'
+  const isOccitanPage = location.pathname === '/occitan'
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header conditionnel - pas affiché sur la landing page ni la page abonnement */}
-      {!isLandingPage && !isAbonnementPage && (
+      {/* Header conditionnel - pas affiché sur la landing page, abonnement, ni occitan */}
+      {!isLandingPage && !isAbonnementPage && !isOccitanPage && (
         <header className="bg-white shadow-sm border-b">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
